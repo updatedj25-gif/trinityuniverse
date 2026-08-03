@@ -1,0 +1,100 @@
+# ============================================================
+# GNOSIS MASTER — Standalone Worker config
+# Use this for: npx wrangler deploy
+# ============================================================
+name = "gnosis-master"
+main = "src/_worker.ts"
+compatibility_date = "2026-02-11"
+
+# ── Workers AI binding ───────────────────────────────────────
+[ai]
+binding = "AI"
+
+# ── Vectorize ────────────────────────────────────────────────
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "gnosis-master-index"
+
+# ── D1 Database ──────────────────────────────────────────────
+[[d1_databases]]
+binding = "DB"
+database_name = "divination-db"
+database_id = "25b1f304-4ab2-41c0-bf5d-a0c0b3c28c41"
+
+# ── R2 Buckets ───────────────────────────────────────────────
+[[r2_buckets]]
+binding = "MASTER_BUCKET"
+bucket_name = "master-bucket"
+
+[[r2_buckets]]
+binding = "TRINITY_EBOOKS"
+bucket_name = "trinity-universe-ebooks"
+
+[[r2_buckets]]
+binding = "YADA_BUCKET"
+bucket_name = "yada-spiritual-guide"
+
+[[r2_buckets]]
+binding = "LOBE_AGRI"
+bucket_name = "gnosis-agriculture"
+
+[[r2_buckets]]
+binding = "LOBE_ART"
+bucket_name = "gnosis-art-culture-fashion"
+
+[[r2_buckets]]
+binding = "LOBE_BIZ"
+bucket_name = "gnosis-business"
+
+[[r2_buckets]]
+binding = "LOBE_CREATE"
+bucket_name = "gnosis-creativity"
+
+[[r2_buckets]]
+binding = "LOBE_DICT"
+bucket_name = "gnosis-dictionary"
+
+[[r2_buckets]]
+binding = "LOBE_DIVINAT"
+bucket_name = "divination-library"
+
+[[r2_buckets]]
+binding = "LOBE_EDU"
+bucket_name = "gnosis-education"
+
+[[r2_buckets]]
+binding = "LOBE_GOVT"
+bucket_name = "gnosis-government"
+
+[[r2_buckets]]
+binding = "LOBE_HEALTH"
+bucket_name = "gnosis-health"
+
+[[r2_buckets]]
+binding = "LOBE_PSYCH"
+bucket_name = "gnosis-psychology"
+
+[[r2_buckets]]
+binding = "LOBE_SCI"
+bucket_name = "gnosis-science"
+
+[[r2_buckets]]
+binding = "LOBE_TECH"
+bucket_name = "gnosis-technology"
+
+[[r2_buckets]]
+binding = "LOBE_TEST"
+bucket_name = "ai-orchestrator-test-bucket"
+
+# ── KV Namespaces ─────────────────────────────────────────────
+[[kv_namespaces]]
+binding = "BOOK_STORE"
+id = "61937ec5ed4a4a9d8185b55a5c5190ba"
+
+[[kv_namespaces]]
+binding = "YADA_SESSIONS"
+id = "bf21f261457748cdb90dd7660ad73f16"
+
+[[kv_namespaces]]
+binding = "GNOSIS_SESSIONS"
+id = "f77344676aba47ef80496eaaa93135b9"

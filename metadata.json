@@ -1,0 +1,6 @@
+{
+  "name": "Trinity Universe - Gnosis AI",
+  "description": "Multi-tenant AI chat platform featuring Gnosis AI and Yada Guide",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,15 @@
+# ============================================================
+# TRINITY UNIVERSE — Frontend Worker
+# Serves the Vite static build + handles /api/chat via
+# Cloudflare Workers AI (no external API keys needed)
+# ============================================================
+name = "trinityuniverse-frontend"
+main = "src/_worker.ts"
+compatibility_date = "2026-08-01"
+
+[assets]
+directory = "./dist"
+
+# Cloudflare Workers AI binding — powers Gnosis & Yada
+[ai]
+binding = "AI"
