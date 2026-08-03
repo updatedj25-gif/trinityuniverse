@@ -5,6 +5,7 @@ import { Navbar } from './components/Navbar';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
+import { LibraryPage } from './components/LibraryPage';
 import { SignInModal } from './components/SignInModal';
 import { TenantModal } from './components/TenantModal';
 
@@ -16,6 +17,9 @@ export const App: React.FC = () => {
   });
 
   const [activeTenantId, setActiveTenantId] = useState<string>('gnosis');
+
+  // View state: 'chat' or 'library'
+  const [currentView, setCurrentView] = useState<'chat' | 'library'>('chat');
 
   // 2. Chat Sessions State
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
@@ -81,6 +85,7 @@ export const App: React.FC = () => {
   // Handlers
   const handleSelectTenant = (tenantId: string) => {
     setActiveTenantId(tenantId);
+    setCurrentView('chat');
     // If the selected tenant does not have a saved session ID, pick the most recent session for that tenant or null
     if (!activeSessionMap[tenantId]) {
       const tenantSessions = sessions.filter((s) => s.tenantId === tenantId);
@@ -92,6 +97,7 @@ export const App: React.FC = () => {
   };
 
   const handleSelectSession = (sessionId: string) => {
+    setCurrentView('chat');
     setActiveSessionMap((prev) => ({
       ...prev,
       [activeTenantId]: sessionId,
@@ -99,6 +105,7 @@ export const App: React.FC = () => {
   };
 
   const handleNewSession = () => {
+    setCurrentView('chat');
     setActiveSessionMap((prev) => ({
       ...prev,
       [activeTenantId]: null,
@@ -276,7 +283,7 @@ export const App: React.FC = () => {
         onSignOut={() => setUser({ name: 'Guest User', signedIn: false })}
       />
 
-      {/* Main Workspace Layout (Sidebar + Chat Area) */}
+      {/* Main Workspace Layout (Sidebar + Chat Area / Library Page) */}
       <div className="flex-1 flex overflow-hidden relative">
         <Sidebar
           tenant={currentTenant}
@@ -284,6 +291,7 @@ export const App: React.FC = () => {
           activeSessionId={activeSessionId}
           onSelectSession={handleSelectSession}
           onNewSession={handleNewSession}
+          onOpenLibrary={() => setCurrentView('library')}
           onClearHistory={handleClearHistory}
           onDeleteSession={handleDeleteSession}
           user={user}
@@ -292,18 +300,27 @@ export const App: React.FC = () => {
         />
 
         <div className="flex-1 flex flex-col h-full min-w-0">
-          <Header
-            tenant={currentTenant}
-            onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
-            onNewChat={handleNewSession}
-          />
+          {currentView === 'library' ? (
+            <LibraryPage
+              onGoHome={() => setCurrentView('chat')}
+              onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+            />
+          ) : (
+            <>
+              <Header
+                tenant={currentTenant}
+                onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+                onNewChat={handleNewSession}
+              />
 
-          <ChatArea
-            tenant={currentTenant}
-            messages={currentMessages}
-            onSendMessage={handleSendMessage}
-            isLoading={isLoading}
-          />
+              <ChatArea
+                tenant={currentTenant}
+                messages={currentMessages}
+                onSendMessage={handleSendMessage}
+                isLoading={isLoading}
+              />
+            </>
+          )}
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tenant, ChatSession, UserProfile } from '../types';
-import { Plus, Trash2, User, MessageSquare, X } from 'lucide-react';
+import { Plus, Trash2, User, MessageSquare, X, BookOpen } from 'lucide-react';
 
 interface SidebarProps {
   tenant: Tenant;
@@ -8,6 +8,7 @@ interface SidebarProps {
   activeSessionId: string | null;
   onSelectSession: (sessionId: string) => void;
   onNewSession: () => void;
+  onOpenLibrary: () => void;
   onClearHistory: () => void;
   onDeleteSession: (sessionId: string) => void;
   user: UserProfile;
@@ -21,6 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeSessionId,
   onSelectSession,
   onNewSession,
+  onOpenLibrary,
   onClearHistory,
   onDeleteSession,
   user,
@@ -75,6 +77,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Action Buttons */}
           <div className="space-y-2 mb-4">
+            {/* Ebook Library Button (Ahead of New Chat) */}
+            <button
+              onClick={() => {
+                onOpenLibrary();
+                onCloseMobile();
+              }}
+              className={`w-full py-2.5 px-4 rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-2xs border transition-all cursor-pointer ${
+                tenant.id === 'yada'
+                  ? 'bg-[#FFF9F2] text-[#A36224] border-[#F3E3D1] hover:bg-[#FAF0E4]'
+                  : 'bg-white text-slate-800 border-stone-200 hover:bg-stone-50 hover:border-stone-300'
+              }`}
+            >
+              <BookOpen className="w-4 h-4 text-[#A36224]" />
+              <span>Ebook Library</span>
+            </button>
+
             {/* New Chat / Consultation Button */}
             <button
               onClick={() => {
