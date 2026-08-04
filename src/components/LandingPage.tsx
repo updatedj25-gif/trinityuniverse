@@ -565,11 +565,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               onClick={() => !isActive && goToSlide(i)}
               style={{
                 position: 'absolute',
-                width: 'min(88%, 350px)',
-                height: '84%',
-                maxHeight: '310px',
+                width: 'min(82%, 340px)',
+                height: '82%',
+                maxHeight: '275px',
                 left: '50%',
-                top: '48%',
+                top: '46%',
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,
                 opacity,
                 filter: blur > 0 ? `blur(${blur}px)` : 'none',
@@ -577,15 +577,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                   'transform 0.55s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.55s ease, filter 0.55s ease',
                 zIndex,
                 cursor: isActive ? 'default' : 'pointer',
-                borderRadius: '18px',
+                borderRadius: '16px',
                 background: card.bgGradient,
                 border: isActive
                   ? `1px solid ${card.accentColor}60`
                   : '1px solid rgba(255, 255, 255, 0.12)',
                 boxShadow: isActive
-                  ? `0 16px 40px rgba(15, 23, 42, 0.35), 0 0 25px ${card.accentColor}30`
+                  ? `0 14px 36px rgba(15, 23, 42, 0.35), 0 0 20px ${card.accentColor}30`
                   : '0 8px 20px rgba(0, 0, 0, 0.2)',
-                padding: '12px 14px',
+                padding: '10px 12px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -672,30 +672,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* ── Dot Indicators ── */}
-      <div className="flex items-center justify-center gap-1.5 mt-1 mb-2 z-10 shrink-0">
-        {GNOSIS_CARDS.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goToSlide(i)}
-            className="cursor-pointer transition-all duration-300 p-1"
-            title={`Slide ${i + 1}`}
-          >
-            <div
-              style={{
-                width: i === activeSlide ? '22px' : '6px',
-                height: '6px',
-                borderRadius: '999px',
-                background:
-                  i === activeSlide
-                    ? GNOSIS_CARDS[i].accentColor
-                    : 'rgba(0, 0, 0, 0.2)',
-              }}
-            />
-          </button>
-        ))}
       </div>
 
       {/* ── Primary Action Call-to-Action ── */}
