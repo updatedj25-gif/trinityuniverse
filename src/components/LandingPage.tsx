@@ -10,7 +10,7 @@ export interface GnosisCard {
   badge: string;
   title: string;
   promptText: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   bgGradient: string;
   accentColor: string;
   chatUserMsg: string;
@@ -520,10 +520,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
             TRINITY UNIVERSE
           </span>
         </div>
-
-        <div className="text-[11px] sm:text-xs font-semibold text-slate-600 bg-white/80 border border-slate-200 px-3.5 py-1.5 rounded-full shadow-sm backdrop-blur-md hidden sm:block">
-          Trinity Universe • 18 Interactive AI & Guide Models
-        </div>
       </header>
 
       {/* ── Subtitle Header (Sitting right ahead of slider cards) ── */}
@@ -614,14 +610,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                   {card.title}
                 </h3>
 
-                {/* Simulated AI Chat Response Display (reveals smoothly after prompt finishes typing) */}
+                {/* Simulated AI Chat Response Display (reveals smoothly ONLY after prompt finishes typing) */}
                 <div
                   className={`bg-slate-950/75 border border-white/10 rounded-xl p-2 sm:p-2.5 text-[10px] sm:text-[11px] text-slate-300 space-y-1 sm:space-y-1.5 backdrop-blur-sm transition-all duration-500 overflow-hidden ${
                     isActive && showAnswer
-                      ? 'opacity-100 translate-y-0'
-                      : isActive
-                      ? 'opacity-30 translate-y-1'
-                      : 'opacity-90 translate-y-0'
+                      ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
+                      : 'opacity-0 translate-y-3 scale-95 pointer-events-none'
                   }`}
                 >
                   <div className="flex items-center gap-1.5 font-semibold text-white">
