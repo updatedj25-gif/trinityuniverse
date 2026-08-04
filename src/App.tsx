@@ -271,14 +271,16 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#FAF7F2] font-sans text-slate-800">
-      {/* Top Navbar */}
+    <div className="h-dvh w-screen flex flex-col overflow-hidden bg-[#FAF7F2] font-sans text-slate-800">
+      {/* Top Navbar — fixed so it never scrolls on any screen size */}
       <Navbar
         tenants={tenants}
         activeTenantId={activeTenantId}
         onSelectTenant={handleSelectTenant}
         onOpenAddTenant={() => setTenantModalOpen(true)}
       />
+      {/* Spacer matching the fixed navbar height */}
+      <div className="h-[46px] shrink-0" />
 
       {/* Main Workspace Layout (Sidebar + Chat Area / Library Page) */}
       <div className="flex-1 flex overflow-hidden relative">

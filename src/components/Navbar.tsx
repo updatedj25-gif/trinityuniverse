@@ -18,7 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAddTenant,
 }) => {
   return (
-    <nav className="w-full bg-[#FAF7F2] border-b border-stone-200/60 px-3 sm:px-4 py-2 flex items-center justify-between z-30 sticky top-0 select-none gap-2">
+    <nav className="w-full bg-[#FAF7F2] border-b border-stone-200/60 px-3 sm:px-4 py-2 flex items-center justify-between z-50 fixed top-0 left-0 right-0 select-none gap-2">
       {/* Left side: Trinity Universe Logo */}
       <div className="flex items-center gap-1.5 shrink-0">
         <img
