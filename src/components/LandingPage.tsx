@@ -337,8 +337,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
         </div>
       </header>
 
-      {/* ── Subtitle Header (Moved down with generous spacing) ── */}
-      <div className="text-center px-4 mt-2 mb-4 sm:mb-6 z-10 relative shrink-0">
+      {/* ── Subtitle Header (Moved down away from top bar, sitting right ahead of slider cards) ── */}
+      <div className="text-center px-4 mt-6 sm:mt-10 mb-2 sm:mb-3 z-10 relative shrink-0">
         <p className="text-xs sm:text-sm font-medium text-slate-600 tracking-wide max-w-xl mx-auto">
           Explore multi-agent reasoning, deep research, and real-time synthesis.
         </p>
@@ -409,12 +409,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               {/* Card Header Bar */}
               <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2.5 mb-2 shrink-0">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div
-                    className="p-1.5 rounded-lg bg-white/10 backdrop-blur-md shrink-0"
-                    style={{ color: card.accentColor }}
-                  >
-                    {card.icon}
-                  </div>
                   <span className="text-[10.5px] font-semibold text-slate-200 tracking-wider truncate">
                     {card.badge}
                   </span>
@@ -474,12 +468,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                 </div>
               </div>
 
-              {/* Card Footer accent glow */}
-              <div className="pt-1.5 flex items-center justify-between text-[9.5px] text-slate-400 shrink-0 border-t border-white/10 mt-1.5">
-                <span className="flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" style={{ color: card.accentColor }} />
-                  Gnosis Engine v3.6
-                </span>
+              {/* Card Footer accent status */}
+              <div className="pt-1.5 flex items-center justify-end text-[9.5px] text-slate-400 shrink-0 border-t border-white/10 mt-1.5">
                 <span className="text-slate-400 font-mono">
                   {showAnswer ? '0.04s response' : 'Synthesizing...'}
                 </span>
