@@ -127,7 +127,7 @@ export default {
       // Store state in KV for 10 minutes to verify on callback (CSRF protection)
       await env.GNOSIS_SESSIONS.put(`oauth_state:${state}`, '1', { expirationTtl: 600 });
 
-      const redirectUri = `${url.origin}/auth/google/callback`;
+      const redirectUri = `https://www.trinityuniverse.org/auth/google/callback`;
       const params = new URLSearchParams({
         client_id: env.GOOGLE_CLIENT_ID,
         redirect_uri: redirectUri,
@@ -167,7 +167,7 @@ export default {
       await env.GNOSIS_SESSIONS.delete(`oauth_state:${state}`);
 
       // Exchange authorization code for tokens
-      const redirectUri = `${url.origin}/auth/google/callback`;
+      const redirectUri = `https://www.trinityuniverse.org/auth/google/callback`;
       let tokenData: {
         access_token?: string;
         id_token?: string;
