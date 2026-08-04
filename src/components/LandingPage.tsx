@@ -294,28 +294,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-[#0c1322] via-[#14213d] to-[#0a1120] text-slate-100 overflow-hidden select-none font-sans">
-      {/* Background bright morning sky ambient lighting & warmth */}
+    <div className="fixed inset-0 flex flex-col bg-[#FAF7F2] text-slate-800 overflow-hidden select-none font-sans">
+      {/* Background bright morning sky ambient lighting & soft warm glows */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Morning sunrise warm glow */}
+        {/* Morning sunrise warm amber glow */}
         <div
-          className="absolute top-[-20%] left-[10%] w-[800px] h-[800px] bg-amber-400/15 rounded-full blur-[160px] animate-pulse"
-          style={{ animationDuration: '9s' }}
+          className="absolute top-[-15%] left-[10%] w-[600px] h-[600px] bg-amber-200/40 rounded-full blur-[140px]"
         />
         {/* Morning fresh sky blue aura */}
         <div
-          className="absolute top-[-10%] right-[5%] w-[750px] h-[750px] bg-sky-400/20 rounded-full blur-[150px] animate-pulse"
-          style={{ animationDuration: '11s' }}
+          className="absolute top-[-10%] right-[5%] w-[650px] h-[650px] bg-sky-200/50 rounded-full blur-[150px]"
         />
-        {/* Soft dawn purple accent in center bottom */}
-        <div className="absolute bottom-[-10%] left-[30%] w-[650px] h-[650px] bg-indigo-500/15 rounded-full blur-[170px]" />
+        {/* Soft dawn rose/lavender glow */}
+        <div className="absolute bottom-[-10%] left-[25%] w-[500px] h-[500px] bg-indigo-100/60 rounded-full blur-[140px]" />
 
         {/* Subtle grid mesh pattern */}
         <div
-          className="absolute inset-0 opacity-[0.05]"
+          className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage:
-              'radial-gradient(rgba(255, 255, 255, 0.6) 1px, transparent 1px)',
+              'radial-gradient(rgba(0, 0, 0, 0.4) 1px, transparent 1px)',
             backgroundSize: '28px 28px',
           }}
         />
@@ -329,26 +327,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
             alt="Trinity Universe"
             className="w-7 h-7 object-contain animate-breathe"
           />
-          <span className="text-xs font-bold tracking-[0.2em] text-slate-200 uppercase">
+          <span className="text-xs font-bold tracking-[0.2em] text-slate-800 uppercase">
             TRINITY UNIVERSE
           </span>
         </div>
 
-        <div className="text-[11px] text-slate-400 bg-slate-900/80 border border-slate-800 px-3 py-1 rounded-full backdrop-blur-md hidden sm:block">
+        <div className="text-[11px] font-medium text-slate-600 bg-white/80 border border-slate-200 px-3.5 py-1 rounded-full shadow-sm backdrop-blur-md hidden sm:block">
           Gnosis AI Studio • 9 Interactive Models
         </div>
       </header>
 
-      {/* ── Subtitle Header ── */}
-      <div className="text-center px-4 mt-1 mb-2 z-10 relative shrink-0">
-        <p className="text-xs sm:text-sm text-slate-400 tracking-wide max-w-xl mx-auto">
+      {/* ── Subtitle Header (Moved down with generous spacing) ── */}
+      <div className="text-center px-4 mt-2 mb-4 sm:mb-6 z-10 relative shrink-0">
+        <p className="text-xs sm:text-sm font-medium text-slate-600 tracking-wide max-w-xl mx-auto">
           Explore multi-agent reasoning, deep research, and real-time synthesis.
         </p>
       </div>
 
-      {/* ── Slider Motion Section with 9 Gnosis AI Cards ── */}
+      {/* ── Slider Motion Section with 9 Gnosis AI Cards (Stepped down) ── */}
       <div
-        className="relative w-full flex-1 min-h-[350px] max-h-[470px] my-auto flex items-center justify-center overflow-hidden z-10"
+        className="relative w-full flex-1 min-h-[310px] max-h-[430px] my-auto flex items-center justify-center overflow-hidden z-10"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -369,9 +367,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
           else if (d === 2) stepX = 105;
           else if (d === -2) stepX = -105;
 
-          const scale = isActive ? 1 : Math.abs(d) === 1 ? 0.84 : 0.72;
-          const opacity = isActive ? 1 : Math.abs(d) === 1 ? 0.55 : 0.22;
-          const blur = isActive ? 0 : Math.abs(d) === 1 ? 5 : 10;
+          const scale = isActive ? 1 : Math.abs(d) === 1 ? 0.82 : 0.68;
+          const opacity = isActive ? 1 : Math.abs(d) === 1 ? 0.6 : 0.25;
+          const blur = isActive ? 0 : Math.abs(d) === 1 ? 4 : 8;
           const zIndex = isActive ? 10 : 5 - Math.abs(d);
 
           return (
@@ -380,11 +378,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               onClick={() => !isActive && goToSlide(i)}
               style={{
                 position: 'absolute',
-                width: 'min(86%, 460px)',
-                height: '86%',
-                maxHeight: '380px',
+                width: 'min(88%, 380px)',
+                height: '84%',
+                maxHeight: '340px',
                 left: '50%',
-                top: '46%',
+                top: '48%',
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,
                 opacity,
                 filter: blur > 0 ? `blur(${blur}px)` : 'none',
@@ -392,15 +390,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                   'transform 0.55s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.55s ease, filter 0.55s ease',
                 zIndex,
                 cursor: isActive ? 'default' : 'pointer',
-                borderRadius: '24px',
+                borderRadius: '20px',
                 background: card.bgGradient,
                 border: isActive
-                  ? `1px solid ${card.accentColor}50`
-                  : '1px solid rgba(255, 255, 255, 0.08)',
+                  ? `1px solid ${card.accentColor}60`
+                  : '1px solid rgba(255, 255, 255, 0.12)',
                 boxShadow: isActive
-                  ? `0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px ${card.accentColor}25`
-                  : '0 10px 30px rgba(0, 0, 0, 0.4)',
-                padding: '20px 22px',
+                  ? `0 20px 45px rgba(15, 23, 42, 0.35), 0 0 25px ${card.accentColor}30`
+                  : '0 10px 25px rgba(0, 0, 0, 0.2)',
+                padding: '16px 18px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -409,33 +407,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               className="group select-none"
             >
               {/* Card Header Bar */}
-              <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-3 mb-3 shrink-0">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2.5 mb-2 shrink-0">
+                <div className="flex items-center gap-2 min-w-0">
                   <div
-                    className="p-1.5 rounded-lg bg-white/10 backdrop-blur-md"
+                    className="p-1.5 rounded-lg bg-white/10 backdrop-blur-md shrink-0"
                     style={{ color: card.accentColor }}
                   >
                     {card.icon}
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-200 tracking-wider">
+                  <span className="text-[10.5px] font-semibold text-slate-200 tracking-wider truncate">
                     {card.badge}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[10px] text-slate-400 font-mono">LIVE</span>
+                  <span className="text-[9.5px] text-slate-300 font-mono">LIVE</span>
                 </div>
               </div>
 
               {/* Card Content Area (Simulated AI Response Box) */}
-              <div className="flex-1 overflow-hidden flex flex-col justify-start space-y-2.5">
-                <h3 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
+              <div className="flex-1 overflow-hidden flex flex-col justify-start space-y-2">
+                <h3 className="text-sm sm:text-base font-bold text-white tracking-tight leading-snug truncate">
                   {card.title}
                 </h3>
 
                 {/* Simulated AI Chat Response Display (reveals smoothly after prompt finishes typing) */}
                 <div
-                  className={`bg-slate-950/70 border border-white/10 rounded-xl p-3 text-xs text-slate-300 space-y-2 backdrop-blur-sm transition-all duration-500 ${
+                  className={`bg-slate-950/75 border border-white/10 rounded-xl p-2.5 text-[11px] text-slate-300 space-y-1.5 backdrop-blur-sm transition-all duration-500 overflow-hidden ${
                     isActive && showAnswer
                       ? 'opacity-100 translate-y-0'
                       : isActive
@@ -443,32 +441,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                       : 'opacity-90 translate-y-0'
                   }`}
                 >
-                  <div className="flex items-center gap-2 font-semibold text-white">
+                  <div className="flex items-center gap-1.5 font-semibold text-white">
                     <span
-                      className="w-1.5 h-1.5 rounded-full"
+                      className="w-1.5 h-1.5 rounded-full shrink-0"
                       style={{ backgroundColor: card.accentColor }}
                     />
-                    <span>{card.chatAiResponse.heading}</span>
+                    <span className="truncate">{card.chatAiResponse.heading}</span>
                   </div>
 
-                  <p className="text-slate-300/90 text-[11px] leading-relaxed">
+                  <p className="text-slate-300/90 text-[10.5px] leading-relaxed line-clamp-2">
                     {card.chatAiResponse.body}
                   </p>
 
                   {/* Code snippet if available */}
                   {card.chatAiResponse.codeSnippet && (
-                    <pre className="bg-black/60 border border-slate-800 text-[10px] text-sky-300 p-2 rounded-lg font-mono overflow-x-auto whitespace-pre-wrap">
+                    <pre className="bg-black/70 border border-slate-800 text-[9.5px] text-sky-300 p-1.5 rounded-lg font-mono overflow-x-auto whitespace-pre-wrap leading-tight max-h-[50px]">
                       {card.chatAiResponse.codeSnippet}
                     </pre>
                   )}
 
                   {/* Bullet insights if available */}
                   {card.chatAiResponse.bullets && (
-                    <ul className="space-y-1 pl-1">
-                      {card.chatAiResponse.bullets.map((b, idx) => (
-                        <li key={idx} className="flex items-start gap-1.5 text-[10.5px] text-slate-300">
-                          <span className="text-sky-400 mt-0.5">•</span>
-                          <span>{b}</span>
+                    <ul className="space-y-0.5 pl-0.5">
+                      {card.chatAiResponse.bullets.slice(0, 2).map((b, idx) => (
+                        <li key={idx} className="flex items-start gap-1 text-[10px] text-slate-300 truncate">
+                          <span className="text-sky-400">•</span>
+                          <span className="truncate">{b}</span>
                         </li>
                       ))}
                     </ul>
@@ -477,12 +475,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               </div>
 
               {/* Card Footer accent glow */}
-              <div className="pt-2 flex items-center justify-between text-[10px] text-slate-400 shrink-0 border-t border-white/5 mt-2">
+              <div className="pt-1.5 flex items-center justify-between text-[9.5px] text-slate-400 shrink-0 border-t border-white/10 mt-1.5">
                 <span className="flex items-center gap-1">
                   <Sparkles className="w-3 h-3" style={{ color: card.accentColor }} />
                   Gnosis Engine v3.6
                 </span>
-                <span className="text-slate-500 font-mono">
+                <span className="text-slate-400 font-mono">
                   {showAnswer ? '0.04s response' : 'Synthesizing...'}
                 </span>
               </div>
@@ -490,12 +488,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
           );
         })}
 
-        {/* ── Stationary Floating Input Box (Extended down by one line for 2-line capacity) ── */}
-        <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-xl z-30 pointer-events-auto">
-          <div className="bg-slate-900/95 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-3 sm:p-3.5 shadow-2xl backdrop-blur-xl flex items-start justify-between gap-3 transition-all min-h-[64px]">
-            <div className="flex items-start gap-2.5 flex-1 min-w-0 pt-0.5">
-              <Sparkles className="w-4 h-4 text-sky-400 shrink-0 animate-pulse mt-1" />
-              <div className="flex-1 min-w-0 text-xs sm:text-sm text-slate-200 font-mono leading-relaxed line-clamp-2 min-h-[38px] sm:min-h-[42px]">
+        {/* ── Stationary Floating Input Box (2-line capacity for mobile & desktop) ── */}
+        <div className="absolute bottom-1 sm:bottom-3 left-1/2 -translate-x-1/2 w-[90%] max-w-lg z-30 pointer-events-auto">
+          <div className="bg-slate-900/90 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-2.5 sm:p-3 shadow-xl backdrop-blur-xl flex items-start justify-between gap-2.5 transition-all min-h-[58px]">
+            <div className="flex items-start gap-2 flex-1 min-w-0 pt-0.5">
+              <Sparkles className="w-3.5 h-3.5 text-sky-400 shrink-0 animate-pulse mt-0.5" />
+              <div className="flex-1 min-w-0 text-xs text-slate-200 font-mono leading-relaxed line-clamp-2 min-h-[34px]">
                 <span>{typedText}</span>
                 <span
                   className={`inline-block w-1.5 h-3.5 ml-0.5 bg-sky-400 align-middle ${
@@ -509,7 +507,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
       </div>
 
       {/* ── Dot Indicators ── */}
-      <div className="flex items-center justify-center gap-1.5 mt-2 mb-1 z-10 shrink-0">
+      <div className="flex items-center justify-center gap-1.5 mt-1 mb-2 z-10 shrink-0">
         {GNOSIS_CARDS.map((_, i) => (
           <button
             key={i}
@@ -525,7 +523,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                 background:
                   i === activeSlide
                     ? GNOSIS_CARDS[i].accentColor
-                    : 'rgba(255, 255, 255, 0.2)',
+                    : 'rgba(0, 0, 0, 0.2)',
               }}
             />
           </button>
@@ -533,11 +531,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
       </div>
 
       {/* ── Primary Action Call-to-Action ── */}
-      <div className="flex flex-col items-center gap-2 px-6 mb-4 mt-2 z-10 relative shrink-0">
+      <div className="flex flex-col items-center gap-2 px-6 mb-5 mt-1 z-10 relative shrink-0">
         {/* Google Sign In Button */}
         <button
           onClick={handleGoogleSignIn}
-          className="w-full max-w-sm py-3 px-5 bg-white hover:bg-slate-100 text-slate-900 rounded-2xl font-bold text-sm flex items-center justify-center gap-3 shadow-xl transition-all cursor-pointer active:scale-[0.98]"
+          className="w-full max-w-sm py-3 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all cursor-pointer active:scale-[0.98]"
         >
           {GOOGLE_SVG}
           <span>Continue with Google</span>
@@ -546,7 +544,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
         {/* Guest access option */}
         <button
           onClick={handleGuestEntry}
-          className="text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer underline underline-offset-2 py-1"
+          className="text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors cursor-pointer underline underline-offset-2 py-0.5"
         >
           Continue as guest
         </button>
