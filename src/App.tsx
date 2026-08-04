@@ -6,6 +6,7 @@ import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { LibraryPage } from './components/LibraryPage';
+import { LandingPage } from './components/LandingPage';
 import { SignInModal } from './components/SignInModal';
 import { TenantModal } from './components/TenantModal';
 
@@ -20,6 +21,22 @@ export const App: React.FC = () => {
 
   // View state: 'chat' or 'library'
   const [currentView, setCurrentView] = useState<'chat' | 'library'>('chat');
+
+  // Landing page — show unless user has previously signed in / dismissed
+  const [showLanding, setShowLanding] = useState<boolean>(() => {
+    const dismissed = localStorage.getItem('trinity_landing_dismissed');
+    const userProfile = localStorage.getItem('trinity_user_profile');
+    if (dismissed === 'true') return false;
+    if (userProfile) {
+      try {
+        const parsed = JSON.parse(userProfile);
+        if (parsed.signedIn) return false;
+      } catch {
+        // ignore
+      }
+    }
+    return true;
+  });
 
   // 2. Chat Sessions State
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
@@ -82,11 +99,20 @@ export const App: React.FC = () => {
 
   const currentMessages = activeSession ? activeSession.messages : [];
 
+  // ── Landing page sign-in handler ─────────────────────────────────────────
+  const handleLandingSignIn = (profile: UserProfile) => {
+    setUser(profile);
+    setActiveTenantId('gnosis');
+    setCurrentView('chat');
+    setShowLanding(false);
+    localStorage.setItem('trinity_landing_dismissed', 'true');
+    localStorage.setItem('trinity_user_profile', JSON.stringify(profile));
+  };
+
   // Handlers
   const handleSelectTenant = (tenantId: string) => {
     setActiveTenantId(tenantId);
     setCurrentView('chat');
-    // If the selected tenant does not have a saved session ID, pick the most recent session for that tenant or null
     if (!activeSessionMap[tenantId]) {
       const tenantSessions = sessions.filter((s) => s.tenantId === tenantId);
       setActiveSessionMap((prev) => ({
@@ -165,7 +191,6 @@ export const App: React.FC = () => {
       attachments,
     };
 
-    // Find target session or create a new isolated session for currentTenant
     let targetSession = updatedSessions.find((s) => s.id === sessionId && s.tenantId === currentTenant.id);
 
     if (!targetSession) {
@@ -205,7 +230,6 @@ export const App: React.FC = () => {
         ? currentTenant.visionModel || '@cf/meta/llama-3.2-11b-vision-instruct'
         : currentTenant.primaryModel || '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
-      // Call Cloudflare AI route
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -269,6 +293,11 @@ export const App: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  // ── Landing page ─────────────────────────────────────────────────────────
+  if (showLanding) {
+    return <LandingPage onSignIn={handleLandingSignIn} />;
+  }
 
   return (
     <div className="h-dvh w-screen flex flex-col overflow-hidden bg-[#FAF7F2] font-sans text-slate-800">
