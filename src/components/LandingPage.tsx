@@ -24,6 +24,7 @@ export interface GnosisCard {
 }
 
 export const GNOSIS_CARDS: GnosisCard[] = [
+  // 1. Gnosis 1
   {
     id: 'fullstack-arch',
     badge: 'Gnosis AI • Code Architecture',
@@ -44,6 +45,27 @@ export const GNOSIS_CARDS: GnosisCard[] = [
       ],
     },
   },
+  // 2. Yada 1
+  {
+    id: 'tarot-archetypes',
+    badge: '✦ Yada Guide • Archetypal Tarot',
+    title: 'Tarot Spread & Archetypal Guidance',
+    promptText: 'Draw a 3-card spread exploring current life transitions and hidden opportunities',
+    icon: <Sparkles className="w-4 h-4 text-amber-400" />,
+    bgGradient: 'radial-gradient(ellipse at top left, #78350f 0%, #451a03 70%, #020617 100%)',
+    accentColor: '#f59e0b',
+    chatUserMsg: 'Draw a 3-card spread exploring current life transitions and hidden opportunities',
+    chatAiResponse: {
+      heading: 'The Star, The Chariot & The High Priestess',
+      body: 'Your journey reveals a transition from deep internal reflection toward bold creative action:',
+      bullets: [
+        'The Star (Past): Renewed hope & spiritual clarity guiding your foundation',
+        'The Chariot (Present): Harnessing opposing forces with focused momentum',
+        'High Priestess (Future): Trusting intuitive wisdom over outer noise',
+      ],
+    },
+  },
+  // 3. Gnosis 2
   {
     id: 'market-intel',
     badge: 'Gnosis AI • Deep Research',
@@ -63,13 +85,34 @@ export const GNOSIS_CARDS: GnosisCard[] = [
       ],
     },
   },
+  // 4. Yada 2
+  {
+    id: 'astrology-transits',
+    badge: '✦ Yada Guide • Celestial Astrology',
+    title: 'Astrology & Natal Transit Reading',
+    promptText: 'Analyze the upcoming Saturn-Neptune alignment for personal growth and alignment',
+    icon: <Sparkles className="w-4 h-4 text-purple-400" />,
+    bgGradient: 'radial-gradient(ellipse at top left, #581c87 0%, #3b0764 70%, #020617 100%)',
+    accentColor: '#d8b4fe',
+    chatUserMsg: 'Analyze the upcoming Saturn-Neptune alignment for personal growth and alignment',
+    chatAiResponse: {
+      heading: 'Bridging Dreams (Neptune) with Structure (Saturn)',
+      body: 'This rare cosmic transit invites grounding spiritual visions into tangible real-world creations:',
+      bullets: [
+        'Saturn demands disciplined practice and clear boundaries',
+        'Neptune dissolves outdated illusions to unlock creative inspiration',
+        'Focus on building sustainable habits for long-term vision',
+      ],
+    },
+  },
+  // 5. Gnosis 3
   {
     id: 'philosophical-synthesis',
     badge: 'Gnosis AI • Philosophy',
     title: 'Epistemological Synthesis',
     promptText: 'Explain constructivist epistemology and its implications on synthetic minds',
     icon: <Brain className="w-4 h-4 text-purple-400" />,
-    bgGradient: 'radial-gradient(ellipse at top left, #581c87 0%, #3b0764 70%, #020617 100%)',
+    bgGradient: 'radial-gradient(ellipse at top left, #4c1d95 0%, #2e1065 70%, #020617 100%)',
     accentColor: '#c084fc',
     chatUserMsg: 'Explain constructivist epistemology and its implications on synthetic minds',
     chatAiResponse: {
@@ -82,6 +125,27 @@ export const GNOSIS_CARDS: GnosisCard[] = [
       ],
     },
   },
+  // 6. Yada 3
+  {
+    id: 'somatic-meditation',
+    badge: '✦ Yada Guide • Mindfulness & Breathwork',
+    title: 'Somatic Breathwork & Calm Engine',
+    promptText: 'Guide me through a 5-minute grounding breathwork session for anxiety relief',
+    icon: <Sparkles className="w-4 h-4 text-emerald-400" />,
+    bgGradient: 'radial-gradient(ellipse at top left, #064e3b 0%, #022c22 70%, #020617 100%)',
+    accentColor: '#6ee7b7',
+    chatUserMsg: 'Guide me through a 5-minute grounding breathwork session for anxiety relief',
+    chatAiResponse: {
+      heading: 'Box Breathing Cadence (4-4-4-4)',
+      body: 'Inhale peace for 4s • Hold in stillness for 4s • Exhale tension for 4s • Rest in clarity for 4s',
+      bullets: [
+        'Calms parasympathetic nervous system within 90 seconds',
+        'Lowers physiological stress responses & mental chatter',
+        'Restores center of presence and somatic calm',
+      ],
+    },
+  },
+  // 7. Gnosis 4
   {
     id: 'code-debug',
     badge: 'Gnosis AI • Debugging Engine',
@@ -94,10 +158,31 @@ export const GNOSIS_CARDS: GnosisCard[] = [
     chatAiResponse: {
       heading: 'Optimistic Concurrency Control Applied',
       body: 'Identified dirty read during state propagation across nodes:',
-      codeSnippet: '// Implemented Vector Clock guard\nif (incomingClock.isConcurrent(localClock)) {\n  return resolveCRDTConflict(localState, incomingState);\n}',
+      codeSnippet: '// Vector Clock guard implementation\nif (incomingClock.isConcurrent(localClock)) {\n  return resolveCRDTConflict(localState, incomingState);\n}',
       bullets: ['Applied State-based CRDTs for seamless convergence', 'Eliminated mutex lock bottlenecks'],
     },
   },
+  // 8. Yada 4
+  {
+    id: 'stoic-wisdom',
+    badge: '✦ Yada Guide • Ancient Philosophy',
+    title: 'Stoic Wisdom & Inner Resilience',
+    promptText: 'How can Marcus Aurelius teachings on control bring clarity to modern burnout?',
+    icon: <Sparkles className="w-4 h-4 text-amber-300" />,
+    bgGradient: 'radial-gradient(ellipse at top left, #854d0e 0%, #3f2305 70%, #020617 100%)',
+    accentColor: '#fde047',
+    chatUserMsg: 'How can Marcus Aurelius teachings on control bring clarity to modern burnout?',
+    chatAiResponse: {
+      heading: 'Dichotomy of Control & Inner Citadel',
+      body: '"You have power over your mind - not outside events. Realize this, and you will find strength."',
+      bullets: [
+        'Focus strictly on effort, reaction, and personal integrity',
+        'Release attachment to external outcomes & perceived expectations',
+        'Cultivate inner quietude amidst daily chaos',
+      ],
+    },
+  },
+  // 9. Gnosis 5
   {
     id: 'creative-prose',
     badge: 'Gnosis AI • Creative Thought',
@@ -112,6 +197,27 @@ export const GNOSIS_CARDS: GnosisCard[] = [
       body: '"A trillion mirrors caught the solar flare simultaneously, igniting the dark void in an orchestrated aurora of golden energy. Below us, the habitat ring hummed with three billion lives, shielded beneath blue vector plasma..."',
     },
   },
+  // 10. Yada 5
+  {
+    id: 'dream-symbolism',
+    badge: '✦ Yada Guide • Dream Wisdom',
+    title: 'Symbolic Dream Interpretation',
+    promptText: 'Interpret a recurring dream about walking through water-filled ancient corridors',
+    icon: <Sparkles className="w-4 h-4 text-indigo-300" />,
+    bgGradient: 'radial-gradient(ellipse at top left, #1e1b4b 0%, #0f172a 70%, #020617 100%)',
+    accentColor: '#818cf8',
+    chatUserMsg: 'Interpret a recurring dream about walking through water-filled ancient corridors',
+    chatAiResponse: {
+      heading: 'Navigating the Subconscious Waters',
+      body: 'Water represents emotional depth and intuition, while ancient corridors represent innate wisdom:',
+      bullets: [
+        'Submerged pathways signal unprocessed emotional shifts longing for expression',
+        'Ancient stone pillars reflect enduring personal resilience',
+        'Encourages navigating unfamiliar feelings with curiosity and grace',
+      ],
+    },
+  },
+  // 11. Gnosis 6
   {
     id: 'strategic-growth',
     badge: 'Gnosis AI • Business Strategy',
@@ -131,6 +237,27 @@ export const GNOSIS_CARDS: GnosisCard[] = [
       ],
     },
   },
+  // 12. Yada 6
+  {
+    id: 'shadow-work',
+    badge: '✦ Yada Guide • Shadow Integration',
+    title: 'Emotional Alchemy & Healing',
+    promptText: 'How do I recognize and gently integrate unacknowledged parts of myself?',
+    icon: <Sparkles className="w-4 h-4 text-rose-300" />,
+    bgGradient: 'radial-gradient(ellipse at top left, #831843 0%, #4c0519 70%, #020617 100%)',
+    accentColor: '#fda4af',
+    chatUserMsg: 'How do I recognize and gently integrate unacknowledged parts of myself?',
+    chatAiResponse: {
+      heading: 'Transforming Disowned Aspects into Strength',
+      body: 'Shadow work transforms hidden resistance into wholeness by bringing compassionate awareness:',
+      bullets: [
+        'Notice strong emotional triggers as mirrors of unmet needs',
+        'Replace self-judgment with warm, non-evaluative curiosity',
+        'Reclaim repressed vitality and creative self-expression',
+      ],
+    },
+  },
+  // 13. Gnosis 7
   {
     id: 'math-proof',
     badge: 'Gnosis AI • Mathematics',
@@ -147,6 +274,27 @@ export const GNOSIS_CARDS: GnosisCard[] = [
       bullets: ['Rigorous energy conservation boundary confirmed', 'Sub-grid eddy viscosity calibrated'],
     },
   },
+  // 14. Yada 7
+  {
+    id: 'iching-guidance',
+    badge: '✦ Yada Guide • I Ching Divination',
+    title: 'I Ching Hexagram Guidance',
+    promptText: 'Cast an I Ching reading for guidance on taking a creative career leap',
+    icon: <Sparkles className="w-4 h-4 text-teal-300" />,
+    bgGradient: 'radial-gradient(ellipse at top left, #115e59 0%, #042f2e 70%, #020617 100%)',
+    accentColor: '#2dd4bf',
+    chatUserMsg: 'Cast an I Ching reading for guidance on taking a creative career leap',
+    chatAiResponse: {
+      heading: 'Hexagram 11: Peace (Tai) → Hexagram 42: Increase (Yi)',
+      body: 'Harmonious alignment between inner purpose and external opportunity:',
+      bullets: [
+        'Tai (Peace): Sky and Earth meet; ideal conditions for initiation',
+        'Yi (Increase): Generous action yields exponential returns',
+        'Move forward with sincerity and steady dedication',
+      ],
+    },
+  },
+  // 15. Gnosis 8
   {
     id: 'ai-governance',
     badge: 'Gnosis AI • Safety & Ethics',
@@ -166,6 +314,27 @@ export const GNOSIS_CARDS: GnosisCard[] = [
       ],
     },
   },
+  // 16. Yada 8
+  {
+    id: 'chakra-alignment',
+    badge: '✦ Yada Guide • Energy Harmony',
+    title: 'Chakra Energy & Vitality Alignment',
+    promptText: 'Provide a daily chakra balancing routine to harmonize focus and intuition',
+    icon: <Sparkles className="w-4 h-4 text-fuchsia-300" />,
+    bgGradient: 'radial-gradient(ellipse at top left, #701a75 0%, #4a044e 70%, #020617 100%)',
+    accentColor: '#f0abfc',
+    chatUserMsg: 'Provide a daily chakra balancing routine to harmonize focus and intuition',
+    chatAiResponse: {
+      heading: 'Root-to-Crown Alignment Flow',
+      body: 'Sequencing somatic breath and intention to align mental clarity with grounded vitality:',
+      bullets: [
+        'Root (Muladhara): Grounding contact with physical earth',
+        'Heart (Anahata): Open posture releasing chest constriction',
+        'Third Eye (Ajna): Visualizing indigo light for sharp intuitive focus',
+      ],
+    },
+  },
+  // 17. Gnosis 9
   {
     id: 'peak-performance',
     badge: 'Gnosis AI • Cognitive Science',
@@ -182,6 +351,26 @@ export const GNOSIS_CARDS: GnosisCard[] = [
         '90-minute hyper-focus sprints aligned with dopamine baseline peaks',
         'Zone-2 aerobic recovery sessions to boost brain-derived neurotrophic factor (BDNF)',
         'Deliberate cold exposure & light exposure timing for metabolic optimization',
+      ],
+    },
+  },
+  // 18. Yada 9
+  {
+    id: 'soul-journaling',
+    badge: '✦ Yada Guide • Contemplation',
+    title: 'Gratitude & Soul Purpose Journaling',
+    promptText: 'Prompt me with 3 contemplative reflections to align with my authentic core',
+    icon: <Sparkles className="w-4 h-4 text-amber-300" />,
+    bgGradient: 'radial-gradient(ellipse at top left, #92400e 0%, #451a03 70%, #020617 100%)',
+    accentColor: '#fbbf24',
+    chatUserMsg: 'Prompt me with 3 contemplative reflections to align with my authentic core',
+    chatAiResponse: {
+      heading: '3 Soul Inquiry Prompts',
+      body: 'Reflect deeply on these questions in your quiet morning stillness:',
+      bullets: [
+        '1. What truth am I ready to honor without needing external validation?',
+        '2. Where in my life can I replace force with magnetic ease?',
+        '3. What small act of beauty can I offer the world today?',
       ],
     },
   },
@@ -333,18 +522,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
         </div>
 
         <div className="text-[11px] font-medium text-slate-600 bg-white/80 border border-slate-200 px-3.5 py-1 rounded-full shadow-sm backdrop-blur-md hidden sm:block">
-          Gnosis AI Studio • 9 Interactive Models
+          Trinity Universe • 18 Interactive AI & Guide Models
         </div>
       </header>
 
       {/* ── Subtitle Header (Moved down away from top bar, sitting right ahead of slider cards) ── */}
       <div className="text-center px-4 mt-6 sm:mt-10 mb-2 sm:mb-3 z-10 relative shrink-0">
         <p className="text-xs sm:text-sm font-medium text-slate-600 tracking-wide max-w-xl mx-auto">
-          Explore multi-agent reasoning, deep research, and real-time synthesis.
+          Explore multi-agent reasoning, archetypal wisdom, deep research, and spiritual synthesis.
         </p>
       </div>
 
-      {/* ── Slider Motion Section with 9 Gnosis AI Cards (Stepped down) ── */}
+      {/* ── Slider Motion Section with 18 Alternating Gnosis & Yada Cards ── */}
       <div
         className="relative w-full flex-1 min-h-[310px] max-h-[430px] my-auto flex items-center justify-center overflow-hidden z-10"
         onTouchStart={handleTouchStart}
