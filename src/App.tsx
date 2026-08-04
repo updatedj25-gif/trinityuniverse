@@ -116,6 +116,14 @@ export const App: React.FC = () => {
 
   const currentMessages = activeSession ? activeSession.messages : [];
 
+  // ── Logout handler ───────────────────────────────────────────────────────
+  const handleLogout = () => {
+    localStorage.removeItem('trinity_user_profile');
+    localStorage.removeItem('trinity_landing_dismissed');
+    // Hit the Worker's logout route to clear the KV session cookie
+    window.location.href = '/auth/logout';
+  };
+
   // ── Landing page sign-in handler ─────────────────────────────────────────
   const handleLandingSignIn = (profile: UserProfile) => {
     setUser(profile);
@@ -324,6 +332,8 @@ export const App: React.FC = () => {
         activeTenantId={activeTenantId}
         onSelectTenant={handleSelectTenant}
         onOpenAddTenant={() => setTenantModalOpen(true)}
+        user={user}
+        onLogout={handleLogout}
       />
       {/* Spacer matching the fixed navbar height */}
       <div className="h-[46px] shrink-0" />
