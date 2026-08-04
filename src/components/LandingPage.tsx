@@ -521,8 +521,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
         </div>
       </header>
 
-      {/* ── Section Header & Subtitle (Stepped down from top bar & sitting ahead of slider) ── */}
-      <div className="text-center px-4 mt-2 sm:mt-5 mb-1 sm:mb-2 z-10 relative shrink-0">
+      {/* ── Section Header & Subtitle (Stepped down away from top bar & sitting close to slider cards) ── */}
+      <div className="text-center px-4 mt-5 sm:mt-9 mb-1 sm:mb-2 z-10 relative shrink-0">
         <h2 className="text-xs sm:text-sm font-extrabold tracking-[0.18em] text-slate-800 uppercase mb-1">
           Gnosis Multi-Tenant AI
         </h2>
@@ -658,7 +658,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
         })}
 
         {/* ── Stationary Floating Input Box (2-line capacity for mobile & desktop) ── */}
-        <div className="absolute bottom-1 sm:bottom-3 left-1/2 -translate-x-1/2 w-[90%] max-w-lg z-30 pointer-events-auto">
+        <div className="absolute bottom-0.5 sm:bottom-1 left-1/2 -translate-x-1/2 w-[90%] max-w-lg z-30 pointer-events-auto">
           <div className="bg-slate-900/90 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-2.5 sm:p-3 shadow-xl backdrop-blur-xl flex items-start justify-between gap-2.5 transition-all min-h-[56px]">
             <div className="flex items-start gap-2 flex-1 min-w-0 pt-0.5">
               <div className="flex-1 min-w-0 text-[11px] sm:text-xs text-slate-200 font-mono leading-relaxed line-clamp-2 min-h-[32px]">
@@ -674,8 +674,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
         </div>
       </div>
 
-      {/* ── Primary Action Call-to-Action ── */}
-      <div className="flex flex-col items-center gap-2 px-6 mb-3 sm:mb-6 mt-0.5 sm:mt-1 z-10 relative shrink-0">
+      {/* ── Primary Action Call-to-Action (Positioned close to input box) ── */}
+      <div className="flex flex-col items-center gap-2 px-6 mb-3 sm:mb-5 mt-1 sm:mt-1.5 z-10 relative shrink-0">
         {/* Google Sign In Button */}
         <button
           onClick={handleGoogleSignIn}
