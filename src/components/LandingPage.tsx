@@ -216,6 +216,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
   // Typewriter effect state for stationary floating input box
   const [typedText, setTypedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showAnswer, setShowAnswer] = useState(false);
 
   const totalCards = GNOSIS_CARDS.length;
 
@@ -237,17 +238,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
     goToSlide((activeSlide - 1 + totalCards) % totalCards);
   }, [activeSlide, goToSlide, totalCards]);
 
-  // Auto-advance every 5 seconds
-  useEffect(() => {
-    const t = setTimeout(goNext, 5000);
-    return () => clearTimeout(t);
-  }, [goNext]);
-
-  // Handle Typewriter effect whenever activeSlide changes
+  // Handle Typewriter effect whenever activeSlide changes:
+  // Prompt types fully first, then answer reveals, then auto-advances
   useEffect(() => {
     const targetPrompt = GNOSIS_CARDS[activeSlide].promptText;
     setTypedText('');
     setIsTyping(true);
+    setShowAnswer(false);
 
     let charIdx = 0;
     const interval = setInterval(() => {
@@ -257,11 +254,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
       } else {
         setIsTyping(false);
         clearInterval(interval);
+        // Reveal AI answer after prompt is fully written
+        setTimeout(() => {
+          setShowAnswer(true);
+        }, 200);
       }
-    }, 25);
+    }, 22);
 
     return () => clearInterval(interval);
   }, [activeSlide]);
+
+  // Auto-advance slide 6.5s after slide activation (allows full prompt typing + reading response)
+  useEffect(() => {
+    const t = setTimeout(goNext, 6500);
+    return () => clearTimeout(t);
+  }, [activeSlide, goNext]);
 
   // Touch swipe handling
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -287,18 +294,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-[#030712] text-slate-100 overflow-hidden select-none font-sans">
-      {/* Background ambient lighting */}
+    <div className="fixed inset-0 flex flex-col bg-gradient-to-b from-[#020617] via-[#080d1a] to-[#020617] text-slate-100 overflow-hidden select-none font-sans">
+      {/* Background cosmic ambient lighting & subtle glow mesh */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] bg-indigo-600/15 rounded-full blur-[140px]" />
-        <div className="absolute bottom-[10%] right-[15%] w-[500px] h-[500px] bg-sky-600/10 rounded-full blur-[120px]" />
-        {/* Subtle grid mesh */}
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute top-[-15%] left-[15%] w-[700px] h-[700px] bg-indigo-600/20 rounded-full blur-[150px] animate-pulse"
+          style={{ animationDuration: '8s' }}
+        />
+        <div
+          className="absolute bottom-[5%] right-[10%] w-[600px] h-[600px] bg-sky-500/15 rounded-full blur-[140px] animate-pulse"
+          style={{ animationDuration: '10s' }}
+        />
+        <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[160px]" />
+
+        {/* Subtle grid mesh pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
           style={{
             backgroundImage:
-              'radial-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
+              'radial-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
           }}
         />
       </div>
@@ -330,7 +345,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
 
       {/* ── Slider Motion Section with 9 Gnosis AI Cards ── */}
       <div
-        className="relative w-full flex-1 min-h-[340px] max-h-[460px] my-auto flex items-center justify-center overflow-hidden z-10"
+        className="relative w-full flex-1 min-h-[350px] max-h-[470px] my-auto flex items-center justify-center overflow-hidden z-10"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -415,8 +430,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                   {card.title}
                 </h3>
 
-                {/* Simulated AI Chat Response Display */}
-                <div className="bg-slate-950/70 border border-white/10 rounded-xl p-3 text-xs text-slate-300 space-y-2 backdrop-blur-sm">
+                {/* Simulated AI Chat Response Display (reveals smoothly after prompt finishes typing) */}
+                <div
+                  className={`bg-slate-950/70 border border-white/10 rounded-xl p-3 text-xs text-slate-300 space-y-2 backdrop-blur-sm transition-all duration-500 ${
+                    isActive && showAnswer
+                      ? 'opacity-100 translate-y-0'
+                      : isActive
+                      ? 'opacity-30 translate-y-1'
+                      : 'opacity-90 translate-y-0'
+                  }`}
+                >
                   <div className="flex items-center gap-2 font-semibold text-white">
                     <span
                       className="w-1.5 h-1.5 rounded-full"
@@ -456,18 +479,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                   <Sparkles className="w-3 h-3" style={{ color: card.accentColor }} />
                   Gnosis Engine v3.6
                 </span>
-                <span className="text-slate-500 font-mono">0.04s response</span>
+                <span className="text-slate-500 font-mono">
+                  {showAnswer ? '0.04s response' : 'Synthesizing...'}
+                </span>
               </div>
             </div>
           );
         })}
 
-        {/* ── Stationary Floating Input / Prompt Box (Unmoved at Bottom Center) ── */}
-        <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-lg z-30 pointer-events-auto">
-          <div className="bg-slate-900/90 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-2.5 sm:p-3 shadow-2xl backdrop-blur-xl flex items-center justify-between gap-3 transition-all">
-            <div className="flex items-center gap-2.5 flex-1 min-w-0 px-1">
-              <Sparkles className="w-4 h-4 text-sky-400 shrink-0 animate-pulse" />
-              <div className="flex-1 min-w-0 text-xs sm:text-sm text-slate-200 font-mono truncate">
+        {/* ── Stationary Floating Input Box (Extended down by one line for 2-line capacity) ── */}
+        <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-xl z-30 pointer-events-auto">
+          <div className="bg-slate-900/95 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-3 sm:p-3.5 shadow-2xl backdrop-blur-xl flex items-start justify-between gap-3 transition-all min-h-[64px]">
+            <div className="flex items-start gap-2.5 flex-1 min-w-0 pt-0.5">
+              <Sparkles className="w-4 h-4 text-sky-400 shrink-0 animate-pulse mt-1" />
+              <div className="flex-1 min-w-0 text-xs sm:text-sm text-slate-200 font-mono leading-relaxed line-clamp-2 min-h-[38px] sm:min-h-[42px]">
                 <span>{typedText}</span>
                 <span
                   className={`inline-block w-1.5 h-3.5 ml-0.5 bg-sky-400 align-middle ${
@@ -479,7 +504,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
 
             <button
               onClick={handleGoogleSignIn}
-              className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shrink-0 shadow-lg transition-all cursor-pointer active:scale-95"
+              className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shrink-0 shadow-lg transition-all cursor-pointer active:scale-95 self-center"
             >
               <span>Get started</span>
               <ArrowRight className="w-3.5 h-3.5" />
