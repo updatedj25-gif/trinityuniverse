@@ -653,12 +653,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                 </div>
               </div>
 
-              {/* Card Footer accent status */}
-              <div className="pt-1 flex items-center justify-end text-[9px] sm:text-[9.5px] text-slate-400 shrink-0 border-t border-white/10 mt-1">
-                <span className="text-slate-400 font-mono">
-                  {showAnswer ? '0.04s response' : 'Synthesizing...'}
-                </span>
-              </div>
             </div>
           );
         })}
