@@ -513,7 +513,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
           <img
             src={TRINITY_LOGO}
             alt="Trinity Universe"
-            className="w-9 h-9 sm:w-11 sm:h-11 object-contain drop-shadow-md transition-transform hover:scale-105"
+            className="w-9 h-9 sm:w-11 sm:h-11 object-contain drop-shadow-md transition-transform hover:scale-105 animate-breathe"
           />
           <span className="text-base sm:text-lg font-black tracking-[0.22em] text-slate-800 uppercase">
             TRINITY UNIVERSE
@@ -667,7 +667,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
         <div className="absolute bottom-1 sm:bottom-3 left-1/2 -translate-x-1/2 w-[90%] max-w-lg z-30 pointer-events-auto">
           <div className="bg-slate-900/90 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-2.5 sm:p-3 shadow-xl backdrop-blur-xl flex items-start justify-between gap-2.5 transition-all min-h-[56px]">
             <div className="flex items-start gap-2 flex-1 min-w-0 pt-0.5">
-              <Sparkles className="w-3.5 h-3.5 text-sky-400 shrink-0 animate-pulse mt-0.5" />
               <div className="flex-1 min-w-0 text-[11px] sm:text-xs text-slate-200 font-mono leading-relaxed line-clamp-2 min-h-[32px]">
                 <span>{typedText}</span>
                 <span
