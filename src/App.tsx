@@ -278,9 +278,6 @@ export const App: React.FC = () => {
         activeTenantId={activeTenantId}
         onSelectTenant={handleSelectTenant}
         onOpenAddTenant={() => setTenantModalOpen(true)}
-        user={user}
-        onOpenSignIn={() => setSignInOpen(true)}
-        onSignOut={() => setUser({ name: 'Guest User', signedIn: false })}
       />
 
       {/* Main Workspace Layout (Sidebar + Chat Area / Library Page) */}
