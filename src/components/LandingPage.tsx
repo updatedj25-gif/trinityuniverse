@@ -294,25 +294,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gradient-to-b from-[#020617] via-[#080d1a] to-[#020617] text-slate-100 overflow-hidden select-none font-sans">
-      {/* Background cosmic ambient lighting & subtle glow mesh */}
+    <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-[#0c1322] via-[#14213d] to-[#0a1120] text-slate-100 overflow-hidden select-none font-sans">
+      {/* Background bright morning sky ambient lighting & warmth */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Morning sunrise warm glow */}
         <div
-          className="absolute top-[-15%] left-[15%] w-[700px] h-[700px] bg-indigo-600/20 rounded-full blur-[150px] animate-pulse"
-          style={{ animationDuration: '8s' }}
+          className="absolute top-[-20%] left-[10%] w-[800px] h-[800px] bg-amber-400/15 rounded-full blur-[160px] animate-pulse"
+          style={{ animationDuration: '9s' }}
         />
+        {/* Morning fresh sky blue aura */}
         <div
-          className="absolute bottom-[5%] right-[10%] w-[600px] h-[600px] bg-sky-500/15 rounded-full blur-[140px] animate-pulse"
-          style={{ animationDuration: '10s' }}
+          className="absolute top-[-10%] right-[5%] w-[750px] h-[750px] bg-sky-400/20 rounded-full blur-[150px] animate-pulse"
+          style={{ animationDuration: '11s' }}
         />
-        <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[160px]" />
+        {/* Soft dawn purple accent in center bottom */}
+        <div className="absolute bottom-[-10%] left-[30%] w-[650px] h-[650px] bg-indigo-500/15 rounded-full blur-[170px]" />
 
         {/* Subtle grid mesh pattern */}
         <div
-          className="absolute inset-0 opacity-[0.04]"
+          className="absolute inset-0 opacity-[0.05]"
           style={{
             backgroundImage:
-              'radial-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px)',
+              'radial-gradient(rgba(255, 255, 255, 0.6) 1px, transparent 1px)',
             backgroundSize: '28px 28px',
           }}
         />
@@ -501,14 +504,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                 />
               </div>
             </div>
-
-            <button
-              onClick={handleGoogleSignIn}
-              className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shrink-0 shadow-lg transition-all cursor-pointer active:scale-95 self-center"
-            >
-              <span>Get started</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>
       </div>
