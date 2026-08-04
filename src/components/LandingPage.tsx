@@ -522,9 +522,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
         </div>
       </header>
 
-      {/* ── Subtitle Header (Sitting right ahead of slider cards) ── */}
-      <div className="text-center px-4 mt-4 sm:mt-8 mb-2 sm:mb-3 z-10 relative shrink-0">
-        <p className="text-xs sm:text-sm font-medium text-slate-600 tracking-wide max-w-xl mx-auto">
+      {/* ── Section Header & Subtitle (Positioned right ahead of slider cards) ── */}
+      <div className="text-center px-4 mt-2 sm:mt-4 mb-0.5 sm:mb-1 z-10 relative shrink-0">
+        <h2 className="text-xs sm:text-sm font-bold tracking-[0.15em] text-slate-800 uppercase mb-0.5">
+          Gnosis Multi-Tenant AI
+        </h2>
+        <p className="text-[11px] sm:text-xs font-medium text-slate-600 tracking-wide max-w-xl mx-auto">
           Explore multi-agent reasoning, archetypal wisdom, deep research, and spiritual synthesis.
         </p>
       </div>
