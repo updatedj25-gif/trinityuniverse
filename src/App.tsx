@@ -42,7 +42,7 @@ export const App: React.FC = () => {
   });
 
   // 5. UI & Modals State
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [signInOpen, setSignInOpen] = useState<boolean>(false);
   const [tenantModalOpen, setTenantModalOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
