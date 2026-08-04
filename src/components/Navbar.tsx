@@ -1,6 +1,5 @@
 import React from 'react';
 import { Tenant } from '../types';
-import { Plus } from 'lucide-react';
 
 const TRINITY_LOGO = 'https://image2url.com/r2/default/images/1767183581317-68102f31-454b-45f6-9d39-025ce8604ac3.png';
 
@@ -50,13 +49,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           );
         })}
 
-        <button
-          onClick={onOpenAddTenant}
-          title="Create new AI Tenant"
-          className="p-1 rounded-full text-slate-500 hover:text-slate-800 hover:bg-stone-200/80 transition-colors cursor-pointer shrink-0"
-        >
-          <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-        </button>
       </div>
     </nav>
   );
