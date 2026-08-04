@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { UserProfile } from '../types';
 
 const TRINITY_LOGO =
@@ -7,45 +7,58 @@ const TRINITY_LOGO =
 const SLIDES = [
   {
     id: 'welcome',
-    label: 'Trinity Universe',
+    badge: 'Trinity Universe',
     heading: 'A New Kind of\nIntelligence',
     sub: 'Two minds. One platform. Infinite depth.',
-    accent: '#1a73e8',
-    bg: 'from-[#EEF3FF] via-[#F5F7FF] to-[#FAF7F2]',
-    dot: 'bg-[#1a73e8]',
-    badge: null,
+    cardBg: 'linear-gradient(145deg, #1e3a8a 0%, #3730a3 100%)',
+    accentBar: '#93c5fd',
+    badgeBg: 'rgba(255,255,255,0.13)',
   },
   {
     id: 'gnosis',
-    label: 'Gnosis AI',
+    badge: '◉  Gnosis AI',
     heading: 'Sharp. Curious.\nAnalytical.',
-    sub: 'Strategy, code, science, philosophy — Gnosis digs deep into any question.',
-    accent: '#1a73e8',
-    bg: 'from-[#E8F0FE] via-[#F0F4FF] to-[#FAF7F2]',
-    dot: 'bg-[#1a73e8]',
-    badge: '◉ Gnosis AI',
+    sub: 'Strategy, code, science, philosophy — Gnosis digs deep.',
+    cardBg: 'linear-gradient(145deg, #1e40af 0%, #2563eb 100%)',
+    accentBar: '#60a5fa',
+    badgeBg: 'rgba(255,255,255,0.13)',
   },
   {
     id: 'yada',
-    label: 'Yada Guide',
+    badge: '✦  Yada Guide',
     heading: 'Wisdom.\nClarity. Soul.',
     sub: 'Ancient traditions, tarot, astrology, mindfulness — Yada walks with you.',
-    accent: '#A36224',
-    bg: 'from-[#FDF3E8] via-[#FFF8F2] to-[#FAF7F2]',
-    dot: 'bg-[#A36224]',
-    badge: '✦ Yada Guide',
+    cardBg: 'linear-gradient(145deg, #78350f 0%, #b45309 100%)',
+    accentBar: '#fcd34d',
+    badgeBg: 'rgba(255,255,255,0.13)',
   },
   {
     id: 'both',
-    label: 'Your Universe',
+    badge: 'Your Universe',
     heading: 'One Login.\nTwo Guides.',
-    sub: 'Sign in and move freely between Gnosis and Yada — your conversations always waiting.',
-    accent: '#6b7280',
-    bg: 'from-[#F5F3EE] via-[#FAF7F2] to-[#F0EDE8]',
-    dot: 'bg-slate-500',
-    badge: null,
+    sub: 'Sign in and move freely — your conversations always waiting.',
+    cardBg: 'linear-gradient(145deg, #1f2937 0%, #374151 100%)',
+    accentBar: '#d1d5db',
+    badgeBg: 'rgba(255,255,255,0.10)',
   },
 ];
+
+// Normalize offset for wrap-around (4 slides)
+function wrapOffset(raw: number, total: number): number {
+  let d = raw % total;
+  if (d > total / 2) d -= total;
+  if (d < -total / 2) d += total;
+  return d;
+}
+
+const GOOGLE_SVG = (
+  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+  </svg>
+);
 
 interface LandingPageProps {
   onSignIn: (profile: UserProfile) => void;
@@ -53,18 +66,17 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
   const [activeSlide, setActiveSlide] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [animating, setAnimating] = useState(false);
+  const touchStartX = useRef<number | null>(null);
 
   const goToSlide = useCallback(
     (idx: number) => {
-      if (isTransitioning || idx === activeSlide) return;
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setActiveSlide(idx);
-        setIsTransitioning(false);
-      }, 280);
+      if (animating || idx === activeSlide) return;
+      setAnimating(true);
+      setActiveSlide(idx);
+      setTimeout(() => setAnimating(false), 500);
     },
-    [isTransitioning, activeSlide]
+    [animating, activeSlide]
   );
 
   const goNext = useCallback(() => {
@@ -73,26 +85,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
 
   // Auto-advance every 4 s
   useEffect(() => {
-    const timer = setTimeout(goNext, 4000);
-    return () => clearTimeout(timer);
+    const t = setTimeout(goNext, 4000);
+    return () => clearTimeout(t);
   }, [goNext]);
 
-  const slide = SLIDES[activeSlide];
-
-  /** Real Google OAuth — navigates to the Worker's /auth/google route */
-  const handleGoogleSignIn = () => {
-    window.location.href = '/auth/google';
+  // Touch swipe support
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 40) {
+      if (dx < 0) goToSlide((activeSlide + 1) % SLIDES.length);
+      else goToSlide((activeSlide - 1 + SLIDES.length) % SLIDES.length);
+    }
+    touchStartX.current = null;
   };
 
-  /** Guest / no-account entry */
-  const handleGuestEntry = () => {
-    onSignIn({ name: 'Guest', signedIn: false });
-  };
+  const handleGoogleSignIn = () => { window.location.href = '/auth/google'; };
+  const handleGuestEntry = () => { onSignIn({ name: 'Guest', signedIn: false }); };
 
   return (
     <div className="fixed inset-0 flex flex-col bg-[#FAF7F2] overflow-hidden select-none">
-      {/* ── Top Bar ── */}
-      <div className="w-full px-5 py-3 flex items-center justify-between z-10 relative">
+
+      {/* ── Top Bar: logo only, clean ── */}
+      <div className="w-full px-5 pt-4 pb-2 flex items-center justify-start z-10 relative shrink-0">
         <div className="flex items-center gap-2">
           <img
             src={TRINITY_LOGO}
@@ -103,109 +121,160 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
             Trinity Universe
           </span>
         </div>
-        <button
-          onClick={handleGoogleSignIn}
-          className="text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors cursor-pointer px-3 py-1.5 rounded-full hover:bg-stone-200/60 border border-transparent hover:border-stone-200"
-        >
-          Sign in
-        </button>
       </div>
 
-      {/* ── Hero Slider ── */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 relative overflow-hidden">
-        {/* Background gradient — transitions with slide */}
-        <div
-          className={`absolute inset-0 bg-gradient-to-b ${slide.bg} transition-all duration-700`}
-        />
+      {/* ── Card Carousel ── */}
+      <div
+        className="relative shrink-0"
+        style={{ height: '46vh' }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {SLIDES.map((slide, i) => {
+          const d = wrapOffset(i - activeSlide, SLIDES.length);
+          const isActive = d === 0;
+          const isAdjacent = Math.abs(d) === 1;
+          const isVisible = isActive || isAdjacent;
 
-        {/* Floating ambient orbs */}
-        <div
-          className="absolute w-72 h-72 rounded-full blur-3xl opacity-25 transition-all duration-700 -top-16 -left-16"
-          style={{ background: slide.accent }}
-        />
-        <div
-          className="absolute w-48 h-48 rounded-full blur-2xl opacity-15 transition-all duration-700 bottom-20 right-10"
-          style={{ background: slide.accent }}
-        />
+          // translateX: -50% centers the card (card is 76% wide, left:50%)
+          // step of 95% (of card own width) gives ~15% peek on each side
+          const tx = `calc(-50% + ${d * 95}%)`;
+          const scale = isActive ? 1 : 0.88;
+          const opacity = isActive ? 1 : isAdjacent ? 0.45 : 0;
+          const blur = isActive ? 0 : 4;
 
-        {/* Slide content */}
-        <div
-          className={`relative z-10 text-center max-w-xs sm:max-w-sm transition-all duration-300 ${
-            isTransitioning
-              ? 'opacity-0 translate-y-3 scale-[0.97]'
-              : 'opacity-100 translate-y-0 scale-100'
-          }`}
-        >
-          {/* Badge pill */}
-          {slide.badge && (
+          return (
             <div
-              className="inline-block text-[11px] font-semibold px-3.5 py-1 rounded-full mb-4 border"
+              key={slide.id}
+              onClick={() => !isActive && goToSlide(i)}
               style={{
-                color: slide.accent,
-                borderColor: slide.accent + '40',
-                background: slide.accent + '12',
+                position: 'absolute',
+                width: '76%',
+                height: '88%',
+                left: '50%',
+                top: '50%',
+                transform: `translate(${tx}, -50%) scale(${scale})`,
+                opacity,
+                filter: blur > 0 ? `blur(${blur}px)` : 'none',
+                transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease, filter 0.5s ease',
+                zIndex: isActive ? 3 : isAdjacent ? 2 : 1,
+                cursor: isActive ? 'default' : 'pointer',
+                pointerEvents: isVisible ? 'auto' : 'none',
+                borderRadius: '28px',
+                background: slide.cardBg,
+                padding: '24px 20px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                boxShadow: isActive
+                  ? '0 20px 60px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12)'
+                  : '0 8px 24px rgba(0,0,0,0.15)',
+                overflow: 'hidden',
               }}
             >
-              {slide.badge}
+              {/* Top: Badge */}
+              <div>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    background: slide.badgeBg,
+                    color: 'rgba(255,255,255,0.9)',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    letterSpacing: '0.06em',
+                    padding: '4px 10px',
+                    borderRadius: '999px',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    marginBottom: '14px',
+                  }}
+                >
+                  {slide.badge}
+                </span>
+
+                {/* Heading */}
+                <h2
+                  style={{
+                    color: '#ffffff',
+                    fontSize: 'clamp(22px, 5.5vw, 30px)',
+                    fontWeight: 800,
+                    lineHeight: 1.18,
+                    letterSpacing: '-0.02em',
+                    whiteSpace: 'pre-line',
+                    marginBottom: '10px',
+                  }}
+                >
+                  {slide.heading}
+                </h2>
+
+                {/* Sub text */}
+                <p
+                  style={{
+                    color: 'rgba(255,255,255,0.72)',
+                    fontSize: 'clamp(12px, 3vw, 14px)',
+                    lineHeight: 1.55,
+                    fontWeight: 400,
+                  }}
+                >
+                  {slide.sub}
+                </p>
+              </div>
+
+              {/* Bottom: accent bar */}
+              <div
+                style={{
+                  height: '3px',
+                  borderRadius: '999px',
+                  background: slide.accentBar,
+                  opacity: 0.6,
+                  marginTop: '16px',
+                  width: '40%',
+                }}
+              />
+
+              {/* Subtle inner glow */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '-30%',
+                  right: '-20%',
+                  width: '70%',
+                  height: '70%',
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.05)',
+                  pointerEvents: 'none',
+                }}
+              />
             </div>
-          )}
-
-          {/* Heading — split on \n */}
-          <h1 className="text-4xl sm:text-5xl font-bold text-slate-800 leading-tight tracking-tight mb-3">
-            {slide.heading.split('\n').map((line, i) => (
-              <span key={i} className="block">
-                {line}
-              </span>
-            ))}
-          </h1>
-
-          {/* Sub */}
-          <p className="text-sm sm:text-base text-slate-500 leading-relaxed max-w-[26ch] mx-auto">
-            {slide.sub}
-          </p>
-        </div>
-
-        {/* ── Dot Indicators ── */}
-        <div className="relative z-10 flex items-center gap-2 mt-10">
-          {SLIDES.map((s, i) => (
-            <button
-              key={s.id}
-              onClick={() => goToSlide(i)}
-              className={`rounded-full transition-all duration-300 cursor-pointer ${
-                i === activeSlide
-                  ? `w-6 h-2 ${slide.dot}`
-                  : 'w-2 h-2 bg-stone-300 hover:bg-stone-400'
-              }`}
-            />
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      {/* ── Bottom CTA ── */}
-      <div className="px-6 pb-10 pt-2 flex flex-col items-center gap-3 relative z-10">
+      {/* ── Dot Indicators ── */}
+      <div className="flex items-center justify-center gap-2 mt-3 mb-1 shrink-0">
+        {SLIDES.map((s, i) => (
+          <button
+            key={s.id}
+            onClick={() => goToSlide(i)}
+            className="cursor-pointer transition-all duration-300"
+            style={{
+              width: i === activeSlide ? '20px' : '7px',
+              height: '7px',
+              borderRadius: '999px',
+              background: i === activeSlide ? '#1e3a8a' : '#d1d5db',
+            }}
+          />
+        ))}
+      </div>
+
+      {/* ── CTA — right below the slider ── */}
+      <div className="flex flex-col items-center gap-2.5 px-6 mt-4 shrink-0">
+
         {/* Google Sign In */}
         <button
           onClick={handleGoogleSignIn}
           className="w-full max-w-sm py-3.5 px-5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl font-semibold text-sm text-slate-700 flex items-center justify-center gap-3 shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-[0.98]"
         >
-          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-            <path
-              fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-            />
-          </svg>
+          {GOOGLE_SVG}
           <span>Continue with Google</span>
         </button>
 
@@ -217,7 +286,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
           Continue as guest
         </button>
 
-        <p className="text-[10px] text-stone-400 text-center max-w-xs mt-1">
+        <p className="text-[10px] text-stone-400 text-center max-w-xs">
           By continuing you agree to Trinity Universe's Terms of Service and Privacy Policy.
         </p>
       </div>
