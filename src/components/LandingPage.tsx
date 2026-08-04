@@ -79,12 +79,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
 
   const slide = SLIDES[activeSlide];
 
+  /** Real Google OAuth — navigates to the Worker's /auth/google route */
   const handleGoogleSignIn = () => {
-    onSignIn({
-      name: 'Explorer',
-      email: 'user@trinityuniverse.org',
-      signedIn: true,
-    });
+    window.location.href = '/auth/google';
+  };
+
+  /** Guest / no-account entry */
+  const handleGuestEntry = () => {
+    onSignIn({ name: 'Guest', signedIn: false });
   };
 
   return (
@@ -201,7 +203,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
             />
             <path
               fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 2.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
             />
           </svg>
           <span>Continue with Google</span>
@@ -209,9 +211,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
 
         {/* Guest entry */}
         <button
-          onClick={() =>
-            onSignIn({ name: 'Guest', signedIn: false })
-          }
+          onClick={handleGuestEntry}
           className="text-xs text-stone-400 hover:text-slate-600 transition-colors cursor-pointer underline underline-offset-2"
         >
           Continue as guest

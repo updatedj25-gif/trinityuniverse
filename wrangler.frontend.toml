@@ -13,3 +13,8 @@ directory = "./dist"
 # Cloudflare Workers AI binding — powers Gnosis & Yada
 [ai]
 binding = "AI"
+
+# Session KV — shared with gnosis-master for cross-worker session reads
+[[kv_namespaces]]
+binding = "GNOSIS_SESSIONS"
+id = "f77344676aba47ef80496eaaa93135b9"

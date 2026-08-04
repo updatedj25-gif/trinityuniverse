@@ -81,6 +81,23 @@ export const App: React.FC = () => {
     localStorage.setItem('trinity_user_profile', JSON.stringify(user));
   }, [user]);
 
+  // ── Server session check (Google OAuth callback restores state here) ──────
+  useEffect(() => {
+    fetch('/api/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: UserProfile | null) => {
+        if (data && data.signedIn) {
+          setUser(data);
+          setShowLanding(false);
+          localStorage.setItem('trinity_landing_dismissed', 'true');
+          localStorage.setItem('trinity_user_profile', JSON.stringify(data));
+        }
+      })
+      .catch(() => {
+        // network error or no session — stay as guest, no action needed
+      });
+  }, []);
+
   // Derived current Tenant object
   const currentTenant =
     tenants.find((t) => t.id === activeTenantId) || tenants[0];

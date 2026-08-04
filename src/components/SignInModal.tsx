@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Check } from 'lucide-react';
+import { X } from 'lucide-react';
 import { UserProfile } from '../types';
 
 interface SignInModalProps {
@@ -11,20 +11,26 @@ interface SignInModalProps {
 export const SignInModal: React.FC<SignInModalProps> = ({
   isOpen,
   onClose,
-  onSignInSuccess,
 }) => {
-  const [email, setEmail] = useState('');
   const [name, setName] = useState('');
 
   if (!isOpen) return null;
 
+  /** Real Google OAuth — navigates to the Worker's /auth/google route */
   const handleGoogleSignIn = () => {
-    onSignInSuccess({
-      name: name.trim() || 'Alex Mercer',
-      email: email.trim() || 'alex.mercer@trinityuniverse.org',
-      signedIn: true,
-    });
-    onClose();
+    window.location.href = '/auth/google';
+  };
+
+  /** Guest / custom-name sign-in (client-only, no server session) */
+  const handleGuestSignIn = () => {
+    const profile: UserProfile = {
+      name: name.trim() || 'Guest',
+      signedIn: false,
+    };
+    // Persist guest name locally so the parent can read it
+    localStorage.setItem('trinity_user_profile', JSON.stringify(profile));
+    // Reload so App picks up the stored profile
+    window.location.reload();
   };
 
   return (
@@ -50,6 +56,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
         </div>
 
         <div className="space-y-4">
+          {/* ── Real Google OAuth button ── */}
           <button
             onClick={handleGoogleSignIn}
             className="w-full py-3 px-4 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl font-medium text-sm text-slate-700 flex items-center justify-center gap-3 shadow-2xs transition-all cursor-pointer"
@@ -80,7 +87,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
               <div className="w-full border-t border-stone-200"></div>
             </div>
             <span className="relative bg-white px-3 text-xs text-stone-400">
-              or enter custom name
+              or continue as guest
             </span>
           </div>
 
@@ -98,10 +105,10 @@ export const SignInModal: React.FC<SignInModalProps> = ({
           </div>
 
           <button
-            onClick={handleGoogleSignIn}
+            onClick={handleGuestSignIn}
             className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm rounded-xl shadow-2xs transition-all cursor-pointer"
           >
-            Sign In as {name || 'Alex Mercer'}
+            Continue as {name || 'Guest'}
           </button>
         </div>
       </div>
