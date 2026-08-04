@@ -51,7 +51,6 @@ export const GNOSIS_CARDS: GnosisCard[] = [
     badge: '✦ Yada Guide • Archetypal Tarot',
     title: 'Tarot Spread & Archetypal Guidance',
     promptText: 'Draw a 3-card spread exploring current life transitions and hidden opportunities',
-    icon: <Sparkles className="w-4 h-4 text-amber-400" />,
     bgGradient: 'radial-gradient(ellipse at top left, #78350f 0%, #451a03 70%, #020617 100%)',
     accentColor: '#f59e0b',
     chatUserMsg: 'Draw a 3-card spread exploring current life transitions and hidden opportunities',
@@ -509,22 +508,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
       </div>
 
       {/* ── Top Bar ── */}
-      <header className="w-full px-5 sm:px-6 pt-4 sm:pt-5 pb-2 flex items-center justify-between z-20 relative shrink-0">
+      <header className="w-full px-5 sm:px-6 pt-3.5 sm:pt-6 pb-1.5 sm:pb-3 flex items-center justify-between z-20 relative shrink-0">
         <div className="flex items-center gap-3">
           <img
             src={TRINITY_LOGO}
             alt="Trinity Universe"
-            className="w-8 h-8 sm:w-9 sm:h-9 object-contain animate-breathe"
+            className="w-9 h-9 sm:w-11 sm:h-11 object-contain drop-shadow-md transition-transform hover:scale-105"
           />
-          <span className="text-sm sm:text-base font-extrabold tracking-[0.2em] text-slate-800 uppercase">
+          <span className="text-base sm:text-lg font-black tracking-[0.22em] text-slate-800 uppercase">
             TRINITY UNIVERSE
           </span>
         </div>
       </header>
 
-      {/* ── Section Header & Subtitle (Positioned right ahead of slider cards) ── */}
-      <div className="text-center px-4 mt-2 sm:mt-4 mb-0.5 sm:mb-1 z-10 relative shrink-0">
-        <h2 className="text-xs sm:text-sm font-bold tracking-[0.15em] text-slate-800 uppercase mb-0.5">
+      {/* ── Section Header & Subtitle (Stepped down from top bar & sitting ahead of slider) ── */}
+      <div className="text-center px-4 mt-2 sm:mt-5 mb-1 sm:mb-2 z-10 relative shrink-0">
+        <h2 className="text-xs sm:text-sm font-extrabold tracking-[0.18em] text-slate-800 uppercase mb-1">
           Gnosis Multi-Tenant AI
         </h2>
         <p className="text-[11px] sm:text-xs font-medium text-slate-600 tracking-wide max-w-xl mx-auto">
@@ -534,7 +533,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
 
       {/* ── Slider Motion Section with 18 Alternating Gnosis & Yada Cards ── */}
       <div
-        className="relative w-full flex-1 min-h-[290px] max-h-[410px] my-auto flex items-center justify-center overflow-hidden z-10"
+        className="relative w-full flex-1 min-h-[250px] sm:min-h-[290px] max-h-[380px] sm:max-h-[420px] my-auto flex items-center justify-center overflow-hidden z-10"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -566,9 +565,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               onClick={() => !isActive && goToSlide(i)}
               style={{
                 position: 'absolute',
-                width: 'min(86%, 350px)',
-                height: '82%',
-                maxHeight: '320px',
+                width: 'min(88%, 350px)',
+                height: '84%',
+                maxHeight: '310px',
                 left: '50%',
                 top: '48%',
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,
@@ -586,7 +585,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                 boxShadow: isActive
                   ? `0 16px 40px rgba(15, 23, 42, 0.35), 0 0 25px ${card.accentColor}30`
                   : '0 8px 20px rgba(0, 0, 0, 0.2)',
-                padding: '14px 16px',
+                padding: '12px 14px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -707,11 +706,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
       </div>
 
       {/* ── Primary Action Call-to-Action ── */}
-      <div className="flex flex-col items-center gap-2 px-6 mb-6 mt-1 z-10 relative shrink-0">
+      <div className="flex flex-col items-center gap-2 px-6 mb-3 sm:mb-6 mt-0.5 sm:mt-1 z-10 relative shrink-0">
         {/* Google Sign In Button */}
         <button
           onClick={handleGoogleSignIn}
-          className="w-full max-w-sm py-3.5 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all cursor-pointer active:scale-[0.98]"
+          className="w-full max-w-xs sm:max-w-sm py-3 sm:py-3.5 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all cursor-pointer active:scale-[0.98]"
         >
           {GOOGLE_SVG}
           <span>Continue with Google</span>
