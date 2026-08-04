@@ -42,7 +42,7 @@ export const App: React.FC = () => {
   });
 
   // 5. UI & Modals State
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [signInOpen, setSignInOpen] = useState<boolean>(false);
   const [tenantModalOpen, setTenantModalOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -289,6 +289,7 @@ export const App: React.FC = () => {
           tenant={currentTenant}
           sessions={sessions}
           activeSessionId={activeSessionId}
+          currentView={currentView}
           onSelectSession={handleSelectSession}
           onNewSession={handleNewSession}
           onOpenLibrary={() => setCurrentView('library')}

@@ -6,6 +6,7 @@ interface SidebarProps {
   tenant: Tenant;
   sessions: ChatSession[];
   activeSessionId: string | null;
+  currentView: 'chat' | 'library';
   onSelectSession: (sessionId: string) => void;
   onNewSession: () => void;
   onOpenLibrary: () => void;
@@ -20,6 +21,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   tenant,
   sessions,
   activeSessionId,
+  currentView,
   onSelectSession,
   onNewSession,
   onOpenLibrary,
@@ -84,12 +86,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onCloseMobile();
               }}
               className={`w-full py-2.5 px-4 rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-2xs border transition-all cursor-pointer ${
-                tenant.id === 'yada'
+                currentView === 'library'
+                  ? 'bg-[#A36224] text-white border-[#8a511d] shadow-md'
+                  : tenant.id === 'yada'
                   ? 'bg-[#FFF9F2] text-[#A36224] border-[#F3E3D1] hover:bg-[#FAF0E4]'
                   : 'bg-white text-slate-800 border-stone-200 hover:bg-stone-50 hover:border-stone-300'
               }`}
             >
-              <BookOpen className="w-4 h-4 text-[#A36224]" />
+              <BookOpen className={`w-4 h-4 ${currentView === 'library' ? 'text-white' : 'text-[#A36224]'}`} />
               <span>Ebook Library</span>
             </button>
 

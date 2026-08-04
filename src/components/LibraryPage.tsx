@@ -18,7 +18,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
           {onToggleSidebar && (
             <button
               onClick={onToggleSidebar}
-              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-stone-200/50 transition-colors cursor-pointer lg:hidden"
+              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-stone-200/50 transition-colors cursor-pointer"
               title="Toggle sidebar"
             >
               <Menu className="w-5 h-5" />
