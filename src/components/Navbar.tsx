@@ -24,13 +24,10 @@ export const Navbar: React.FC<NavbarProps> = ({
         <img
           src={TRINITY_LOGO}
           alt="Trinity Universe"
-          className="w-5 h-5 object-contain animate-breathe"
+          className="w-7 h-7 sm:w-8 sm:h-8 object-contain animate-breathe"
         />
-        <span className="text-xs sm:text-sm font-semibold tracking-wider text-slate-800 uppercase hidden sm:inline">
+        <span className="text-[10px] sm:text-sm font-semibold tracking-wider text-slate-800 uppercase">
           TRINITY UNIVERSE
-        </span>
-        <span className="text-[10px] font-semibold tracking-wider text-slate-800 uppercase inline sm:hidden">
-          TRINITY
         </span>
       </div>
 
