@@ -521,8 +521,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
         </div>
       </header>
 
-      {/* ── Section Header & Subtitle (Stepped down away from top bar & sitting close to slider cards) ── */}
-      <div className="text-center px-4 mt-5 sm:mt-9 mb-1 sm:mb-2 z-10 relative shrink-0">
+      {/* ── Section Header & Subtitle (Positioned right above slider cards) ── */}
+      <div className="text-center px-4 mt-7 sm:mt-11 mb-0 sm:-mb-1 z-10 relative shrink-0">
         <h2 className="text-xs sm:text-sm font-extrabold tracking-[0.18em] text-slate-800 uppercase mb-1">
           Gnosis Multi-Tenant AI
         </h2>
@@ -569,7 +569,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                 height: '82%',
                 maxHeight: '275px',
                 left: '50%',
-                top: '46%',
+                top: '44%',
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,
                 opacity,
                 filter: blur > 0 ? `blur(${blur}px)` : 'none',
