@@ -1,6 +1,8 @@
 import React from 'react';
 import { Tenant } from '../types';
-import { Plus, Sparkles, Info } from 'lucide-react';
+import { Plus } from 'lucide-react';
+
+const TRINITY_LOGO = 'https://image2url.com/r2/default/images/1767183581317-68102f31-454b-45f6-9d39-025ce8604ac3.png';
 
 interface NavbarProps {
   tenants: Tenant[];
@@ -19,7 +21,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     <nav className="w-full bg-[#FAF7F2] border-b border-stone-200/60 px-3 sm:px-4 py-2 flex items-center justify-between z-30 sticky top-0 select-none gap-2">
       {/* Left side: Trinity Universe Logo */}
       <div className="flex items-center gap-1.5 shrink-0">
-        <span className="w-2.5 h-2.5 rounded-full bg-[#C05621] inline-block shadow-xs"></span>
+        <img
+          src={TRINITY_LOGO}
+          alt="Trinity Universe"
+          className="w-5 h-5 object-contain animate-breathe"
+        />
         <span className="text-xs sm:text-sm font-semibold tracking-wider text-slate-800 uppercase hidden sm:inline">
           TRINITY UNIVERSE
         </span>
@@ -42,13 +48,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-stone-200/60'
               }`}
             >
-              {tenant.id === 'gnosis' ? (
-                <Info className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-600 shrink-0" />
-              ) : tenant.id === 'yada' ? (
-                <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-600 shrink-0" />
-              ) : (
-                <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-600 shrink-0" />
-              )}
               <span>{tenant.name === 'YADA' ? 'Yada Guide' : tenant.name}</span>
             </button>
           );

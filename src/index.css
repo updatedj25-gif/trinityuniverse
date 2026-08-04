@@ -27,6 +27,18 @@ body {
   animation: stardust 6s ease-in-out infinite alternate;
 }
 
+/* Breathing / living pulse animation for logo */
+@keyframes breathe {
+  0%   { transform: scale(1);    opacity: 1; }
+  40%  { transform: scale(1.12); opacity: 0.85; }
+  60%  { transform: scale(1.12); opacity: 0.85; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+.animate-breathe {
+  animation: breathe 3.2s ease-in-out infinite;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

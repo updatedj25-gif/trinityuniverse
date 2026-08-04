@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tenant, ChatSession, UserProfile } from '../types';
-import { Plus, Trash2, User, MessageSquare, X, BookOpen } from 'lucide-react';
+import { Plus, Trash2, MessageSquare, X } from 'lucide-react';
 
 interface SidebarProps {
   tenant: Tenant;
@@ -93,7 +93,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   : 'bg-white text-slate-800 border-stone-200 hover:bg-stone-50 hover:border-stone-300'
               }`}
             >
-              <BookOpen className={`w-4 h-4 ${currentView === 'library' ? 'text-white' : 'text-[#A36224]'}`} />
               <span>Ebook Library</span>
             </button>
 

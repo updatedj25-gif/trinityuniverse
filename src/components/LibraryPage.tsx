@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, BookOpen, Menu } from 'lucide-react';
+import { Home, Menu } from 'lucide-react';
 
 interface LibraryPageProps {
   onGoHome: () => void;
@@ -36,7 +36,6 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-[#A36224]" />
           <h1 className="text-base sm:text-lg font-serif tracking-wider font-semibold text-slate-800">
             Ebook Library
           </h1>

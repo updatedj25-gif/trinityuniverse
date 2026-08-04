@@ -10,13 +10,11 @@ import {
   Image as ImageIcon,
   FileText,
   X,
-  Sparkles,
   Zap,
   Gem,
   Eye,
   Plus,
   BookOpen,
-  Atom,
 } from 'lucide-react';
 
 interface ChatAreaProps {
@@ -149,17 +147,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       {/* Main Messages or Landing Page Center */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 z-10 scroll-smooth">
         {messages.length === 0 ? (
-          /* Empty Landing State matching DeepSeek Screenshot */
+          /* Empty Landing State */
           <div className="h-full min-h-[440px] flex flex-col items-center justify-center text-center px-4 max-w-2xl mx-auto">
-            {/* Logo Emblem & Title */}
+            {/* Title only — no icon box */}
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-2xs">
-                {tenant.id === 'yada' ? (
-                  <Sparkles className="w-5 h-5 text-amber-600" />
-                ) : (
-                  <Atom className="w-6 h-6 text-blue-600" />
-                )}
-              </div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 font-sans">
                 Start chatting with {tenant.name}
               </h1>
