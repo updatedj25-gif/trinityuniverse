@@ -1,4 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// Extend Window to include the Google Identity Services SDK loaded from CDN
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (cfg: { client_id: string; callback: (r: { credential: string }) => void }) => void;
+          prompt: (cb: (n: { isNotDisplayed: () => boolean; isSkippedMoment: () => boolean }) => void) => void;
+        };
+      };
+    };
+  }
+}
 import { UserProfile } from '../types';
 import { ArrowRight, Sparkles, Code2, Cpu, Brain, Flame, Zap, ShieldCheck, Compass, BarChart3, LineChart } from 'lucide-react';
 
