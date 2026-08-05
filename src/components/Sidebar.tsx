@@ -48,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed lg:relative top-0 bottom-0 left-0 z-50 h-full bg-[#F6F3EE] flex flex-col justify-between transition-all duration-300 ease-in-out select-none shrink-0 overflow-hidden ${
+        className={`fixed lg:relative top-0 bottom-0 left-0 z-50 h-full bg-[#F6F3EE] flex flex-col transition-all duration-300 ease-in-out select-none shrink-0 overflow-hidden ${
           isOpen
             ? 'w-64 sm:w-72 translate-x-0 opacity-100 border-r border-stone-200/80'
             : 'w-0 -translate-x-full opacity-0 pointer-events-none border-r-0'

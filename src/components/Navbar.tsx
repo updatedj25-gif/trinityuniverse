@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Tenant, UserProfile } from '../types';
 import { LogOut } from 'lucide-react';
+// Note: ChevronDown intentionally excluded — no dropdown indicator on profile button
 
 const TRINITY_LOGO = 'https://image2url.com/r2/default/images/1767183581317-68102f31-454b-45f6-9d39-025ce8604ac3.png';
 
@@ -48,15 +49,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           alt="Trinity Universe"
           className="w-6 h-6 sm:w-7 sm:h-7 object-contain animate-breathe shrink-0"
         />
-        {/* Hide full text on very small screens, show abbreviated */}
-        <span className="text-[9px] sm:text-[11px] font-semibold tracking-wider text-slate-800 uppercase whitespace-nowrap">
+        {/* Show full brand name at all screen sizes */}
+        <span className="text-[9px] sm:text-[11px] font-semibold tracking-wider text-slate-800 uppercase whitespace-nowrap leading-none">
           TRINITY UNIVERSE
         </span>
       </div>
 
       {/* ── Center: Tenant Switcher Pills — flex-1 so it fills available space ── */}
-      <div className="flex-1 flex items-center justify-center min-w-0">
-        <div className="flex items-center gap-0.5 sm:gap-1 bg-stone-200/40 p-0.5 sm:p-1 rounded-full border border-stone-200/80 overflow-hidden">
+      <div className="flex-1 flex items-center justify-center min-w-0 overflow-visible">
+        <div className="flex items-center gap-0.5 sm:gap-1 bg-stone-200/40 p-0.5 sm:p-1 rounded-full border border-stone-200/80 overflow-visible">
           {tenants.map((tenant) => {
             const isActive = tenant.id === activeTenantId;
             const label = tenant.id === 'yada' ? 'Yada Guide' : tenant.name;
@@ -65,8 +66,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 key={tenant.id}
                 onClick={() => onSelectTenant(tenant.id)}
                 className={`
-                  px-2 sm:px-3 py-0.5 sm:py-1 rounded-full
-                  text-[10px] sm:text-xs font-medium
+                  px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full
+                  text-[9.5px] sm:text-xs font-medium
                   transition-all cursor-pointer whitespace-nowrap shrink-0
                   ${isActive
                     ? `${tenant.activePillBg} ${tenant.activePillText} ${tenant.activePillBorder} border shadow-sm font-semibold`
@@ -81,13 +82,14 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* ── Right: Profile Avatar ── */}
+      {/* ── Right: Profile Avatar (no dropdown arrow indicator) ── */}
       {user.signedIn ? (
         <div className="relative shrink-0" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((prev) => !prev)}
-            className="flex items-center gap-1 p-0.5 sm:p-1 rounded-full hover:bg-stone-200/60 transition-colors cursor-pointer"
+            className="flex items-center p-0.5 sm:p-1 rounded-full hover:bg-stone-200/60 transition-colors cursor-pointer appearance-none"
             title={user.name}
+            aria-haspopup="true"
           >
             {user.avatarUrl ? (
               <img

@@ -572,9 +572,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               onClick={() => !isActive && goToSlide(i)}
               style={{
                 position: 'absolute',
-                width: isMobile ? 'min(66%, 272px)' : 'min(82%, 340px)',
-                height: isMobile ? '66%' : '82%',
-                maxHeight: isMobile ? '220px' : '275px',
+                width: isMobile ? 'min(53%, 218px)' : 'min(82%, 340px)',
+                height: isMobile ? '53%' : '82%',
+                maxHeight: isMobile ? '176px' : '275px',
                 left: '50%',
                 top: '44%',
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,
@@ -664,11 +664,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
           );
         })}
 
-        {/* ── Stationary Floating Input Box (2-line capacity for mobile & desktop) ── */}
-        <div className="absolute bottom-0.5 sm:bottom-1 left-1/2 -translate-x-1/2 w-[90%] max-w-lg z-30 pointer-events-auto">
-          <div className="bg-slate-900/90 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-2.5 sm:p-3 shadow-xl backdrop-blur-xl flex items-start justify-between gap-2.5 transition-all min-h-[56px]">
+        {/* ── Stationary Floating Input Box (3-line capacity for mobile & desktop) ── */}
+        <div className="absolute bottom-0.5 sm:bottom-1 left-1/2 -translate-x-1/2 w-[76%] max-w-md z-30 pointer-events-auto">
+          <div className="bg-slate-900/90 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-2 sm:p-2.5 shadow-xl backdrop-blur-xl flex items-start justify-between gap-2 transition-all min-h-[60px]">
             <div className="flex items-start gap-2 flex-1 min-w-0 pt-0.5">
-              <div className="flex-1 min-w-0 text-[11px] sm:text-xs text-slate-200 font-mono leading-relaxed line-clamp-2 min-h-[32px]">
+              <div className="flex-1 min-w-0 text-[11px] sm:text-xs text-slate-200 font-mono leading-relaxed line-clamp-3 min-h-[48px]">
                 <span>{typedText}</span>
                 <span
                   className={`inline-block w-1.5 h-3.5 ml-0.5 bg-sky-400 align-middle ${
