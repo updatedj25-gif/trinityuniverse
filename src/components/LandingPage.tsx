@@ -580,7 +580,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
 
       {/* ── Slider Motion Section with 18 Alternating Gnosis & Yada Cards ── */}
       <div
-        className="relative w-full flex-1 min-h-[263px] sm:min-h-[290px] max-h-[399px] sm:max-h-[420px] my-auto flex items-center justify-center overflow-hidden z-10"
+        className="relative w-full flex-1 min-h-[310px] sm:min-h-[290px] max-h-[430px] sm:max-h-[420px] my-auto flex items-center justify-center overflow-hidden z-10"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -612,9 +612,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               onClick={() => !isActive && goToSlide(i)}
               style={{
                 position: 'absolute',
-                width: isMobile ? 'min(58%, 229px)' : 'min(82%, 340px)',
-                height: isMobile ? '58%' : '82%',
-                maxHeight: isMobile ? '185px' : '275px',
+                width: isMobile ? 'min(80%, 290px)' : 'min(82%, 340px)',
+                height: isMobile ? '78%' : '82%',
+                maxHeight: isMobile ? '248px' : '275px',
                 left: '50%',
                 top: '44%',
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,
