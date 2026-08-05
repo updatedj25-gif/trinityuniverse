@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Tenant, UserProfile } from '../types';
-import { LogOut, ChevronDown } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 
 const TRINITY_LOGO = 'https://image2url.com/r2/default/images/1767183581317-68102f31-454b-45f6-9d39-025ce8604ac3.png';
 
@@ -49,11 +49,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="w-6 h-6 sm:w-7 sm:h-7 object-contain animate-breathe shrink-0"
         />
         {/* Hide full text on very small screens, show abbreviated */}
-        <span className="hidden xs:hidden sm:inline text-[10px] sm:text-[11px] font-semibold tracking-wider text-slate-800 uppercase whitespace-nowrap">
+        <span className="text-[9px] sm:text-[11px] font-semibold tracking-wider text-slate-800 uppercase whitespace-nowrap">
           TRINITY UNIVERSE
-        </span>
-        <span className="inline sm:hidden text-[9px] font-bold tracking-widest text-slate-800 uppercase">
-          TU
         </span>
       </div>
 
@@ -62,7 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-0.5 sm:gap-1 bg-stone-200/40 p-0.5 sm:p-1 rounded-full border border-stone-200/80 overflow-hidden">
           {tenants.map((tenant) => {
             const isActive = tenant.id === activeTenantId;
-            const label = tenant.name === 'YADA' ? 'Yada' : tenant.name;
+            const label = tenant.id === 'yada' ? 'Yada Guide' : tenant.name;
             return (
               <button
                 key={tenant.id}
@@ -104,9 +101,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {initials}
               </div>
             )}
-            <ChevronDown
-              className={`w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
-            />
           </button>
 
           {/* Dropdown */}

@@ -5,6 +5,7 @@
  *   POST /api/chat           → Cloudflare Workers AI (Gnosis / Yada)
  *   GET  /api/me             → Return current session user (or 401)
  *   GET  /auth/google        → Initiate Google OAuth flow
+ *   GET  /api/auth/google     → Alias (matches Google Console redirect URI)
  *   GET  /auth/google/callback → Exchange code, create session, set cookie
  *   GET  /auth/logout        → Destroy session & clear cookie
  *   *                        → ASSETS.fetch (Vite static build)
@@ -116,7 +117,7 @@ export default {
     }
 
     // ── GET /auth/google ──────────────────────────────────────────────────────
-    if (url.pathname === '/auth/google' && request.method === 'GET') {
+    if ((url.pathname === '/auth/google' || url.pathname === '/api/auth/google') && request.method === 'GET') {
       if (!env.GOOGLE_CLIENT_ID || !env.GNOSIS_SESSIONS) {
         return new Response('OAuth not configured. Set GOOGLE_CLIENT_ID and bind GNOSIS_SESSIONS.', {
           status: 503,
@@ -127,7 +128,7 @@ export default {
       // Store state in KV for 10 minutes to verify on callback (CSRF protection)
       await env.GNOSIS_SESSIONS.put(`oauth_state:${state}`, '1', { expirationTtl: 600 });
 
-      const redirectUri = `https://www.trinityuniverse.org/auth/google/callback`;
+      const redirectUri = `${url.origin}/api/auth/google/callback`;
       const params = new URLSearchParams({
         client_id: env.GOOGLE_CLIENT_ID,
         redirect_uri: redirectUri,
@@ -142,7 +143,7 @@ export default {
     }
 
     // ── GET /auth/google/callback ─────────────────────────────────────────────
-    if (url.pathname === '/auth/google/callback' && request.method === 'GET') {
+    if ((url.pathname === '/auth/google/callback' || url.pathname === '/api/auth/google/callback') && request.method === 'GET') {
       if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET || !env.GNOSIS_SESSIONS) {
         return new Response('OAuth not configured.', { status: 503 });
       }
@@ -167,7 +168,7 @@ export default {
       await env.GNOSIS_SESSIONS.delete(`oauth_state:${state}`);
 
       // Exchange authorization code for tokens
-      const redirectUri = `https://www.trinityuniverse.org/auth/google/callback`;
+      const redirectUri = `${url.origin}/api/auth/google/callback`;
       let tokenData: {
         access_token?: string;
         id_token?: string;
@@ -237,7 +238,7 @@ export default {
     }
 
     // ── GET /auth/logout ──────────────────────────────────────────────────────
-    if (url.pathname === '/auth/logout' && request.method === 'GET') {
+    if ((url.pathname === '/auth/logout' || url.pathname === '/api/auth/logout') && request.method === 'GET') {
       if (env.GNOSIS_SESSIONS) {
         const cookies = parseCookies(request.headers.get('cookie'));
         const sessionId = cookies['__trinity_session'];

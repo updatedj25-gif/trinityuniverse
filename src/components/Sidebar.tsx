@@ -54,7 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             : 'w-0 -translate-x-full opacity-0 pointer-events-none border-r-0'
         }`}
       >
-        <div className="w-64 sm:w-72 h-full flex flex-col justify-between">
+        <div className="w-64 sm:w-72 h-full flex flex-col">
           {/* Top Content Area */}
           <div className="p-4 flex-1 flex flex-col overflow-y-auto">
             {/* Tenant Header & Mobile Close */}
@@ -178,27 +178,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               })
             )}
           </div>
-        </div>
-
-        {/* Bottom Profile Footer */}
-        <div className="p-3 border-t border-stone-200/80 bg-[#F2EEE8] flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div
-              className={`w-8 h-8 rounded-full ${
-                tenant.avatarBg || 'bg-blue-100 text-blue-600'
-              } flex items-center justify-center shrink-0 shadow-2xs font-bold text-xs`}
-            >
-              {tenant.name.charAt(0)}
-            </div>
-            <div className="text-xs font-medium text-slate-800 truncate max-w-[130px]">
-              {user.signedIn ? user.name : 'Guest User'}
-            </div>
-          </div>
-
-          <div className="text-[10px] text-stone-400 uppercase tracking-wider font-semibold">
-            TRINITY
-          </div>
-        </div>
         </div>
       </aside>
     </>

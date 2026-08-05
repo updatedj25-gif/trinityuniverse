@@ -398,6 +398,7 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
   const [activeSlide, setActiveSlide] = useState(0);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
   const [animating, setAnimating] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
@@ -428,6 +429,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
 
   // Handle Typewriter effect whenever activeSlide changes:
   // Prompt types fully first, then answer reveals, then auto-advances
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   useEffect(() => {
     const targetPrompt = GNOSIS_CARDS[activeSlide].promptText;
     setTypedText('');
@@ -474,7 +481,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
   };
 
   const handleGoogleSignIn = () => {
-    window.location.href = '/auth/google';
+    window.location.href = '/api/auth/google';
   };
 
   const handleGuestEntry = () => {
@@ -565,9 +572,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               onClick={() => !isActive && goToSlide(i)}
               style={{
                 position: 'absolute',
-                width: 'min(82%, 340px)',
-                height: '82%',
-                maxHeight: '275px',
+                width: isMobile ? 'min(66%, 272px)' : 'min(82%, 340px)',
+                height: isMobile ? '66%' : '82%',
+                maxHeight: isMobile ? '220px' : '275px',
                 left: '50%',
                 top: '44%',
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,
