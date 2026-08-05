@@ -11,150 +11,117 @@ import { LandingPage } from './components/LandingPage';
 import { SignInModal } from './components/SignInModal';
 import { TenantModal } from './components/TenantModal';
 
-export const App: React.FC = () => {
-  // 1. Tenants State
+const App: React.FC = () => {
+  // ── Tenants ────────────────────────────────────────────────────────────────
   const [tenants, setTenants] = useState<Tenant[]>(() => {
-    const saved = localStorage.getItem('trinity_tenants');
-    return saved ? JSON.parse(saved) : INITIAL_TENANTS;
+    try {
+      const saved = localStorage.getItem('trinity_tenants');
+      return saved ? JSON.parse(saved) : INITIAL_TENANTS;
+    } catch { return INITIAL_TENANTS; }
   });
 
   const [activeTenantId, setActiveTenantId] = useState<string>('gnosis');
-
-  // View state: 'chat' or 'library'
   const [currentView, setCurrentView] = useState<'chat' | 'library'>('chat');
 
-  // Landing page — show unless user has previously signed in / dismissed
+  // ── Landing ────────────────────────────────────────────────────────────────
   const [showLanding, setShowLanding] = useState<boolean>(() => {
-    const dismissed = localStorage.getItem('trinity_landing_dismissed');
-    const userProfile = localStorage.getItem('trinity_user_profile');
-    if (dismissed === 'true') return false;
-    if (userProfile) {
-      try {
-        const parsed = JSON.parse(userProfile);
-        if (parsed.signedIn) return false;
-      } catch {
-        // ignore
+    try {
+      const dismissed = localStorage.getItem('trinity_landing_dismissed');
+      if (dismissed === 'true') return false;
+      const raw = localStorage.getItem('trinity_user_profile');
+      if (raw) {
+        const p: UserProfile = JSON.parse(raw);
+        if (p.signedIn) return false;
       }
-    }
+    } catch { /* */ }
     return true;
   });
 
-  // 2. Chat Sessions State — defaults to DEFAULT_INITIAL_SESSIONS so sidebar is never empty
+  // ── Sessions ───────────────────────────────────────────────────────────────
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
-    const saved = localStorage.getItem('trinity_chat_sessions');
-    if (saved) {
-      try {
+    try {
+      const saved = localStorage.getItem('trinity_chat_sessions');
+      if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch {
-        // fallback
       }
-    }
+    } catch { /* */ }
     return DEFAULT_INITIAL_SESSIONS;
   });
 
-  // 3. Per-Tenant Active Session Map (Remembers each AI tenant's open chat)
+  // ── Active session per tenant ──────────────────────────────────────────────
   const [activeSessionMap, setActiveSessionMap] = useState<Record<string, string | null>>(() => {
-    const saved = localStorage.getItem('trinity_active_session_map');
-    if (saved) {
-      try {
+    try {
+      const saved = localStorage.getItem('trinity_active_session_map');
+      if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') return parsed;
-      } catch {
-        // fallback
       }
-    }
-    return {
-      gnosis: 'session_gnosis_welcome',
-      yada: 'session_yada_welcome',
-    };
+    } catch { /* */ }
+    return { gnosis: 'session_gnosis_welcome', yada: 'session_yada_welcome' };
   });
 
-  // 4. User State
+  // ── User ───────────────────────────────────────────────────────────────────
   const [user, setUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('trinity_user_profile');
-    return saved
-      ? JSON.parse(saved)
-      : { name: 'Guest User', signedIn: false };
+    try {
+      const saved = localStorage.getItem('trinity_user_profile');
+      if (saved) return JSON.parse(saved);
+    } catch { /* */ }
+    return { name: 'Guest User', signedIn: false };
   });
 
-  // 5. UI & Modals State
+  // ── UI ─────────────────────────────────────────────────────────────────────
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [signInOpen, setSignInOpen] = useState<boolean>(false);
   const [tenantModalOpen, setTenantModalOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Persistence effects
-  useEffect(() => {
-    localStorage.setItem('trinity_tenants', JSON.stringify(tenants));
-  }, [tenants]);
+  // ── Persistence ────────────────────────────────────────────────────────────
+  useEffect(() => { localStorage.setItem('trinity_tenants', JSON.stringify(tenants)); }, [tenants]);
+  useEffect(() => { localStorage.setItem('trinity_chat_sessions', JSON.stringify(sessions)); }, [sessions]);
+  useEffect(() => { localStorage.setItem('trinity_active_session_map', JSON.stringify(activeSessionMap)); }, [activeSessionMap]);
+  useEffect(() => { localStorage.setItem('trinity_user_profile', JSON.stringify(user)); }, [user]);
 
-  useEffect(() => {
-    localStorage.setItem('trinity_chat_sessions', JSON.stringify(sessions));
-  }, [sessions]);
-
-  useEffect(() => {
-    localStorage.setItem('trinity_active_session_map', JSON.stringify(activeSessionMap));
-  }, [activeSessionMap]);
-
-  useEffect(() => {
-    localStorage.setItem('trinity_user_profile', JSON.stringify(user));
-  }, [user]);
-
-  // ── Server session check (Google OAuth callback restores state here) ──────
+  // ── Restore session from server cookie (Google OAuth redirect flow) ─────────
   useEffect(() => {
     fetch('/api/me')
       .then((r) => (r.ok ? r.json() : null))
       .then((data: UserProfile | null) => {
         if (data && data.signedIn) {
           setUser(data);
-          setShowLanding(false);
-          localStorage.setItem('trinity_landing_dismissed', 'true');
           localStorage.setItem('trinity_user_profile', JSON.stringify(data));
+          setShowLanding(false);
         }
       })
-      .catch(() => {
-        // network error or no session — stay as guest, no action needed
-      });
+      .catch(() => { /* api/me not available in dev; ignore */ });
   }, []);
 
-  // Derived current Tenant object
-  const currentTenant =
-    tenants.find((t) => t.id === activeTenantId) || tenants[0];
+  // ── Derived state ──────────────────────────────────────────────────────────
+  const currentTenant = tenants.find((t) => t.id === activeTenantId) ?? tenants[0];
+  const activeSessionId = activeSessionMap[activeTenantId] ?? null;
+  const currentTenantSessions = sessions.filter((s) => s.tenantId === currentTenant.id);
+  const activeSession = currentTenantSessions.find((s) => s.id === activeSessionId);
+  const currentMessages = activeSession?.messages ?? [];
 
-  // Current active session for the selected tenant
-  const activeSessionId = activeSessionMap[activeTenantId] || null;
+  // ── Handlers ───────────────────────────────────────────────────────────────
+  const handleLandingEnter = (profile: UserProfile) => {
+    setUser(profile);
+    localStorage.setItem('trinity_user_profile', JSON.stringify(profile));
+    localStorage.setItem('trinity_landing_dismissed', 'true');
+    setActiveTenantId('gnosis');
+    setShowLanding(false);
+  };
 
-  // Filter sessions strictly belonging to the active tenant
-  const currentTenantSessions = sessions.filter(
-    (s) => s.tenantId === currentTenant.id
-  );
-
-  const activeSession = currentTenantSessions.find(
-    (s) => s.id === activeSessionId
-  );
-
-  const currentMessages = activeSession ? activeSession.messages : [];
-
-  // ── Logout handler ───────────────────────────────────────────────────────
   const handleLogout = () => {
+    const clearedUser: UserProfile = { name: 'Guest User', signedIn: false };
+    setUser(clearedUser);
     localStorage.removeItem('trinity_user_profile');
     localStorage.removeItem('trinity_landing_dismissed');
-    // Hit the Worker's logout route to clear the KV session cookie
-    window.location.href = '/auth/logout';
+    setShowLanding(true);
+    // Also hit server logout if available
+    fetch('/api/auth/logout').catch(() => {});
   };
 
-  // ── Landing page sign-in handler ─────────────────────────────────────────
-  const handleLandingSignIn = (profile: UserProfile) => {
-    setUser(profile);
-    setActiveTenantId('gnosis');
-    setCurrentView('chat');
-    setShowLanding(false);
-    localStorage.setItem('trinity_landing_dismissed', 'true');
-    localStorage.setItem('trinity_user_profile', JSON.stringify(profile));
-  };
-
-  // Handlers
   const handleSelectTenant = (tenantId: string) => {
     setActiveTenantId(tenantId);
     setCurrentView('chat');
@@ -169,64 +136,39 @@ export const App: React.FC = () => {
 
   const handleSelectSession = (sessionId: string) => {
     setCurrentView('chat');
-    setActiveSessionMap((prev) => ({
-      ...prev,
-      [activeTenantId]: sessionId,
-    }));
+    setActiveSessionMap((prev) => ({ ...prev, [activeTenantId]: sessionId }));
   };
 
   const handleNewSession = () => {
     setCurrentView('chat');
-    setActiveSessionMap((prev) => ({
-      ...prev,
-      [activeTenantId]: null,
-    }));
+    setActiveSessionMap((prev) => ({ ...prev, [activeTenantId]: null }));
   };
 
   const handleClearHistory = () => {
-    if (
-      window.confirm(
-        `Are you sure you want to clear all history for ${currentTenant.name}?`
-      )
-    ) {
+    if (window.confirm(`Clear all history for ${currentTenant.name}?`)) {
       setSessions((prev) => prev.filter((s) => s.tenantId !== currentTenant.id));
-      setActiveSessionMap((prev) => ({
-        ...prev,
-        [currentTenant.id]: null,
-      }));
+      setActiveSessionMap((prev) => ({ ...prev, [currentTenant.id]: null }));
     }
   };
 
   const handleDeleteSession = (sessionId: string) => {
     setSessions((prev) => prev.filter((s) => s.id !== sessionId));
     if (activeSessionId === sessionId) {
-      setActiveSessionMap((prev) => ({
-        ...prev,
-        [activeTenantId]: null,
-      }));
+      setActiveSessionMap((prev) => ({ ...prev, [activeTenantId]: null }));
     }
   };
 
   const handleAddTenant = (newTenant: Tenant) => {
     setTenants((prev) => [...prev, newTenant]);
     setActiveTenantId(newTenant.id);
-    setActiveSessionMap((prev) => ({
-      ...prev,
-      [newTenant.id]: null,
-    }));
+    setActiveSessionMap((prev) => ({ ...prev, [newTenant.id]: null }));
   };
 
-  const handleSendMessage = async (
-    content: string,
-    attachments?: Attachment[]
-  ) => {
+  const handleSendMessage = async (content: string, attachments?: Attachment[]) => {
     let sessionId = activeSessionId;
     let updatedSessions = [...sessions];
 
-    const now = new Date().toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -236,7 +178,9 @@ export const App: React.FC = () => {
       attachments,
     };
 
-    let targetSession = updatedSessions.find((s) => s.id === sessionId && s.tenantId === currentTenant.id);
+    let targetSession = updatedSessions.find(
+      (s) => s.id === sessionId && s.tenantId === currentTenant.id,
+    );
 
     if (!targetSession) {
       const newSessionId = `session_${currentTenant.id}_${Date.now()}`;
@@ -244,6 +188,7 @@ export const App: React.FC = () => {
       targetSession = {
         id: newSessionId,
         tenantId: currentTenant.id,
+        userEmail: user.email,           // ← tag session with signed-in email
         title: title || 'New Conversation',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -258,22 +203,19 @@ export const App: React.FC = () => {
         messages: [...targetSession.messages, userMessage],
       };
       updatedSessions = updatedSessions.map((s) =>
-        s.id === sessionId ? targetSession! : s
+        s.id === sessionId ? targetSession! : s,
       );
     }
 
     setSessions(updatedSessions);
-    setActiveSessionMap((prev) => ({
-      ...prev,
-      [currentTenant.id]: sessionId,
-    }));
+    setActiveSessionMap((prev) => ({ ...prev, [currentTenant.id]: sessionId }));
     setIsLoading(true);
 
     try {
       const hasImages = userMessage.attachments?.some((a) => a.type === 'image');
       const selectedModel = hasImages
-        ? currentTenant.visionModel || '@cf/meta/llama-3.2-11b-vision-instruct'
-        : currentTenant.primaryModel || '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+        ? currentTenant.visionModel ?? '@cf/meta/llama-3.2-11b-vision-instruct'
+        : currentTenant.primaryModel ?? '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -292,61 +234,49 @@ export const App: React.FC = () => {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to get response from Cloudflare AI');
-      }
+      if (!response.ok) throw new Error(data.error ?? 'Failed to get AI response');
 
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: data.text,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
       setSessions((prev) =>
         prev.map((s) =>
-          s.id === sessionId
-            ? { ...s, messages: [...s.messages, assistantMessage] }
-            : s
-        )
+          s.id === sessionId ? { ...s, messages: [...s.messages, assistantMessage] } : s,
+        ),
       );
-    } catch (error: any) {
-      console.error('Error in chat request:', error);
-      const errorMessage: ChatMessage = {
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Please verify credentials.';
+      const errMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `Issue communicating with ${currentTenant.name}: ${
-          error.message || 'Please verify environment credentials.'
-        }`,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
+        content: `⚠ Issue communicating with ${currentTenant.name}: ${msg}`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
-
       setSessions((prev) =>
         prev.map((s) =>
-          s.id === sessionId
-            ? { ...s, messages: [...s.messages, errorMessage] }
-            : s
-        )
+          s.id === sessionId ? { ...s, messages: [...s.messages, errMessage] } : s,
+        ),
       );
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ── Landing page ─────────────────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────────────────────────────────
   if (showLanding) {
-    return <LandingPage onSignIn={handleLandingSignIn} />;
+    return (
+      <LandingPage
+        onSignIn={handleLandingEnter}
+      />
+    );
   }
 
   return (
     <div className="h-dvh w-screen flex flex-col overflow-hidden bg-[#FAF7F2] font-sans text-slate-800">
-      {/* Top Navbar — fixed so it never scrolls on any screen size */}
       <Navbar
         tenants={tenants}
         activeTenantId={activeTenantId}
@@ -355,10 +285,8 @@ export const App: React.FC = () => {
         user={user}
         onLogout={handleLogout}
       />
-      {/* Spacer matching the fixed navbar height */}
       <div className="h-[46px] shrink-0" />
 
-      {/* Main Workspace Layout (Sidebar + Chat Area / Library Page) */}
       <div className="flex-1 flex overflow-hidden relative">
         <Sidebar
           tenant={currentTenant}
@@ -379,16 +307,15 @@ export const App: React.FC = () => {
           {currentView === 'library' ? (
             <LibraryPage
               onGoHome={() => setCurrentView('chat')}
-              onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+              onToggleSidebar={() => setSidebarOpen((p) => !p)}
             />
           ) : (
             <>
               <Header
                 tenant={currentTenant}
-                onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+                onToggleSidebar={() => setSidebarOpen((p) => !p)}
                 onNewChat={handleNewSession}
               />
-
               <ChatArea
                 tenant={currentTenant}
                 messages={currentMessages}
@@ -400,11 +327,13 @@ export const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Modals */}
       <SignInModal
         isOpen={signInOpen}
         onClose={() => setSignInOpen(false)}
-        onSignInSuccess={(profile) => setUser(profile)}
+        onSignInSuccess={(profile) => {
+          setUser(profile);
+          setShowLanding(false);
+        }}
       />
 
       <TenantModal
@@ -415,3 +344,5 @@ export const App: React.FC = () => {
     </div>
   );
 };
+
+export default App;

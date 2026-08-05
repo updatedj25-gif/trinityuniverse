@@ -481,7 +481,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
   };
 
   const handleGoogleSignIn = () => {
-    window.location.href = '/api/auth/google';
+    const clientId = (import.meta as { env?: Record<string, string> }).env?.VITE_GOOGLE_CLIENT_ID;
+    // Try GIS one-tap popup first; fall back to server-side redirect
+    if (clientId && window.google?.accounts?.id) {
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (response: { credential: string }) => {
+          try {
+            const payload = JSON.parse(
+              atob(response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+            );
+            onSignIn({
+              name: payload.name || payload.email,
+              email: payload.email,
+              avatarUrl: payload.picture,
+              signedIn: true,
+            });
+          } catch { /* */ }
+        },
+      });
+      window.google.accounts.id.prompt((n: { isNotDisplayed: () => boolean; isSkippedMoment: () => boolean }) => {
+        if (n.isNotDisplayed() || n.isSkippedMoment()) {
+          window.location.href = '/api/auth/google';
+        }
+      });
+    } else {
+      window.location.href = '/api/auth/google';
+    }
   };
 
   const handleGuestEntry = () => {
@@ -540,7 +566,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
 
       {/* ── Slider Motion Section with 18 Alternating Gnosis & Yada Cards ── */}
       <div
-        className="relative w-full flex-1 min-h-[250px] sm:min-h-[290px] max-h-[380px] sm:max-h-[420px] my-auto flex items-center justify-center overflow-hidden z-10"
+        className="relative w-full flex-1 min-h-[263px] sm:min-h-[290px] max-h-[399px] sm:max-h-[420px] my-auto flex items-center justify-center overflow-hidden z-10"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >

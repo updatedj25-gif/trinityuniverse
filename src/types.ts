@@ -52,6 +52,8 @@ export interface ChatMessage {
 export interface ChatSession {
   id: string;
   tenantId: string;
+  /** Email of the signed-in user who owns this session */
+  userEmail?: string;
   title: string;
   createdAt: string;
   updatedAt: string;
