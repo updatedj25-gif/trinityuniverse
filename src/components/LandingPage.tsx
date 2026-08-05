@@ -569,18 +569,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
       </header>
 
       {/* ── Section Header & Subtitle (Positioned right above slider cards) ── */}
-      <div className="text-center px-4 mt-7 sm:mt-11 mb-0 sm:-mb-1 z-10 relative shrink-0">
-        <h2 className="text-xs sm:text-sm font-extrabold tracking-[0.18em] text-slate-800 uppercase mb-1">
+      <div className="text-center px-4 mt-2 sm:mt-11 mb-1 sm:-mb-1 z-10 relative shrink-0">
+        <h2 className="text-[10.5px] sm:text-sm font-extrabold tracking-[0.18em] text-slate-800 uppercase mb-0.5">
           Gnosis Multi-Tenant AI
         </h2>
-        <p className="text-[11px] sm:text-xs font-medium text-slate-600 tracking-wide max-w-xl mx-auto">
+        <p className="text-[10px] sm:text-xs font-medium text-slate-600 tracking-wide max-w-xl mx-auto">
           Explore multi-agent reasoning, archetypal wisdom, deep research, and spiritual synthesis.
         </p>
       </div>
 
       {/* ── Slider Motion Section with 18 Alternating Gnosis & Yada Cards ── */}
       <div
-        className="relative w-full flex-1 min-h-[310px] sm:min-h-[290px] max-h-[430px] sm:max-h-[420px] my-auto flex items-center justify-center overflow-hidden z-10"
+        className="relative w-full flex-1 min-h-[250px] sm:min-h-[290px] max-h-[370px] sm:max-h-[420px] my-auto flex items-center justify-center overflow-hidden z-10"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -612,9 +612,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               onClick={() => !isActive && goToSlide(i)}
               style={{
                 position: 'absolute',
-                width: isMobile ? 'min(80%, 290px)' : 'min(82%, 340px)',
-                height: isMobile ? '78%' : '82%',
-                maxHeight: isMobile ? '248px' : '275px',
+                width: isMobile ? 'min(70%, 252px)' : 'min(82%, 340px)',
+                height: isMobile ? '76%' : '82%',
+                maxHeight: isMobile ? '210px' : '275px',
                 left: '50%',
                 top: '44%',
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,
@@ -632,7 +632,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                 boxShadow: isActive
                   ? `0 14px 36px rgba(15, 23, 42, 0.35), 0 0 20px ${card.accentColor}30`
                   : '0 8px 20px rgba(0, 0, 0, 0.2)',
-                padding: '10px 12px',
+                padding: isMobile ? '7px 9px' : '10px 12px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -641,47 +641,47 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               className="group select-none"
             >
               {/* Card Header Bar */}
-              <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2 mb-2 shrink-0">
+              <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5 mb-1.5 shrink-0">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-[10px] sm:text-[10.5px] font-semibold text-slate-200 tracking-wider truncate">
+                  <span className="text-[9px] sm:text-[10.5px] font-semibold text-slate-200 tracking-wider truncate">
                     {card.badge}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[9px] sm:text-[9.5px] text-slate-300 font-mono">LIVE</span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[8px] sm:text-[9.5px] text-slate-300 font-mono">LIVE</span>
                 </div>
               </div>
 
               {/* Card Content Area (Simulated AI Response Box) */}
-              <div className="flex-1 overflow-hidden flex flex-col justify-start space-y-1.5">
-                <h3 className="text-xs sm:text-sm font-bold text-white tracking-tight leading-snug truncate">
+              <div className="flex-1 overflow-hidden flex flex-col justify-start space-y-1">
+                <h3 className="text-[10px] sm:text-sm font-bold text-white tracking-tight leading-snug truncate">
                   {card.title}
                 </h3>
 
                 {/* Simulated AI Chat Response Display (reveals smoothly ONLY after prompt finishes typing) */}
                 <div
-                  className={`bg-slate-950/75 border border-white/10 rounded-xl p-2 sm:p-2.5 text-[10px] sm:text-[11px] text-slate-300 space-y-1 sm:space-y-1.5 backdrop-blur-sm transition-all duration-500 overflow-hidden ${
+                  className={`bg-slate-950/75 border border-white/10 rounded-xl p-1.5 sm:p-2.5 text-[9px] sm:text-[11px] text-slate-300 space-y-1 sm:space-y-1.5 backdrop-blur-sm transition-all duration-500 overflow-hidden ${
                     isActive && showAnswer
                       ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
                       : 'opacity-0 translate-y-3 scale-95 pointer-events-none'
                   }`}
                 >
-                  <div className="flex items-center gap-1.5 font-semibold text-white">
+                  <div className="flex items-center gap-1 font-semibold text-white">
                     <span
                       className="w-1.5 h-1.5 rounded-full shrink-0"
                       style={{ backgroundColor: card.accentColor }}
                     />
-                    <span className="truncate">{card.chatAiResponse.heading}</span>
+                    <span className="truncate text-[9px] sm:text-[10.5px]">{card.chatAiResponse.heading}</span>
                   </div>
 
-                  <p className="text-slate-300/90 text-[10px] sm:text-[10.5px] leading-relaxed line-clamp-2">
+                  <p className="text-slate-300/90 text-[8.5px] sm:text-[10.5px] leading-relaxed line-clamp-2">
                     {card.chatAiResponse.body}
                   </p>
 
                   {/* Code snippet if available */}
                   {card.chatAiResponse.codeSnippet && (
-                    <pre className="bg-black/70 border border-slate-800 text-[9px] sm:text-[9.5px] text-sky-300 p-1.5 rounded-lg font-mono overflow-x-auto whitespace-pre-wrap leading-tight max-h-[46px]">
+                    <pre className="bg-black/70 border border-slate-800 text-[8px] sm:text-[9.5px] text-sky-300 p-1 sm:p-1.5 rounded-lg font-mono overflow-x-auto whitespace-pre-wrap leading-tight max-h-[38px] sm:max-h-[46px]">
                       {card.chatAiResponse.codeSnippet}
                     </pre>
                   )}
@@ -690,7 +690,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                   {card.chatAiResponse.bullets && (
                     <ul className="space-y-0.5 pl-0.5">
                       {card.chatAiResponse.bullets.slice(0, 2).map((b, idx) => (
-                        <li key={idx} className="flex items-start gap-1 text-[9.5px] sm:text-[10px] text-slate-300 truncate">
+                        <li key={idx} className="flex items-start gap-1 text-[8.5px] sm:text-[10px] text-slate-300 truncate">
                           <span className="text-sky-400">•</span>
                           <span className="truncate">{b}</span>
                         </li>
@@ -722,7 +722,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
       </div>
 
       {/* ── Primary Action Call-to-Action (Positioned close to input box) ── */}
-      <div className="flex flex-col items-center gap-2 px-6 mb-3 sm:mb-5 mt-1 sm:mt-1.5 z-10 relative shrink-0">
+      <div className="flex flex-col items-center gap-2 px-6 mb-2 sm:mb-5 mt-0 sm:mt-1.5 z-10 relative shrink-0">
         {/* Google Sign In Button */}
         <button
           onClick={handleGoogleSignIn}
