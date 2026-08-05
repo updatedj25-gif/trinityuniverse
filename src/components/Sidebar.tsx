@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tenant, ChatSession, UserProfile } from '../types';
-import { Plus, Trash2, MessageSquare, X } from 'lucide-react';
+import { Plus, Trash2, MessageSquare, BookOpen, X } from 'lucide-react';
 
 interface SidebarProps {
   tenant: Tenant;
@@ -78,9 +78,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons: 1. Ebook Library Menu -> 2. New Chat Button */}
             <div className="space-y-2 mb-4">
-              {/* Ebook Library Button (Ahead of New Chat) */}
+              {/* Ebook Library Button */}
               <button
                 onClick={() => {
                   onOpenLibrary();
@@ -94,6 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     : 'bg-white text-slate-800 border-stone-200 hover:bg-stone-50 hover:border-stone-300'
                 }`}
               >
+                <BookOpen className="w-4 h-4" />
                 <span>Ebook Library</span>
               </button>
 
@@ -112,15 +113,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <Plus className="w-4 h-4" />
                 <span>{tenant.newChatBtnText}</span>
               </button>
-
-              {/* Clear All History Button */}
-              <button
-                onClick={onClearHistory}
-                className="w-full py-1.5 px-4 rounded-xl font-medium text-xs text-red-600 bg-red-50/70 border border-red-200/50 hover:bg-red-100/70 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>{tenant.clearHistoryBtnText}</span>
-              </button>
             </div>
 
             {/* Subtitle for Yada */}
@@ -130,14 +122,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </p>
             )}
 
-            {/* Section Header */}
-            <div className="mb-2 px-1">
+            {/* 3. Section Header & Chat History */}
+            <div className="flex items-center justify-between mb-2 px-1">
               <span className="text-[11px] font-semibold tracking-wider text-stone-400 uppercase">
                 {tenant.id === 'yada' ? 'CONSULTATIONS HISTORY' : 'CHAT HISTORY'}
               </span>
+              {currentTenantSessions.length > 0 && (
+                <button
+                  onClick={onClearHistory}
+                  title="Clear all history"
+                  className="text-[10px] text-stone-400 hover:text-red-500 transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>Clear</span>
+                </button>
+              )}
             </div>
 
-            {/* Chat History List — empty for new users, populated after conversations */}
+            {/* Chat History List */}
             <div className="flex-1 overflow-y-auto space-y-1 pr-1">
               {currentTenantSessions.length === 0 ? (
                 <p className="text-xs italic text-stone-400 py-3 px-1">

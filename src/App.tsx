@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tenant, ChatSession, ChatMessage, UserProfile, Attachment } from './types';
 import { INITIAL_TENANTS } from './data/tenants';
+import { DEFAULT_INITIAL_SESSIONS } from './data/defaultSessions';
 import { Navbar } from './components/Navbar';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -38,16 +39,35 @@ export const App: React.FC = () => {
     return true;
   });
 
-  // 2. Chat Sessions State
+  // 2. Chat Sessions State — defaults to DEFAULT_INITIAL_SESSIONS so sidebar is never empty
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
     const saved = localStorage.getItem('trinity_chat_sessions');
-    return saved ? JSON.parse(saved) : [];
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {
+        // fallback
+      }
+    }
+    return DEFAULT_INITIAL_SESSIONS;
   });
 
   // 3. Per-Tenant Active Session Map (Remembers each AI tenant's open chat)
   const [activeSessionMap, setActiveSessionMap] = useState<Record<string, string | null>>(() => {
     const saved = localStorage.getItem('trinity_active_session_map');
-    return saved ? JSON.parse(saved) : { gnosis: null, yada: null };
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') return parsed;
+      } catch {
+        // fallback
+      }
+    }
+    return {
+      gnosis: 'session_gnosis_welcome',
+      yada: 'session_yada_welcome',
+    };
   });
 
   // 4. User State

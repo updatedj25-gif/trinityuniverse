@@ -572,9 +572,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               onClick={() => !isActive && goToSlide(i)}
               style={{
                 position: 'absolute',
-                width: isMobile ? 'min(53%, 218px)' : 'min(82%, 340px)',
-                height: isMobile ? '53%' : '82%',
-                maxHeight: isMobile ? '176px' : '275px',
+                width: isMobile ? 'min(58%, 229px)' : 'min(82%, 340px)',
+                height: isMobile ? '58%' : '82%',
+                maxHeight: isMobile ? '185px' : '275px',
                 left: '50%',
                 top: '44%',
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,

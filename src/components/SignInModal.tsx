@@ -16,9 +16,9 @@ export const SignInModal: React.FC<SignInModalProps> = ({
 
   if (!isOpen) return null;
 
-  /** Real Google OAuth — navigates to the Worker's /auth/google route */
+  /** Real Google OAuth — navigates to the backend /api/auth/google route */
   const handleGoogleSignIn = () => {
-    window.location.href = '/auth/google';
+    window.location.href = '/api/auth/google';
   };
 
   /** Guest / custom-name sign-in (client-only, no server session) */

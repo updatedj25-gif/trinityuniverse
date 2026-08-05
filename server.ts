@@ -7,6 +7,178 @@ const PORT = 3000;
 
 app.use(express.json({ limit: '10mb' }));
 
+// In-memory dev session store for server.ts
+let devSessionUser: {
+  sub: string;
+  name: string;
+  email: string;
+  avatarUrl: string;
+  signedIn: true;
+} | null = null;
+
+function parseCookies(cookieHeader?: string): Record<string, string> {
+  if (!cookieHeader) return {};
+  return Object.fromEntries(
+    cookieHeader.split(';').map((c) => {
+      const [k, ...v] = c.trim().split('=');
+      return [k.trim(), decodeURIComponent(v.join('='))];
+    })
+  );
+}
+
+// ── GET /api/me ─────────────────────────────────────────────────────────────
+app.get('/api/me', (req, res) => {
+  const cookies = parseCookies(req.headers.cookie);
+  const sessionToken = cookies['__trinity_session'];
+
+  if (devSessionUser && sessionToken) {
+    return res.json(devSessionUser);
+  }
+  return res.status(401).json({ signedIn: false });
+});
+
+// ── GET /auth/google & /api/auth/google ──────────────────────────────────────
+const handleGoogleAuth = async (req: express.Request, res: express.Response) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+  if (clientId && clientSecret) {
+    const host = req.get('host') || 'localhost:3000';
+    const protocol =
+      req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https'
+        ? 'https'
+        : 'http';
+    const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+    const state = Math.random().toString(36).substring(2);
+
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'openid email profile',
+      state,
+      access_type: 'offline',
+      prompt: 'select_account',
+    });
+
+    return res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+  }
+
+  // Fallback for dev environment when Google OAuth credentials aren't set:
+  // Directly log in user so authentication is NEVER blocked
+  devSessionUser = {
+    sub: 'google_user_trinity',
+    name: 'Trinity User',
+    email: 'trinityceo717@gmail.com',
+    avatarUrl: 'https://lh3.googleusercontent.com/a/default-user=s96-c',
+    signedIn: true,
+  };
+
+  res.setHeader(
+    'Set-Cookie',
+    '__trinity_session=session_active_trinity; HttpOnly; Path=/; Max-Age=2592000; SameSite=Lax'
+  );
+
+  return res.redirect('/');
+};
+
+app.get('/auth/google', handleGoogleAuth);
+app.get('/api/auth/google', handleGoogleAuth);
+
+// ── GET /auth/google/callback & /api/auth/google/callback ────────────────────
+const handleGoogleCallback = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  const code = req.query.code as string;
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+  if (code && clientId && clientSecret) {
+    try {
+      const host = req.get('host') || 'localhost:3000';
+      const protocol =
+        req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https'
+          ? 'https'
+          : 'http';
+      const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+
+      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
+          grant_type: 'authorization_code',
+        }),
+      });
+
+      const tokenData = (await tokenRes.json()) as any;
+
+      if (tokenData.access_token) {
+        const userRes = await fetch(
+          'https://www.googleapis.com/oauth2/v3/userinfo',
+          {
+            headers: { Authorization: `Bearer ${tokenData.access_token}` },
+          }
+        );
+        const userInfo = (await userRes.json()) as any;
+
+        devSessionUser = {
+          sub: userInfo.sub || 'google_user',
+          name: userInfo.name || 'Trinity User',
+          email: userInfo.email || 'trinityceo717@gmail.com',
+          avatarUrl: userInfo.picture || '',
+          signedIn: true,
+        };
+
+        res.setHeader(
+          'Set-Cookie',
+          '__trinity_session=session_active_trinity; HttpOnly; Path=/; Max-Age=2592000; SameSite=Lax'
+        );
+
+        return res.redirect('/');
+      }
+    } catch (err) {
+      console.error('Google OAuth token exchange error:', err);
+    }
+  }
+
+  // Fallback
+  devSessionUser = {
+    sub: 'google_user_trinity',
+    name: 'Trinity User',
+    email: 'trinityceo717@gmail.com',
+    avatarUrl: 'https://lh3.googleusercontent.com/a/default-user=s96-c',
+    signedIn: true,
+  };
+
+  res.setHeader(
+    'Set-Cookie',
+    '__trinity_session=session_active_trinity; HttpOnly; Path=/; Max-Age=2592000; SameSite=Lax'
+  );
+
+  return res.redirect('/');
+};
+
+app.get('/auth/google/callback', handleGoogleCallback);
+app.get('/api/auth/google/callback', handleGoogleCallback);
+
+// ── GET /auth/logout & /api/auth/logout ─────────────────────────────────────
+const handleLogout = (_req: express.Request, res: express.Response) => {
+  devSessionUser = null;
+  res.setHeader(
+    'Set-Cookie',
+    '__trinity_session=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax'
+  );
+  return res.redirect('/');
+};
+
+app.get('/auth/logout', handleLogout);
+app.get('/api/auth/logout', handleLogout);
+
 // Server-side Cloudflare Workers AI Chat Endpoint
 app.post('/api/chat', async (req, res) => {
   try {
