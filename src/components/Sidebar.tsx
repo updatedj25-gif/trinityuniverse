@@ -42,22 +42,56 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isOpen && (
         <div
           onClick={onCloseMobile}
-          className="fixed inset-0 bg-slate-900/20 backdrop-blur-xs z-40 lg:hidden"
+          className="fixed inset-0 bg-slate-900/20 z-40 lg:hidden"
         />
       )}
 
-      {/* Sidebar Container — no profile footer; profile is in the top Navbar */}
-      {/* Mobile: fixed below the 46px Navbar with an explicit height so flex children resolve correctly */}
+      {/*
+        Sidebar Container
+        ─────────────────────────────────────────────────────────────────────
+        MOBILE (< lg):
+          position: fixed
+          top: 46px  ← sits below the Navbar
+          bottom: 0  ← stretches all the way to the bottom of the viewport
+          left: 0
+
+        Using `top + bottom` instead of `h-[calc(100dvh-46px)]` is intentional:
+        `dvh` is not reliably supported on Android Chrome and can silently
+        resolve to 0, which causes `overflow-hidden` to clip all content so
+        only the background colour is visible (the reported bug).
+        `bottom: 0` lets the browser compute the height natively — works on
+        every mobile browser without viewport-unit quirks.
+
+        DESKTOP (≥ lg):
+          position: relative (participates in flex layout)
+          height: 100%  ← fills the flex parent
+          top / bottom: auto
+      */}
       <aside
-        className={`fixed lg:relative top-[46px] lg:top-0 left-0 z-50 h-[calc(100dvh-46px)] lg:h-full bg-[#F6F3EE] flex flex-col transition-all duration-300 ease-in-out select-none shrink-0 overflow-hidden ${
+        className={[
+          // Shared
+          'bg-[#F6F3EE] flex flex-col select-none shrink-0 overflow-hidden',
+          'transition-all duration-300 ease-in-out',
+          // Mobile: fixed panel below navbar, stretching to viewport bottom
+          'fixed top-[46px] bottom-0 left-0 z-50',
+          // Desktop: relative, full height inside flex parent
+          'lg:relative lg:top-auto lg:bottom-auto lg:z-auto lg:h-full',
+          // Open / closed state
           isOpen
             ? 'w-64 sm:w-72 translate-x-0 opacity-100 border-r border-stone-200/80'
-            : 'w-0 -translate-x-full opacity-0 pointer-events-none border-r-0'
-        }`}
+            : 'w-0 -translate-x-full opacity-0 pointer-events-none border-r-0',
+        ].join(' ')}
       >
-        <div className="w-64 sm:w-72 flex-1 flex flex-col min-h-0">
-          {/* All scrollable content area */}
-          <div className="p-4 flex-1 flex flex-col overflow-y-auto">
+        {/*
+          Inner wrapper: fixed width so content doesn't reflow during the
+          width transition (the aside animates from w-0 → w-64 but the inner
+          div stays at w-64, and overflow-hidden on the aside clips it cleanly).
+          flex-1 fills the full height of the aside.
+        */}
+        <div className="w-64 sm:w-72 flex-1 flex flex-col overflow-hidden">
+
+          {/* Scrollable content area */}
+          <div className="p-4 flex-1 flex flex-col overflow-y-auto min-h-0">
 
             {/* Tenant Header & Mobile Close */}
             <div className="flex items-center justify-between mb-4 px-1">
@@ -79,7 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             </div>
 
-            {/* Action Buttons: 1. Ebook Library Menu -> 2. New Chat Button */}
+            {/* 1. Ebook Library  2. New Chat */}
             <div className="space-y-2 mb-4">
               {/* Ebook Library Button */}
               <button
@@ -87,7 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onOpenLibrary();
                   onCloseMobile();
                 }}
-                className={`w-full py-2.5 px-4 rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-2xs border transition-all cursor-pointer ${
+                className={`w-full py-2.5 px-4 rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm border transition-all cursor-pointer ${
                   currentView === 'library'
                     ? 'bg-[#A36224] text-white border-[#8a511d] shadow-md'
                     : tenant.id === 'yada'
@@ -95,7 +129,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     : 'bg-white text-slate-800 border-stone-200 hover:bg-stone-50 hover:border-stone-300'
                 }`}
               >
-                <BookOpen className="w-4 h-4" />
+                <BookOpen className="w-4 h-4 shrink-0" />
                 <span>Ebook Library</span>
               </button>
 
@@ -105,13 +139,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onNewSession();
                   onCloseMobile();
                 }}
-                className={`w-full py-2.5 px-4 rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-2xs border transition-all cursor-pointer ${
+                className={`w-full py-2.5 px-4 rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm border transition-all cursor-pointer ${
                   tenant.id === 'yada'
                     ? 'bg-white text-[#A36224] border-[#E5C9A8] hover:bg-[#FFF9F2] hover:border-[#A36224]'
                     : 'bg-white text-slate-800 border-stone-200 hover:bg-stone-50 hover:border-stone-300'
                 }`}
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 shrink-0" />
                 <span>{tenant.newChatBtnText}</span>
               </button>
             </div>
@@ -123,7 +157,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </p>
             )}
 
-            {/* 3. Section Header & Chat History */}
+            {/* 3. Chat History header */}
             <div className="flex items-center justify-between mb-2 px-1">
               <span className="text-[11px] font-semibold tracking-wider text-stone-400 uppercase">
                 {tenant.id === 'yada' ? 'CONSULTATIONS HISTORY' : 'CHAT HISTORY'}
@@ -141,7 +175,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
 
             {/* Chat History List */}
-            <div className="flex-1 overflow-y-auto space-y-1 pr-1">
+            <div className="flex-1 overflow-y-auto space-y-1 pr-1 min-h-0">
               {currentTenantSessions.length === 0 ? (
                 <p className="text-xs italic text-stone-400 py-3 px-1">
                   No previous conversations
@@ -154,7 +188,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       key={session.id}
                       className={`group relative flex items-center justify-between py-2 px-2.5 rounded-lg text-xs sm:text-sm transition-all cursor-pointer ${
                         isActive
-                          ? 'bg-stone-200/70 text-slate-900 font-medium shadow-2xs'
+                          ? 'bg-stone-200/70 text-slate-900 font-medium shadow-sm'
                           : 'text-slate-600 hover:bg-stone-200/40 hover:text-slate-900'
                       }`}
                       onClick={() => {
@@ -173,7 +207,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           onDeleteSession(session.id);
                         }}
                         title="Delete session"
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded text-stone-400 hover:text-red-500 hover:bg-stone-200/80 transition-all cursor-pointer"
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded text-stone-400 hover:text-red-500 hover:bg-stone-200/80 transition-all cursor-pointer shrink-0"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -183,8 +217,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
             </div>
 
-          </div>{/* end p-4 flex-1 content area */}
-        </div>{/* end w-64 inner wrapper */}
+          </div>{/* end scrollable content */}
+        </div>{/* end inner wrapper */}
       </aside>
     </>
   );
