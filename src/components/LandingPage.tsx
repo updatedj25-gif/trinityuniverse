@@ -569,7 +569,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
       </header>
 
       {/* ── Section Header & Subtitle (Positioned right above slider cards) ── */}
-      <div className="text-center px-4 mt-2 sm:mt-11 mb-1 sm:-mb-1 z-10 relative shrink-0">
+      <div className="text-center px-4 mt-0 sm:mt-11 mb-0 sm:-mb-1 z-10 relative shrink-0">
         <h2 className="text-[10.5px] sm:text-sm font-extrabold tracking-[0.18em] text-slate-800 uppercase mb-0.5">
           Gnosis Multi-Tenant AI
         </h2>
@@ -580,7 +580,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
 
       {/* ── Slider Motion Section with 18 Alternating Gnosis & Yada Cards ── */}
       <div
-        className="relative w-full flex-1 min-h-[250px] sm:min-h-[290px] max-h-[370px] sm:max-h-[420px] my-auto flex items-center justify-center overflow-hidden z-10"
+        className="relative w-full flex-1 min-h-0 sm:min-h-[290px] max-h-[295px] sm:max-h-[420px] sm:my-auto flex items-center justify-center overflow-hidden z-10"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -616,7 +616,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                 height: isMobile ? '76%' : '82%',
                 maxHeight: isMobile ? '210px' : '275px',
                 left: '50%',
-                top: '44%',
+                top: isMobile ? '36%' : '44%',
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,
                 opacity,
                 filter: blur > 0 ? `blur(${blur}px)` : 'none',
@@ -722,7 +722,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
       </div>
 
       {/* ── Primary Action Call-to-Action (Positioned close to input box) ── */}
-      <div className="flex flex-col items-center gap-2 px-6 mb-2 sm:mb-5 mt-0 sm:mt-1.5 z-10 relative shrink-0">
+      <div className="flex flex-col items-center gap-2 px-6 mb-1 sm:mb-5 mt-0 sm:mt-1.5 z-10 relative shrink-0">
         {/* Google Sign In Button */}
         <button
           onClick={handleGoogleSignIn}

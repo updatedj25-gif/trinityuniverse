@@ -90,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   currentView === 'library'
                     ? 'bg-[#A36224] text-white border-[#8a511d] shadow-md'
                     : tenant.id === 'yada'
-                    ? 'bg-[#FFF9F2] text-[#A36224] border-[#F3E3D1] hover:bg-[#FAF0E4]'
+                    ? 'bg-white text-[#A36224] border-[#E5C9A8] hover:bg-[#FFF9F2] hover:border-[#A36224]'
                     : 'bg-white text-slate-800 border-stone-200 hover:bg-stone-50 hover:border-stone-300'
                 }`}
               >
@@ -106,7 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }}
                 className={`w-full py-2.5 px-4 rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-2xs border transition-all cursor-pointer ${
                   tenant.id === 'yada'
-                    ? 'bg-[#FFF9F2] text-[#A36224] border-[#F3E3D1] hover:bg-[#FAF0E4]'
+                    ? 'bg-white text-[#A36224] border-[#E5C9A8] hover:bg-[#FFF9F2] hover:border-[#A36224]'
                     : 'bg-white text-slate-800 border-stone-200 hover:bg-stone-50 hover:border-stone-300'
                 }`}
               >
