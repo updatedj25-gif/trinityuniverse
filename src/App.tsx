@@ -39,11 +39,23 @@ const App: React.FC = () => {
 
   // ── Sessions ───────────────────────────────────────────────────────────────
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
+    // Legacy hardcoded session IDs — strip them out on first load so returning
+    // users also get a clean empty sidebar instead of stale welcome chats.
+    const LEGACY_IDS = new Set([
+      'session_gnosis_welcome',
+      'session_gnosis_guide',
+      'session_yada_welcome',
+      'session_yada_guide',
+    ]);
     try {
       const saved = localStorage.getItem('trinity_chat_sessions');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter((s: ChatSession) => !LEGACY_IDS.has(s.id));
+          localStorage.setItem('trinity_chat_sessions', JSON.stringify(cleaned));
+          return cleaned;
+        }
       }
     } catch { /* */ }
     return DEFAULT_INITIAL_SESSIONS;
@@ -51,14 +63,27 @@ const App: React.FC = () => {
 
   // ── Active session per tenant ──────────────────────────────────────────────
   const [activeSessionMap, setActiveSessionMap] = useState<Record<string, string | null>>(() => {
+    const LEGACY_IDS = new Set([
+      'session_gnosis_welcome',
+      'session_gnosis_guide',
+      'session_yada_welcome',
+      'session_yada_guide',
+    ]);
     try {
       const saved = localStorage.getItem('trinity_active_session_map');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === 'object') return parsed;
+        if (parsed && typeof parsed === 'object') {
+          // Null-out any pointer that still targets a legacy session
+          const cleaned: Record<string, string | null> = {};
+          for (const [k, v] of Object.entries(parsed)) {
+            cleaned[k] = typeof v === 'string' && LEGACY_IDS.has(v) ? null : (v as string | null);
+          }
+          return cleaned;
+        }
       }
     } catch { /* */ }
-    return { gnosis: 'session_gnosis_welcome', yada: 'session_yada_welcome' };
+    return { gnosis: null, yada: null };
   });
 
   // ── User ───────────────────────────────────────────────────────────────────
