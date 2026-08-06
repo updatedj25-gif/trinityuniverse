@@ -107,14 +107,27 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('trinity_active_session_map', JSON.stringify(activeSessionMap)); }, [activeSessionMap]);
   useEffect(() => { localStorage.setItem('trinity_user_profile', JSON.stringify(user)); }, [user]);
 
+  // ── Auth error from Google OAuth redirect (e.g. ?auth_error=access_denied) ──
+  const [authError, setAuthError] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('auth_error');
+    if (err) {
+      // Remove param from URL so it doesn't persist on refresh
+      window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+    }
+    return err;
+  });
+
   // ── Restore session from server cookie (Google OAuth redirect flow) ─────────
   useEffect(() => {
-    fetch('/api/me')
+    fetch('/api/me', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((data: UserProfile | null) => {
         if (data && data.signedIn) {
           setUser(data);
           localStorage.setItem('trinity_user_profile', JSON.stringify(data));
+          setAuthError(null);
           setShowLanding(false);
         }
       })
@@ -296,6 +309,7 @@ const App: React.FC = () => {
     return (
       <LandingPage
         onSignIn={handleLandingEnter}
+        authError={authError}
       />
     );
   }

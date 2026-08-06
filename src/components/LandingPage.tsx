@@ -408,9 +408,20 @@ const GOOGLE_SVG = (
 
 interface LandingPageProps {
   onSignIn: (profile: UserProfile) => void;
+  authError?: string | null;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
+// Human-readable messages for OAuth error codes
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  access_denied:        'Google sign-in was cancelled. Please try again.',
+  invalid_state:        'Session expired during sign-in. Please try again.',
+  missing_params:       'Sign-in incomplete — please try again.',
+  token_exchange_failed:'Could not complete sign-in. Please try again.',
+  profile_fetch_failed: 'Could not load your Google profile. Please try again.',
+  incomplete_profile:   'Your Google account is missing required info.',
+};
+
+export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError }) => {
   const [activeSlide, setActiveSlide] = useState(0);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
   const [animating, setAnimating] = useState(false);
@@ -420,6 +431,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
   const [typedText, setTypedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [errorDismissed, setErrorDismissed] = useState(false);
 
   const totalCards = GNOSIS_CARDS.length;
 
@@ -568,6 +580,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
         </div>
       </header>
 
+      {/* ── Auth Error Banner ── shown when Google OAuth returns an error code */}
+      {authError && !errorDismissed && (
+        <div className="mx-5 sm:mx-8 mb-1 z-20 relative shrink-0">
+          <div className="flex items-center justify-between gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2.5 text-xs font-medium shadow-sm">
+            <span>
+              {AUTH_ERROR_MESSAGES[authError] ?? `Sign-in failed (${authError}). Please try again.`}
+            </span>
+            <button
+              onClick={() => setErrorDismissed(true)}
+              className="shrink-0 text-red-400 hover:text-red-600 transition-colors cursor-pointer ml-2"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Section Header & Subtitle (Positioned right above slider cards) ── */}
       <div className="text-center px-4 mt-3 sm:mt-11 mb-0 sm:-mb-1 z-10 relative shrink-0">
         <h2 className="text-[10.5px] sm:text-sm font-extrabold tracking-[0.18em] text-slate-800 uppercase mb-0.5">
@@ -612,9 +642,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
               onClick={() => !isActive && goToSlide(i)}
               style={{
                 position: 'absolute',
-                width: isMobile ? 'min(70%, 252px)' : 'min(82%, 340px)',
-                height: isMobile ? '76%' : '82%',
-                maxHeight: isMobile ? '210px' : '275px',
+                width: isMobile ? 'min(75%, 265px)' : 'min(82%, 340px)',
+                height: isMobile ? '81%' : '82%',
+                maxHeight: isMobile ? '221px' : '275px',
                 left: '50%',
                 top: isMobile ? '36%' : '44%',
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,
