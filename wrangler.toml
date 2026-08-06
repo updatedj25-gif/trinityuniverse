@@ -31,10 +31,6 @@ binding = "TRINITY_EBOOKS"
 bucket_name = "trinity-universe-ebooks"
 
 [[r2_buckets]]
-binding = "YADA_BUCKET"
-bucket_name = "yada-spiritual-guide"
-
-[[r2_buckets]]
 binding = "LOBE_AGRI"
 bucket_name = "gnosis-agriculture"
 
@@ -53,10 +49,6 @@ bucket_name = "gnosis-creativity"
 [[r2_buckets]]
 binding = "LOBE_DICT"
 bucket_name = "gnosis-dictionary"
-
-[[r2_buckets]]
-binding = "LOBE_DIVINAT"
-bucket_name = "divination-library"
 
 [[r2_buckets]]
 binding = "LOBE_EDU"

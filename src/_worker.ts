@@ -494,23 +494,25 @@ export default {
         const obj = await env.LIBRARY_BUCKET.get(key);
         if (!obj) return new Response('File not found', { status: 404 });
         // Determine content type from key extension
-        const ext = key.split('.').pop()?.toLowerCase() || '';
+        const ext = (key.split('.').pop() || '').toLowerCase();
         const ctMap: Record<string, string> = {
           png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
           pdf: 'application/pdf', epub: 'application/epub+zip',
         };
         const ct = obj.httpMetadata?.contentType || ctMap[ext] || 'application/octet-stream';
         const isDownload = ext === 'pdf' || ext === 'epub';
-        const headers: Record<string, string> = {
+        const responseHeaders: Record<string, string> = {
           'Content-Type': ct,
           'Cache-Control': 'public, max-age=86400',
           'Access-Control-Allow-Origin': '*',
         };
         if (isDownload) {
           const filename = key.split('/').pop() || 'ebook';
-          headers['Content-Disposition'] = `attachment; filename="${filename}"`;
+          responseHeaders['Content-Disposition'] = `attachment; filename="${filename}"`;
         }
-        return new Response(obj.body, { status: 200, headers });
+        // Use arrayBuffer for maximum compatibility with all runtimes
+        const buf = await obj.arrayBuffer();
+        return new Response(buf, { status: 200, headers: responseHeaders });
       } catch {
         return new Response('Error fetching file', { status: 500 });
       }

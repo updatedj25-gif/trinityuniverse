@@ -24,8 +24,18 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'chat' | 'library'>('chat');
 
   // ── Landing ────────────────────────────────────────────────────────────────
-  // TEMP_BYPASS: OAuth disabled for library testing — restore after confirmation
-  const [showLanding, setShowLanding] = useState<boolean>(false);
+  const [showLanding, setShowLanding] = useState<boolean>(() => {
+    try {
+      const dismissed = localStorage.getItem('trinity_landing_dismissed');
+      if (dismissed === 'true') return false;
+      const raw = localStorage.getItem('trinity_user_profile');
+      if (raw) {
+        const p: UserProfile = JSON.parse(raw);
+        if (p.signedIn) return false;
+      }
+    } catch { /* */ }
+    return true;
+  });
 
   // ── Sessions ───────────────────────────────────────────────────────────────
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
