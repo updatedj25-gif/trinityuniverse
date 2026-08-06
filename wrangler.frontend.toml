@@ -18,3 +18,14 @@ binding = "AI"
 [[kv_namespaces]]
 binding = "GNOSIS_SESSIONS"
 id = "f77344676aba47ef80496eaaa93135b9"
+
+# ── Library R2 Bucket — covers + ebook files ─────────────────────────────────
+[[r2_buckets]]
+binding = "LIBRARY_BUCKET"
+bucket_name = "trinityuniverselibrary"
+
+# ── D1 Database — ebook_catalog table ────────────────────────────────────────
+[[d1_databases]]
+binding = "DB"
+database_name = "divination-db"
+database_id = "25b1f304-4ab2-41c0-bf5d-a0c0b3c28c41"

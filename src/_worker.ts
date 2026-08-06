@@ -2,13 +2,15 @@
  * Trinity Universe — Full-stack Cloudflare Worker
  *
  * Routes:
- *   POST /api/chat           → Cloudflare Workers AI (Gnosis / Yada)
- *   GET  /api/me             → Return current session user (or 401)
- *   GET  /auth/google        → Initiate Google OAuth flow
- *   GET  /api/auth/google     → Alias (matches Google Console redirect URI)
+ *   POST /api/chat              → Cloudflare Workers AI (Gnosis / Yada)
+ *   GET  /api/me               → Return current session user (or 401)
+ *   GET  /auth/google          → Initiate Google OAuth flow
+ *   GET  /api/auth/google      → Alias (matches Google Console redirect URI)
  *   GET  /auth/google/callback → Exchange code, create session, set cookie
- *   GET  /auth/logout        → Destroy session & clear cookie
- *   *                        → ASSETS.fetch (Vite static build)
+ *   GET  /auth/logout          → Destroy session & clear cookie
+ *   GET  /api/r2/*             → Serve files from LIBRARY_BUCKET R2 (covers + ebooks)
+ *   GET  /api/library/catalog  → Return D1 ebook catalog JSON
+ *   *                          → ASSETS.fetch (Vite static build)
  */
 
 // ── Cloudflare KV type (inline so we don't need @cloudflare/workers-types) ──
@@ -18,11 +20,36 @@ interface KVNamespace {
   delete(key: string): Promise<void>;
 }
 
+interface R2ObjectBody {
+  readonly body: ReadableStream;
+  readonly httpMetadata?: { contentType?: string; cacheControl?: string };
+  arrayBuffer(): Promise<ArrayBuffer>;
+  text(): Promise<string>;
+}
+
+interface R2Bucket {
+  get(key: string): Promise<R2ObjectBody | null>;
+}
+
+interface D1PreparedStatement {
+  bind(...values: unknown[]): D1PreparedStatement;
+  all<T = Record<string, unknown>>(): Promise<{ results: T[] }>;
+  first<T = Record<string, unknown>>(): Promise<T | null>;
+  run(): Promise<{ success: boolean }>;
+}
+interface D1Database {
+  prepare(query: string): D1PreparedStatement;
+}
+
 interface Env {
   ASSETS: { fetch: (request: Request) => Promise<Response> };
   AI: any; // Cloudflare Workers AI binding
-  /** Session KV — bound in both wrangler configs */
+  /** Session KV — shared with gnosis-master */
   GNOSIS_SESSIONS: KVNamespace;
+  /** Library R2 bucket — covers + ebook files */
+  LIBRARY_BUCKET: R2Bucket;
+  /** D1 database — ebook_catalog table */
+  DB: D1Database;
   /** Google OAuth credentials — set via wrangler secret put */
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
@@ -454,6 +481,60 @@ export default {
           },
           { headers: CORS_HEADERS }
         );
+      }
+    }
+
+    // ── GET /api/r2/* — Serve files from LIBRARY_BUCKET R2 ───────────────────
+    if (url.pathname.startsWith('/api/r2/') && request.method === 'GET') {
+      const key = url.pathname.replace('/api/r2/', '');
+      if (!key || !env.LIBRARY_BUCKET) {
+        return new Response('Not found', { status: 404 });
+      }
+      try {
+        const obj = await env.LIBRARY_BUCKET.get(key);
+        if (!obj) return new Response('File not found', { status: 404 });
+        // Determine content type from key extension
+        const ext = key.split('.').pop()?.toLowerCase() || '';
+        const ctMap: Record<string, string> = {
+          png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+          pdf: 'application/pdf', epub: 'application/epub+zip',
+        };
+        const ct = obj.httpMetadata?.contentType || ctMap[ext] || 'application/octet-stream';
+        const isDownload = ext === 'pdf' || ext === 'epub';
+        const headers: Record<string, string> = {
+          'Content-Type': ct,
+          'Cache-Control': 'public, max-age=86400',
+          'Access-Control-Allow-Origin': '*',
+        };
+        if (isDownload) {
+          const filename = key.split('/').pop() || 'ebook';
+          headers['Content-Disposition'] = `attachment; filename="${filename}"`;
+        }
+        return new Response(obj.body, { status: 200, headers });
+      } catch {
+        return new Response('Error fetching file', { status: 500 });
+      }
+    }
+
+    // ── GET /api/library/catalog — Serve D1 ebook catalog ────────────────────
+    if (url.pathname === '/api/library/catalog' && request.method === 'GET') {
+      if (!env.DB) {
+        return Response.json([], { headers: CORS_HEADERS });
+      }
+      try {
+        const { results } = await env.DB
+          .prepare(
+            `SELECT id, title, slug, author, niche, price, file_key,
+                    cover_filename, is_featured, tag, publication_year
+             FROM ebook_catalog ORDER BY display_order ASC`
+          )
+          .all();
+        return Response.json(results, {
+          headers: { ...CORS_HEADERS, 'Cache-Control': 'public, max-age=300' },
+        });
+      } catch (e: unknown) {
+        console.error('[/api/library/catalog]', e);
+        return Response.json([], { headers: CORS_HEADERS });
       }
     }
 
