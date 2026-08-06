@@ -47,15 +47,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Sidebar Container — no profile footer; profile is in the top Navbar */}
-      {/* Mobile: starts at top-[46px] to sit below the fixed Navbar; desktop uses lg:relative flow */}
+      {/* Mobile: fixed below the 46px Navbar with an explicit height so flex children resolve correctly */}
       <aside
-        className={`fixed lg:relative top-[46px] lg:top-0 bottom-0 left-0 z-50 lg:h-full bg-[#F6F3EE] flex flex-col transition-all duration-300 ease-in-out select-none shrink-0 overflow-hidden ${
+        className={`fixed lg:relative top-[46px] lg:top-0 left-0 z-50 h-[calc(100dvh-46px)] lg:h-full bg-[#F6F3EE] flex flex-col transition-all duration-300 ease-in-out select-none shrink-0 overflow-hidden ${
           isOpen
             ? 'w-64 sm:w-72 translate-x-0 opacity-100 border-r border-stone-200/80'
             : 'w-0 -translate-x-full opacity-0 pointer-events-none border-r-0'
         }`}
       >
-        <div className="w-64 sm:w-72 h-full flex flex-col">
+        <div className="w-64 sm:w-72 flex-1 flex flex-col min-h-0">
           {/* All scrollable content area */}
           <div className="p-4 flex-1 flex flex-col overflow-y-auto">
 
