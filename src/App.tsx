@@ -25,8 +25,6 @@ const App: React.FC = () => {
 
   // ── Landing ────────────────────────────────────────────────────────────────
   const [showLanding, setShowLanding] = useState<boolean>(() => {
-    // ?guest=1 bypasses the landing page so the chat UI can be tested/screenshotted without OAuth
-    if (typeof window !== 'undefined' && window.location.search.includes('guest=1')) return false;
     try {
       const dismissed = localStorage.getItem('trinity_landing_dismissed');
       if (dismissed === 'true') return false;
