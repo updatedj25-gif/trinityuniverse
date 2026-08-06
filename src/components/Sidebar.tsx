@@ -31,7 +31,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   onCloseMobile,
 }) => {
-  // Filter sessions strictly by tenant.id
   const currentTenantSessions = sessions.filter(
     (s) => s.tenantId === tenant.id
   );
@@ -47,54 +46,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/*
-        Sidebar Container
-        ─────────────────────────────────────────────────────────────────────
-        MOBILE (< lg):
-          position: fixed
-          top: 46px  ← sits below the Navbar
-          bottom: 0  ← stretches all the way to the bottom of the viewport
-          left: 0
+        ── WHY THIS LAYOUT WORKS ──────────────────────────────────────────────
+        Previous attempts used h-[calc(100dvh-46px)] or flex-1 chains to set
+        the sidebar height. Both fail on Android Chrome because:
+          • dvh resolves to 0 on many Android Chrome versions
+          • flex-1 depends on its parent having an explicit height; when the
+            root container's h-screen hasn't settled on first render, flex-1
+            collapses to 0 — overflow-hidden then clips all content, leaving
+            only the beige background visible (the reported bug).
 
-        Using `top + bottom` instead of `h-[calc(100dvh-46px)]` is intentional:
-        `dvh` is not reliably supported on Android Chrome and can silently
-        resolve to 0, which causes `overflow-hidden` to clip all content so
-        only the background colour is visible (the reported bug).
-        `bottom: 0` lets the browser compute the height natively — works on
-        every mobile browser without viewport-unit quirks.
-
-        DESKTOP (≥ lg):
-          position: relative (participates in flex layout)
-          height: 100%  ← fills the flex parent
-          top / bottom: auto
+        FIX:
+          1. aside uses fixed top-[46px] bottom-0 — browser computes height
+             natively, no dvh, no flex inheritance.
+          2. Inner div uses absolute inset-y-0 left-0 — height comes directly
+             from the aside's CSS geometry, zero flex-1 dependency.
+          3. transition-[width,opacity] instead of transition-all — prevents
+             accidental height animation during open/close.
+        ──────────────────────────────────────────────────────────────────────
       */}
       <aside
         className={[
-          // Shared
-          'bg-[#F6F3EE] flex flex-col select-none shrink-0 overflow-hidden',
-          'transition-all duration-300 ease-in-out',
-          // Mobile: fixed panel below navbar, stretching to viewport bottom
+          'bg-[#F6F3EE] overflow-hidden select-none shrink-0',
+          'transition-[width,opacity] duration-300 ease-in-out',
+          // Mobile: fixed below Navbar, stretches to viewport bottom
           'fixed top-[46px] bottom-0 left-0 z-50',
-          // Desktop: relative, full height inside flex parent
+          // Desktop: back to relative flow
           'lg:relative lg:top-auto lg:bottom-auto lg:z-auto lg:h-full',
-          // Open / closed state
           isOpen
-            ? 'w-64 sm:w-72 translate-x-0 opacity-100 border-r border-stone-200/80'
-            : 'w-0 -translate-x-full opacity-0 pointer-events-none border-r-0',
+            ? 'w-64 sm:w-72 opacity-100 border-r border-stone-200/80'
+            : 'w-0 opacity-0 pointer-events-none border-r-0',
         ].join(' ')}
       >
         {/*
-          Inner wrapper: fixed width so content doesn't reflow during the
-          width transition (the aside animates from w-0 → w-64 but the inner
-          div stays at w-64, and overflow-hidden on the aside clips it cleanly).
-          flex-1 fills the full height of the aside.
+          Absolute inner div — fills the aside fully using inset-y-0.
+          Fixed width (w-64) prevents content from squeezing during the
+          width-transition animation on the outer aside.
         */}
-        <div className="w-64 sm:w-72 flex-1 flex flex-col overflow-hidden">
+        <div className="absolute inset-y-0 left-0 w-64 sm:w-72 flex flex-col">
 
-          {/* Scrollable content area */}
-          <div className="p-4 flex-1 flex flex-col overflow-y-auto min-h-0">
+          {/* Full-height scrollable content wrapper */}
+          <div className="flex flex-col h-full overflow-y-auto p-4">
 
-            {/* Tenant Header & Mobile Close */}
-            <div className="flex items-center justify-between mb-4 px-1">
+            {/* Tenant name + Close button */}
+            <div className="flex items-center justify-between mb-4 px-1 shrink-0">
               <h2
                 className={`text-lg font-bold tracking-tight ${
                   tenant.fontStyle === 'serif'
@@ -113,9 +107,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             </div>
 
-            {/* 1. Ebook Library  2. New Chat */}
-            <div className="space-y-2 mb-4">
-              {/* Ebook Library Button */}
+            {/* 1. Ebook Library   2. New Chat */}
+            <div className="space-y-2 mb-4 shrink-0">
               <button
                 onClick={() => {
                   onOpenLibrary();
@@ -133,7 +126,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span>Ebook Library</span>
               </button>
 
-              {/* New Chat / Consultation Button */}
               <button
                 onClick={() => {
                   onNewSession();
@@ -150,15 +142,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             </div>
 
-            {/* Subtitle for Yada */}
+            {/* Yada subtitle */}
             {tenant.subtitle && (
-              <p className="text-xs italic text-stone-500 mb-3 px-1 font-serif">
+              <p className="text-xs italic text-stone-500 mb-3 px-1 font-serif shrink-0">
                 {tenant.subtitle}
               </p>
             )}
 
             {/* 3. Chat History header */}
-            <div className="flex items-center justify-between mb-2 px-1">
+            <div className="flex items-center justify-between mb-2 px-1 shrink-0">
               <span className="text-[11px] font-semibold tracking-wider text-stone-400 uppercase">
                 {tenant.id === 'yada' ? 'CONSULTATIONS HISTORY' : 'CHAT HISTORY'}
               </span>
@@ -174,7 +166,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
             </div>
 
-            {/* Chat History List */}
+            {/* Chat History list — flex-1 fills remaining space, scrolls independently */}
             <div className="flex-1 overflow-y-auto space-y-1 pr-1 min-h-0">
               {currentTenantSessions.length === 0 ? (
                 <p className="text-xs italic text-stone-400 py-3 px-1">
@@ -200,7 +192,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <MessageSquare className="w-3.5 h-3.5 shrink-0 text-stone-400" />
                         <span className="truncate">{session.title}</span>
                       </div>
-
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -217,8 +208,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
             </div>
 
-          </div>{/* end scrollable content */}
-        </div>{/* end inner wrapper */}
+          </div>
+        </div>
       </aside>
     </>
   );
