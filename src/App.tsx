@@ -98,7 +98,10 @@ const App: React.FC = () => {
   });
 
   // ── UI ─────────────────────────────────────────────────────────────────────
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  // Auto-open sidebar when ?guest=1 is present (for screenshot/testing without OAuth)
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(
+    typeof window !== 'undefined' && window.location.search.includes('guest=1')
+  );
   const [signInOpen, setSignInOpen] = useState<boolean>(false);
   const [tenantModalOpen, setTenantModalOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
