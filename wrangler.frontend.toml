@@ -1,7 +1,7 @@
 # ============================================================
 # TRINITY UNIVERSE — Frontend Worker
-# Serves the Vite static build + handles /api/chat via
-# Cloudflare Workers AI (no external API keys needed)
+# Serves the Vite static build + handles all /api/* routes
+# including RAG-enhanced chat, ingestion, auth, and library
 # ============================================================
 name = "trinityuniverse-frontend"
 main = "src/_worker.ts"
@@ -10,19 +10,49 @@ compatibility_date = "2026-08-01"
 [assets]
 directory = "./dist"
 
-# Cloudflare Workers AI binding — powers Gnosis & Yada
+# ── Workers AI — powers Gnosis & Yada chat + embeddings ──────────────────────
 [ai]
 binding = "AI"
 
-# Session KV — shared with gnosis-master for cross-worker session reads
+# ── Vectorize — 384-dim RAG index (bge-small-en-v1.5) ────────────────────────
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "gnosis-master-index"
+
+# ── Session KV ───────────────────────────────────────────────────────────────
 [[kv_namespaces]]
 binding = "GNOSIS_SESSIONS"
 id = "f77344676aba47ef80496eaaa93135b9"
 
-# ── Library R2 Bucket — covers + ebook files ─────────────────────────────────
+# ── Book content cache + ingest tracking ─────────────────────────────────────
+[[kv_namespaces]]
+binding = "BOOK_STORE"
+id = "61937ec5ed4a4a9d8185b55a5c5190ba"
+
+# ── Structured message storage for fine-tuning ───────────────────────────────
+[[kv_namespaces]]
+binding = "CHAT_SESSIONS"
+id = "c3dd8e43cd874a1bb53b244f43be07fd"
+
+# ── Rate limiting + context cache ────────────────────────────────────────────
+[[kv_namespaces]]
+binding = "CHAT_CONTEXT_CACHE"
+id = "97c6de5ad30f4d0db27fc723ffde75d7"
+
+# ── Library R2 — covers + ebook files ────────────────────────────────────────
 [[r2_buckets]]
 binding = "LIBRARY_BUCKET"
 bucket_name = "trinityuniverselibrary"
+
+# ── Gnosis AI knowledge base (trinityuniversegnosischat) ─────────────────────
+[[r2_buckets]]
+binding = "GNOSIS_CHAT_BUCKET"
+bucket_name = "trinityuniversegnosischat"
+
+# ── Yada AI knowledge base (trinityuniverseyadachat) ─────────────────────────
+[[r2_buckets]]
+binding = "YADA_CHAT_BUCKET"
+bucket_name = "trinityuniverseyadachat"
 
 # ── D1 Database — ebook_catalog table ────────────────────────────────────────
 [[d1_databases]]

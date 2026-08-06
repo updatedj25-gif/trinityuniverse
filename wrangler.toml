@@ -10,7 +10,7 @@ compatibility_date = "2026-02-11"
 [ai]
 binding = "AI"
 
-# ── Vectorize ────────────────────────────────────────────────
+# ── Vectorize — 384-dim RAG index ────────────────────────────
 [[vectorize]]
 binding = "VECTORIZE"
 index_name = "gnosis-master-index"
@@ -22,6 +22,18 @@ database_name = "divination-db"
 database_id = "25b1f304-4ab2-41c0-bf5d-a0c0b3c28c41"
 
 # ── R2 Buckets ───────────────────────────────────────────────
+[[r2_buckets]]
+binding = "LIBRARY_BUCKET"
+bucket_name = "trinityuniverselibrary"
+
+[[r2_buckets]]
+binding = "GNOSIS_CHAT_BUCKET"
+bucket_name = "trinityuniversegnosischat"
+
+[[r2_buckets]]
+binding = "YADA_CHAT_BUCKET"
+bucket_name = "trinityuniverseyadachat"
+
 [[r2_buckets]]
 binding = "MASTER_BUCKET"
 bucket_name = "master-bucket"
@@ -80,13 +92,21 @@ bucket_name = "ai-orchestrator-test-bucket"
 
 # ── KV Namespaces ─────────────────────────────────────────────
 [[kv_namespaces]]
+binding = "GNOSIS_SESSIONS"
+id = "f77344676aba47ef80496eaaa93135b9"
+
+[[kv_namespaces]]
 binding = "BOOK_STORE"
 id = "61937ec5ed4a4a9d8185b55a5c5190ba"
 
 [[kv_namespaces]]
-binding = "YADA_SESSIONS"
-id = "bf21f261457748cdb90dd7660ad73f16"
+binding = "CHAT_SESSIONS"
+id = "c3dd8e43cd874a1bb53b244f43be07fd"
 
 [[kv_namespaces]]
-binding = "GNOSIS_SESSIONS"
-id = "f77344676aba47ef80496eaaa93135b9"
+binding = "CHAT_CONTEXT_CACHE"
+id = "97c6de5ad30f4d0db27fc723ffde75d7"
+
+[[kv_namespaces]]
+binding = "YADA_SESSIONS"
+id = "bf21f261457748cdb90dd7660ad73f16"
