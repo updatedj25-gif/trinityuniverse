@@ -569,7 +569,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
       </header>
 
       {/* ── Section Header & Subtitle (Positioned right above slider cards) ── */}
-      <div className="text-center px-4 mt-0 sm:mt-11 mb-0 sm:-mb-1 z-10 relative shrink-0">
+      <div className="text-center px-4 mt-3 sm:mt-11 mb-0 sm:-mb-1 z-10 relative shrink-0">
         <h2 className="text-[10.5px] sm:text-sm font-extrabold tracking-[0.18em] text-slate-800 uppercase mb-0.5">
           Gnosis Multi-Tenant AI
         </h2>
