@@ -14,7 +14,7 @@ declare global {
   }
 }
 import { UserProfile } from '../types';
-import { ArrowRight, Sparkles, Code2, Cpu, Brain, Flame, Zap, ShieldCheck, Compass, BarChart3, LineChart, BookOpen } from 'lucide-react';
+import { ArrowRight, Sparkles, Code2, Cpu, Brain, Flame, Zap, ShieldCheck, Compass, BarChart3, LineChart, BookOpen, Download, ShoppingCart, X } from 'lucide-react';
 
 const TRINITY_LOGO =
   'https://image2url.com/r2/default/images/1767183581317-68102f31-454b-45f6-9d39-025ce8604ac3.png';
@@ -409,8 +409,13 @@ const GOOGLE_SVG = (
 interface LandingBook {
   id: number;
   title: string;
+  author: string;
+  niche: string;
   cover_filename: string | null;
+  file_key: string | null;
   price: number;
+  tag: string | null;
+  publication_year: number | null;
 }
 
 interface LandingPageProps {
@@ -440,6 +445,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError })
   const [showAnswer, setShowAnswer] = useState(false);
   const [errorDismissed, setErrorDismissed] = useState(false);
   const [libraryBooks, setLibraryBooks] = useState<LandingBook[]>([]);
+  const [selectedBook, setSelectedBook] = useState<LandingBook | null>(null);
+  const [bookAddedToCart, setBookAddedToCart] = useState(false);
 
   const totalCards = GNOSIS_CARDS.length;
 
@@ -559,6 +566,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError })
 
   const handleGuestEntry = () => {
     onSignIn({ name: 'Guest', signedIn: false });
+  };
+
+  const handleBookSelect = (book: LandingBook) => {
+    setSelectedBook(book);
+    setBookAddedToCart(false);
+  };
+
+  const handleBookCart = (book: LandingBook) => {
+    if (book.price === 0) return;
+    try {
+      const saved = localStorage.getItem('trinity_library_cart');
+      const cart = saved ? JSON.parse(saved) as LandingBook[] : [];
+      if (!cart.some(item => item.id === book.id)) {
+        localStorage.setItem('trinity_library_cart', JSON.stringify([...cart, book]));
+      }
+    } catch {
+      localStorage.setItem('trinity_library_cart', JSON.stringify([book]));
+    }
+    setBookAddedToCart(true);
   };
 
   return (
@@ -786,13 +812,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError })
 
       {/* The same first-page catalog covers are showcased below sign-in. */}
       {libraryBooks.length > 0 && (
-        <section className="relative z-10 shrink-0 w-full overflow-hidden pb-2 sm:pb-4" aria-label="Trinity Universe Library preview">
+        <section className="relative z-10 shrink-0 w-full overflow-hidden mt-4 sm:mt-6 pb-2 sm:pb-4" aria-label="Trinity Universe Library preview">
           <div className="flex items-center gap-2 sm:gap-3 landing-cover-track">
             {[...libraryBooks, ...libraryBooks].map((book, index) => (
               <div
                 key={`${book.id}-${index}`}
-                className="w-12 h-[68px] sm:w-16 sm:h-[88px] shrink-0 overflow-hidden rounded-lg border border-white/70 bg-white/70 shadow-md"
+                onClick={() => handleBookSelect(book)}
+                className="landing-cover-card w-[72px] h-[108px] sm:w-24 sm:h-36 md:w-[104px] md:h-[156px] shrink-0 overflow-hidden rounded-lg border border-white/70 bg-white/70 shadow-md cursor-pointer transition-[box-shadow,filter] hover:brightness-110 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A36224] relative z-0"
+                style={{ animationDelay: `${index * 1.15}s` }}
                 title={book.title}
+                role="button"
+                tabIndex={0}
+                onKeyDown={event => {
+                  if (event.key === 'Enter' || event.key === ' ') handleBookSelect(book);
+                }}
               >
                 {book.cover_filename ? (
                   <img
@@ -813,6 +846,91 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError })
             Trinity Universe Library
           </p>
         </section>
+      )}
+
+      {selectedBook && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/55 backdrop-blur-sm"
+          onClick={() => setSelectedBook(null)}
+          role="presentation"
+        >
+          <div
+            className="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={event => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={selectedBook.title}
+          >
+            <div className="relative h-44 sm:h-52 overflow-hidden bg-gradient-to-br from-slate-700 to-slate-950">
+              {selectedBook.cover_filename ? (
+                <img
+                  src={`/api/r2/${selectedBook.cover_filename}`}
+                  alt={selectedBook.title}
+                  className="w-full h-full object-cover opacity-75"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <BookOpen className="w-14 h-14 text-slate-400" />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <p className="text-white font-serif font-bold text-lg leading-tight line-clamp-2">{selectedBook.title}</p>
+                <p className="text-slate-200 text-sm mt-1">{selectedBook.author}</p>
+              </div>
+              <button
+                onClick={() => setSelectedBook(null)}
+                className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/45 text-white hover:bg-black/65 cursor-pointer"
+                aria-label="Close ebook details"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="space-y-3 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="max-w-[75%] rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700 truncate">
+                  {selectedBook.niche}
+                </span>
+                <span className="text-sm font-bold text-slate-800">
+                  {selectedBook.price === 0 ? 'FREE' : `$${selectedBook.price.toFixed(2)}`}
+                </span>
+              </div>
+              {selectedBook.publication_year && (
+                <p className="text-xs text-slate-500">Published: {selectedBook.publication_year}</p>
+              )}
+              {selectedBook.tag && (
+                <span className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-600">
+                  #{selectedBook.tag}
+                </span>
+              )}
+              {selectedBook.price === 0 && selectedBook.file_key ? (
+                <a
+                  href={`/api/r2/${selectedBook.file_key}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#A36224] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#8a511f]"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Free
+                </a>
+              ) : selectedBook.price > 0 ? (
+                <button
+                  onClick={() => handleBookCart(selectedBook)}
+                  className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition-colors ${
+                    bookAddedToCart ? 'bg-emerald-600' : 'bg-[#A36224] hover:bg-[#8a511f]'
+                  }`}
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  {bookAddedToCart ? 'Added to Cart' : 'Add to Cart'}
+                </button>
+              ) : (
+                <div className="flex w-full items-center justify-center rounded-xl bg-slate-100 py-3 text-sm text-slate-400">
+                  File not available
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

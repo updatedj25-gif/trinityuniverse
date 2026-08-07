@@ -50,8 +50,30 @@ body {
 
 .landing-cover-track {
   width: max-content;
-  animation: landing-cover-scroll 42s linear infinite;
+  animation: landing-cover-scroll 78s linear infinite;
   will-change: transform;
+}
+
+.landing-cover-card {
+  aspect-ratio: 2 / 3;
+  animation: landing-cover-pop 5.2s ease-in-out infinite;
+  will-change: transform;
+}
+
+.landing-cover-card:hover,
+.landing-cover-card:focus-visible {
+  animation-play-state: paused;
+  transform: translateY(-8px) scale(1.08);
+  z-index: 20;
+}
+
+@keyframes landing-cover-pop {
+  0%, 74%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  82%, 90% {
+    transform: translateY(-5px) scale(1.06);
+  }
 }
 
 .landing-cover-track:hover {
@@ -59,7 +81,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-cover-track {
+  .landing-cover-track,
+  .landing-cover-card {
     animation: none;
     transform: translateX(0);
   }
