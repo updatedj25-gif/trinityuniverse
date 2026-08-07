@@ -14,7 +14,7 @@ declare global {
   }
 }
 import { UserProfile } from '../types';
-import { ArrowRight, Sparkles, Code2, Cpu, Brain, Flame, Zap, ShieldCheck, Compass, BarChart3, LineChart } from 'lucide-react';
+import { ArrowRight, Sparkles, Code2, Cpu, Brain, Flame, Zap, ShieldCheck, Compass, BarChart3, LineChart, BookOpen } from 'lucide-react';
 
 const TRINITY_LOGO =
   'https://image2url.com/r2/default/images/1767183581317-68102f31-454b-45f6-9d39-025ce8604ac3.png';
@@ -406,6 +406,13 @@ const GOOGLE_SVG = (
   </svg>
 );
 
+interface LandingBook {
+  id: number;
+  title: string;
+  cover_filename: string | null;
+  price: number;
+}
+
 interface LandingPageProps {
   onSignIn: (profile: UserProfile) => void;
   authError?: string | null;
@@ -432,8 +439,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError })
   const [isTyping, setIsTyping] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const [errorDismissed, setErrorDismissed] = useState(false);
+  const [libraryBooks, setLibraryBooks] = useState<LandingBook[]>([]);
 
   const totalCards = GNOSIS_CARDS.length;
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/library/catalog')
+      .then(response => response.ok ? response.json() : [])
+      .then((books: LandingBook[]) => {
+        if (!cancelled) setLibraryBooks(books.slice(0, 20));
+      })
+      .catch(() => {
+        if (!cancelled) setLibraryBooks([]);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const goToSlide = useCallback(
     (idx: number) => {
@@ -762,6 +783,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError })
           <span>Continue with Google</span>
         </button>
       </div>
+
+      {/* The same first-page catalog covers are showcased below sign-in. */}
+      {libraryBooks.length > 0 && (
+        <section className="relative z-10 shrink-0 w-full overflow-hidden pb-2 sm:pb-4" aria-label="Trinity Universe Library preview">
+          <div className="flex items-center gap-2 sm:gap-3 landing-cover-track">
+            {[...libraryBooks, ...libraryBooks].map((book, index) => (
+              <div
+                key={`${book.id}-${index}`}
+                className="w-12 h-[68px] sm:w-16 sm:h-[88px] shrink-0 overflow-hidden rounded-lg border border-white/70 bg-white/70 shadow-md"
+                title={book.title}
+              >
+                {book.cover_filename ? (
+                  <img
+                    src={`/api/r2/${book.cover_filename}`}
+                    alt={book.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-slate-700 to-slate-950 p-1 text-center">
+                    <BookOpen className="w-4 h-4 text-amber-200" />
+                    <span className="text-[7px] leading-tight text-white line-clamp-3">{book.title}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="mt-1.5 text-center text-[9px] sm:text-[10px] font-semibold tracking-[0.18em] uppercase text-slate-500">
+            Trinity Universe Library
+          </p>
+        </section>
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Menu, BookOpen, Download, Star, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
+import { Home, Menu, BookOpen, Download, Star, ChevronLeft, ChevronRight, Search, ShoppingCart, Trash2, X } from 'lucide-react';
 
 interface LibraryPageProps {
   onGoHome: () => void;
@@ -19,6 +19,9 @@ interface EbookEntry {
   tag: string | null;
   publication_year: number | null;
 }
+
+const LIBRARY_PAGE_SIZE = 20;
+const CART_STORAGE_KEY = 'trinity_library_cart';
 
 const NICHE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   'Spirituality & Hidden Knowledge': { bg: 'bg-violet-50',  text: 'text-violet-700',  border: 'border-violet-200' },
@@ -50,8 +53,17 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onGoHome, onToggleSide
   const [filter, setFilter]     = useState<string>('All');
   const [selected, setSelected] = useState<EbookEntry | null>(null);
   const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
+  const [cart, setCart] = useState<EbookEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem(CART_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [cartOpen, setCartOpen] = useState(false);
 
-  const currentPage = 1; // Page 1 — full 20-book catalog
+  const currentPage = 1;
 
   useEffect(() => {
     fetch('/api/library/catalog')
@@ -60,9 +72,14 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onGoHome, onToggleSide
       .catch(() => { setError('Failed to load library catalog.'); setLoading(false); });
   }, []);
 
-  const niches = ['All', ...Array.from(new Set(books.map(b => b.niche)))];
+  useEffect(() => {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  }, [cart]);
 
-  const filtered = books.filter(b => {
+  const firstPageBooks = books.slice(0, LIBRARY_PAGE_SIZE);
+  const niches = ['All', ...Array.from(new Set(firstPageBooks.map(b => b.niche)))];
+
+  const filtered = firstPageBooks.filter(b => {
     const matchSearch = !search ||
       b.title.toLowerCase().includes(search.toLowerCase()) ||
       b.author.toLowerCase().includes(search.toLowerCase()) ||
@@ -73,6 +90,19 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onGoHome, onToggleSide
 
   const handleImgError = (id: number) =>
     setImgErrors(prev => ({ ...prev, [id]: true }));
+
+  const addToCart = (book: EbookEntry) => {
+    if (book.price === 0 || cart.some(item => item.id === book.id)) return;
+    setCart(prev => [...prev, book]);
+    setCartOpen(true);
+    setSelected(null);
+  };
+
+  const removeFromCart = (bookId: number) => {
+    setCart(prev => prev.filter(book => book.id !== bookId));
+  };
+
+  const cartTotal = cart.reduce((total, book) => total + book.price, 0);
 
   return (
     <div className="flex-1 flex flex-col h-full w-full bg-[#FAF7F2] select-none overflow-hidden">
@@ -102,6 +132,68 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onGoHome, onToggleSide
           </span>
         </div>
 
+        <div className="relative shrink-0">
+          <button
+            onClick={() => setCartOpen(prev => !prev)}
+            className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-stone-200/80 bg-white text-slate-700 hover:text-[#8a511f] hover:border-[#A36224]/40 shadow-2xs transition-all cursor-pointer"
+            aria-expanded={cartOpen}
+            aria-label={`Shopping cart with ${cart.length} books`}
+          >
+            <ShoppingCart className="w-4 h-4" />
+            <span className="hidden sm:inline text-xs font-semibold">Cart</span>
+            {cart.length > 0 && (
+              <span className="absolute -right-2 -top-2 min-w-5 h-5 px-1 rounded-full bg-[#A36224] text-white text-[10px] font-bold flex items-center justify-center">
+                {cart.length}
+              </span>
+            )}
+          </button>
+
+          {cartOpen && (
+            <div className="absolute right-0 top-11 z-40 w-[min(88vw,340px)] rounded-2xl border border-stone-200 bg-white shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">Your library cart</p>
+                  <p className="text-[11px] text-slate-500">{cart.length} paid {cart.length === 1 ? 'book' : 'books'}</p>
+                </div>
+                <button onClick={() => setCartOpen(false)} className="p-1 rounded-lg text-slate-400 hover:bg-stone-100 cursor-pointer" aria-label="Close cart">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              {cart.length === 0 ? (
+                <div className="px-4 py-8 text-center">
+                  <ShoppingCart className="w-7 h-7 mx-auto mb-2 text-stone-300" />
+                  <p className="text-xs text-slate-500">Your cart is empty.</p>
+                  <p className="text-[11px] text-slate-400 mt-1">Add a paid book from its detail window.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="max-h-60 overflow-y-auto divide-y divide-stone-100">
+                    {cart.map(book => (
+                      <div key={book.id} className="flex items-center gap-3 px-4 py-3">
+                        <div className="w-9 h-12 rounded-md overflow-hidden shrink-0 bg-stone-100">
+                          {book.cover_filename && (
+                            <img src={r2Url(book.cover_filename)} alt="" className="w-full h-full object-cover" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-slate-800 line-clamp-2">{book.title}</p>
+                          <p className="text-xs font-bold text-[#8a511f] mt-1">{priceLabel(book.price)}</p>
+                        </div>
+                        <button onClick={() => removeFromCart(book.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 cursor-pointer" aria-label={`Remove ${book.title}`}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between px-4 py-3 bg-[#FAF7F2] border-t border-stone-100">
+                    <span className="text-xs text-slate-500">Total</span>
+                    <span className="text-base font-bold text-slate-900">${cartTotal.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
         <div className="shrink-0 text-xs text-slate-500 hidden sm:block">
           {books.length} titles
         </div>
@@ -156,7 +248,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onGoHome, onToggleSide
           <>
             {/* Page label */}
             <p className="text-xs text-slate-400 mb-4 font-mono">
-              Showing {filtered.length} of {books.length} titles — Page {currentPage}
+               Showing {filtered.length} of {Math.min(books.length, LIBRARY_PAGE_SIZE)} titles — Page {currentPage}
             </p>
 
             {/* ── Book Grid ────────────────────────────────────────────────── */}
@@ -303,7 +395,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onGoHome, onToggleSide
                 </span>
               )}
 
-              {selected.file_key ? (
+              {selected.price === 0 && selected.file_key ? (
                 <a
                   href={r2Url(selected.file_key)}
                   target="_blank"
@@ -311,8 +403,21 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onGoHome, onToggleSide
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#A36224] hover:bg-[#8a511f] text-white font-semibold text-sm transition-colors cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
-                  {selected.price === 0 ? 'Download Free' : 'Access Ebook'}
+                   Download Free
                 </a>
+              ) : selected.price > 0 ? (
+                <button
+                  onClick={() => addToCart(selected)}
+                  disabled={cart.some(book => book.id === selected.id)}
+                  className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-white font-semibold text-sm transition-colors cursor-pointer ${
+                    cart.some(book => book.id === selected.id)
+                      ? 'bg-emerald-600 cursor-default'
+                      : 'bg-[#A36224] hover:bg-[#8a511f]'
+                  }`}
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  {cart.some(book => book.id === selected.id) ? 'Added to Cart' : 'Add to Cart'}
+                </button>
               ) : (
                 <div className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-slate-100 text-slate-400 text-sm">
                   File not available

@@ -39,6 +39,32 @@ body {
   animation: breathe 3.2s ease-in-out infinite;
 }
 
+@keyframes landing-cover-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 0.375rem));
+  }
+}
+
+.landing-cover-track {
+  width: max-content;
+  animation: landing-cover-scroll 42s linear infinite;
+  will-change: transform;
+}
+
+.landing-cover-track:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-cover-track {
+    animation: none;
+    transform: translateX(0);
+  }
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
