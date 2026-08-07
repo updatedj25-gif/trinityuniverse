@@ -58,6 +58,7 @@ body {
   aspect-ratio: 2 / 3;
   animation: landing-cover-pop 5.2s ease-in-out infinite;
   will-change: transform;
+  z-index: 1;
 }
 
 .landing-cover-card:hover,
@@ -70,9 +71,11 @@ body {
 @keyframes landing-cover-pop {
   0%, 74%, 100% {
     transform: translateY(0) scale(1);
+    z-index: 1;
   }
   82%, 90% {
     transform: translateY(-5px) scale(1.06);
+    z-index: 8;
   }
 }
 
