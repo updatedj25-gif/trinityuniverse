@@ -50,13 +50,13 @@ body {
 
 .landing-cover-track {
   width: max-content;
-  animation: landing-cover-scroll 78s linear infinite;
+  animation: landing-cover-scroll 122s linear infinite;
   will-change: transform;
 }
 
 .landing-cover-card {
   aspect-ratio: 2 / 3;
-  animation: landing-cover-pop 5.2s ease-in-out infinite;
+  animation: landing-cover-pop 7.5s ease-in-out infinite;
   will-change: transform;
   z-index: 1;
 }

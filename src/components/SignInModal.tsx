@@ -6,11 +6,14 @@ interface SignInModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSignInSuccess: (user: UserProfile) => void;
+  googleOnly?: boolean;
 }
 
 export const SignInModal: React.FC<SignInModalProps> = ({
   isOpen,
   onClose,
+  onSignInSuccess,
+  googleOnly = false,
 }) => {
   const [name, setName] = useState('');
 
@@ -48,10 +51,12 @@ export const SignInModal: React.FC<SignInModalProps> = ({
             ●
           </div>
           <h3 className="text-xl font-bold text-slate-800">
-            Sign in to Trinity Universe
+            {googleOnly ? 'Sign in to enter the Library' : 'Sign in to Trinity Universe'}
           </h3>
           <p className="text-xs text-stone-500 mt-1">
-            Sync your Gnosis AI and Yada Guide conversations across devices
+            {googleOnly
+              ? 'Use your Google account to access the Trinity Universe Library.'
+              : 'Sync your Gnosis AI and Yada Guide conversations across devices'}
           </p>
         </div>
 
@@ -82,34 +87,38 @@ export const SignInModal: React.FC<SignInModalProps> = ({
             <span>Continue with Google</span>
           </button>
 
-          <div className="relative my-4 flex items-center justify-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-stone-200"></div>
-            </div>
-            <span className="relative bg-white px-3 text-xs text-stone-400">
-              or continue as guest
-            </span>
-          </div>
+          {!googleOnly && (
+            <>
+              <div className="relative my-4 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-stone-200"></div>
+                </div>
+                <span className="relative bg-white px-3 text-xs text-stone-400">
+                  or continue as guest
+                </span>
+              </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Display Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Dr. Gabriel Vane"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm focus:outline-none focus:border-stone-500"
-            />
-          </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Display Name
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Dr. Gabriel Vane"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm focus:outline-none focus:border-stone-500"
+                />
+              </div>
 
-          <button
-            onClick={handleGuestSignIn}
-            className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm rounded-xl shadow-2xs transition-all cursor-pointer"
-          >
-            Continue as {name || 'Guest'}
-          </button>
+              <button
+                onClick={handleGuestSignIn}
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm rounded-xl shadow-2xs transition-all cursor-pointer"
+              >
+                Continue as {name || 'Guest'}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -420,6 +420,7 @@ interface LandingBook {
 
 interface LandingPageProps {
   onSignIn: (profile: UserProfile) => void;
+  onVisitLibrary: () => void;
   authError?: string | null;
 }
 
@@ -433,7 +434,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   incomplete_profile:   'Your Google account is missing required info.',
 };
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibrary, authError }) => {
   const [activeSlide, setActiveSlide] = useState(0);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
   const [animating, setAnimating] = useState(false);
@@ -513,9 +514,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError })
     return () => clearInterval(interval);
   }, [activeSlide]);
 
-  // Auto-advance slide 6.5s after slide activation (allows full prompt typing + reading response)
+  // Auto-advance slide 8.5s after slide activation (allows full prompt typing + reading response)
   useEffect(() => {
-    const t = setTimeout(goNext, 6500);
+    const t = setTimeout(goNext, 8500);
     return () => clearTimeout(t);
   }, [activeSlide, goNext]);
 
@@ -588,7 +589,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError })
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-[#FAF7F2] text-slate-800 overflow-hidden select-none font-sans">
+    <div className="relative min-h-screen w-full flex flex-col bg-[#FAF7F2] text-slate-800 overflow-x-hidden overflow-y-auto select-none font-sans lg:min-h-[1120px]">
       {/* Background bright morning sky ambient lighting & soft warm glows */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Morning sunrise warm amber glow */}
@@ -657,7 +658,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError })
 
       {/* ── Slider Motion Section with 18 Alternating Gnosis & Yada Cards ── */}
       <div
-        className="relative w-full flex-1 min-h-0 sm:min-h-[290px] max-h-[295px] sm:max-h-[420px] sm:my-auto flex items-center justify-center overflow-hidden z-10"
+        className="relative w-full h-[330px] sm:h-[445px] lg:h-[545px] shrink-0 flex items-center justify-center overflow-hidden z-10 sm:my-2 lg:my-7"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -689,9 +690,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError })
               onClick={() => !isActive && goToSlide(i)}
               style={{
                 position: 'absolute',
-                width: isMobile ? 'min(75%, 265px)' : 'min(82%, 340px)',
-                height: isMobile ? '81%' : '82%',
-                maxHeight: isMobile ? '221px' : '275px',
+                 width: isMobile ? 'min(78%, 300px)' : 'min(82%, 430px)',
+                 height: isMobile ? '84%' : '84%',
+                 maxHeight: isMobile ? '252px' : '365px',
                 left: '50%',
                 top: isMobile ? '36%' : '44%',
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,
@@ -799,7 +800,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError })
       </div>
 
       {/* ── Primary Action Call-to-Action (Positioned close to input box) ── */}
-      <div className="flex flex-col items-center gap-2 px-6 mb-1 sm:mb-5 mt-0 sm:mt-1.5 z-10 relative shrink-0">
+      <div className="flex flex-col items-center gap-2 px-6 mb-1 sm:mb-4 lg:mb-7 mt-0 sm:mt-1.5 z-10 relative shrink-0">
         {/* Google Sign In Button */}
         <button
           onClick={handleGoogleSignIn}
@@ -810,15 +811,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError })
         </button>
       </div>
 
-      {/* The same first-page catalog covers are showcased below sign-in. */}
+      {/* The same first-page catalog covers are showcased as the library preview. */}
       {libraryBooks.length > 0 && (
-        <section className="relative z-10 shrink-0 w-full overflow-hidden mt-4 sm:mt-6 pb-2 sm:pb-4" aria-label="Trinity Universe Library preview">
-          <div className="flex items-center gap-2 sm:gap-3 landing-cover-track">
+        <section className="relative z-10 shrink-0 w-full overflow-hidden mt-3 sm:mt-5 lg:mt-7 pb-4 sm:pb-6 lg:pb-10" aria-label="Trinity Universe Library preview">
+          <div className="flex items-end justify-between gap-4 px-5 sm:px-8 lg:px-12 mb-3 sm:mb-4">
+            <div className="text-left">
+              <p className="text-[9px] sm:text-[10px] font-bold tracking-[0.28em] uppercase text-[#A36224]">
+                Live
+              </p>
+              <h2 className="text-sm sm:text-base lg:text-lg font-black tracking-[0.16em] uppercase text-slate-800">
+                Trinity Universe Library
+              </h2>
+            </div>
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.16em] uppercase text-slate-500">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Curated reading room
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 sm:gap-4 lg:gap-5 landing-cover-track">
             {[...libraryBooks, ...libraryBooks].map((book, index) => (
               <div
                 key={`${book.id}-${index}`}
                 onClick={() => handleBookSelect(book)}
-                className="landing-cover-card w-[72px] h-[108px] sm:w-24 sm:h-36 md:w-[104px] md:h-[156px] shrink-0 overflow-hidden rounded-lg border border-white/70 bg-white/70 shadow-md cursor-pointer transition-[box-shadow,filter] hover:brightness-110 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A36224] relative z-0"
+                className="landing-cover-card w-[96px] h-[144px] sm:w-32 sm:h-48 md:w-36 md:h-[216px] lg:w-40 lg:h-60 shrink-0 overflow-hidden rounded-xl border border-white/70 bg-white/70 shadow-md cursor-pointer transition-[box-shadow,filter] hover:brightness-110 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A36224] relative z-0"
                 style={{ animationDelay: `${index * 1.15}s` }}
                 title={book.title}
                 role="button"
@@ -827,24 +843,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, authError })
                   if (event.key === 'Enter' || event.key === ' ') handleBookSelect(book);
                 }}
               >
-                {book.cover_filename ? (
-                  <img
-                    src={`/api/r2/${book.cover_filename}`}
-                    alt={book.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-slate-700 to-slate-950 p-1 text-center">
-                    <BookOpen className="w-4 h-4 text-amber-200" />
-                    <span className="text-[7px] leading-tight text-white line-clamp-3">{book.title}</span>
+                <div className="relative w-full h-full">
+                  {book.cover_filename ? (
+                    <img
+                      src={`/api/r2/${book.cover_filename}`}
+                      alt={book.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-700 to-slate-950 p-2 text-center">
+                      <BookOpen className="w-6 h-6 text-amber-200" />
+                    </div>
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/65 to-transparent px-2 pt-8 pb-2">
+                    <p className="text-[10px] sm:text-xs font-semibold leading-tight text-white line-clamp-3 drop-shadow-md">
+                      {book.title}
+                    </p>
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>
-          <p className="mt-1.5 text-center text-[9px] sm:text-[10px] font-semibold tracking-[0.18em] uppercase text-slate-500">
-            Trinity Universe Library
-          </p>
+          <div className="flex justify-end px-5 sm:px-8 lg:px-12 mt-2 sm:mt-3">
+            <button
+              type="button"
+              onClick={onVisitLibrary}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#A36224] px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-bold text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#8a511f] hover:shadow-lg active:translate-y-0 cursor-pointer"
+            >
+              Visit Library
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
         </section>
       )}
 

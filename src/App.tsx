@@ -128,6 +128,10 @@ const App: React.FC = () => {
           setUser(data);
           localStorage.setItem('trinity_user_profile', JSON.stringify(data));
           setAuthError(null);
+          if (localStorage.getItem('trinity_library_access_pending') === 'true') {
+            localStorage.removeItem('trinity_library_access_pending');
+            setCurrentView('library');
+          }
           setShowLanding(false);
         }
       })
@@ -148,6 +152,16 @@ const App: React.FC = () => {
     localStorage.setItem('trinity_landing_dismissed', 'true');
     setActiveTenantId('gnosis');
     setShowLanding(false);
+  };
+
+  const handleVisitLibrary = () => {
+    if (user.signedIn) {
+      setCurrentView('library');
+      setShowLanding(false);
+      return;
+    }
+    localStorage.setItem('trinity_library_access_pending', 'true');
+    setSignInOpen(true);
   };
 
   const handleLogout = () => {
@@ -307,10 +321,28 @@ const App: React.FC = () => {
   // ── Render ─────────────────────────────────────────────────────────────────
   if (showLanding) {
     return (
-      <LandingPage
-        onSignIn={handleLandingEnter}
-        authError={authError}
-      />
+      <>
+        <LandingPage
+          onSignIn={handleLandingEnter}
+          onVisitLibrary={handleVisitLibrary}
+          authError={authError}
+        />
+        <SignInModal
+          isOpen={signInOpen}
+          onClose={() => {
+            localStorage.removeItem('trinity_library_access_pending');
+            setSignInOpen(false);
+          }}
+          googleOnly
+          onSignInSuccess={(profile) => {
+            localStorage.removeItem('trinity_library_access_pending');
+            setUser(profile);
+            setCurrentView('library');
+            setShowLanding(false);
+            setSignInOpen(false);
+          }}
+        />
+      </>
     );
   }
 
