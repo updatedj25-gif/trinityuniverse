@@ -62,7 +62,7 @@ export const GNOSIS_CARDS: GnosisCard[] = [
   // 2. Yada 1
   {
     id: 'tarot-archetypes',
-    badge: '✦ Yada Guide • Archetypal Tarot',
+    badge: 'Yada Guide • Archetypal Tarot',
     title: 'Tarot Spread & Archetypal Guidance',
     promptText: 'Draw a 3-card spread exploring current life transitions and hidden opportunities',
     bgGradient: 'radial-gradient(ellipse at top left, #78350f 0%, #451a03 70%, #020617 100%)',
@@ -101,7 +101,7 @@ export const GNOSIS_CARDS: GnosisCard[] = [
   // 4. Yada 2
   {
     id: 'astrology-transits',
-    badge: '✦ Yada Guide • Celestial Astrology',
+    badge: 'Yada Guide • Celestial Astrology',
     title: 'Astrology & Natal Transit Reading',
     promptText: 'Analyze the upcoming Saturn-Neptune alignment for personal growth and alignment',
     icon: <Sparkles className="w-4 h-4 text-purple-400" />,
@@ -141,7 +141,7 @@ export const GNOSIS_CARDS: GnosisCard[] = [
   // 6. Yada 3
   {
     id: 'somatic-meditation',
-    badge: '✦ Yada Guide • Mindfulness & Breathwork',
+    badge: 'Yada Guide • Mindfulness & Breathwork',
     title: 'Somatic Breathwork & Calm Engine',
     promptText: 'Guide me through a 5-minute grounding breathwork session for anxiety relief',
     icon: <Sparkles className="w-4 h-4 text-emerald-400" />,
@@ -178,7 +178,7 @@ export const GNOSIS_CARDS: GnosisCard[] = [
   // 8. Yada 4
   {
     id: 'stoic-wisdom',
-    badge: '✦ Yada Guide • Ancient Philosophy',
+    badge: 'Yada Guide • Ancient Philosophy',
     title: 'Stoic Wisdom & Inner Resilience',
     promptText: 'How can Marcus Aurelius teachings on control bring clarity to modern burnout?',
     icon: <Sparkles className="w-4 h-4 text-amber-300" />,
@@ -213,7 +213,7 @@ export const GNOSIS_CARDS: GnosisCard[] = [
   // 10. Yada 5
   {
     id: 'dream-symbolism',
-    badge: '✦ Yada Guide • Dream Wisdom',
+    badge: 'Yada Guide • Dream Wisdom',
     title: 'Symbolic Dream Interpretation',
     promptText: 'Interpret a recurring dream about walking through water-filled ancient corridors',
     icon: <Sparkles className="w-4 h-4 text-indigo-300" />,
@@ -253,7 +253,7 @@ export const GNOSIS_CARDS: GnosisCard[] = [
   // 12. Yada 6
   {
     id: 'shadow-work',
-    badge: '✦ Yada Guide • Shadow Integration',
+    badge: 'Yada Guide • Shadow Integration',
     title: 'Emotional Alchemy & Healing',
     promptText: 'How do I recognize and gently integrate unacknowledged parts of myself?',
     icon: <Sparkles className="w-4 h-4 text-rose-300" />,
@@ -290,7 +290,7 @@ export const GNOSIS_CARDS: GnosisCard[] = [
   // 14. Yada 7
   {
     id: 'iching-guidance',
-    badge: '✦ Yada Guide • I Ching Divination',
+    badge: 'Yada Guide • I Ching Divination',
     title: 'I Ching Hexagram Guidance',
     promptText: 'Cast an I Ching reading for guidance on taking a creative career leap',
     icon: <Sparkles className="w-4 h-4 text-teal-300" />,
@@ -330,7 +330,7 @@ export const GNOSIS_CARDS: GnosisCard[] = [
   // 16. Yada 8
   {
     id: 'chakra-alignment',
-    badge: '✦ Yada Guide • Energy Harmony',
+    badge: 'Yada Guide • Energy Harmony',
     title: 'Chakra Energy & Vitality Alignment',
     promptText: 'Provide a daily chakra balancing routine to harmonize focus and intuition',
     icon: <Sparkles className="w-4 h-4 text-fuchsia-300" />,
@@ -370,7 +370,7 @@ export const GNOSIS_CARDS: GnosisCard[] = [
   // 18. Yada 9
   {
     id: 'soul-journaling',
-    badge: '✦ Yada Guide • Contemplation',
+    badge: 'Yada Guide • Contemplation',
     title: 'Gratitude & Soul Purpose Journaling',
     promptText: 'Prompt me with 3 contemplative reflections to align with my authentic core',
     icon: <Sparkles className="w-4 h-4 text-amber-300" />,
@@ -443,6 +443,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
   const libraryTrackRef = useRef<HTMLDivElement | null>(null);
   const libraryDragStartX = useRef<number | null>(null);
   const libraryDragStartScroll = useRef(0);
+  const libraryWasDragged = useRef(false);
+  const libraryInteractionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [libraryPaused, setLibraryPaused] = useState(false);
 
   // Typewriter effect state for stationary floating input box
   const [typedText, setTypedText] = useState('');
@@ -552,19 +555,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
     setActiveLibraryIndex(nextIndex);
   }, [libraryBooks.length]);
 
+  useEffect(() => {
+    if (!libraryBooks.length || libraryPaused) return;
+    const timer = window.setInterval(() => scrollToLibraryIndex(activeLibraryIndex + 1), 5200);
+    return () => window.clearInterval(timer);
+  }, [activeLibraryIndex, libraryBooks.length, libraryPaused, scrollToLibraryIndex]);
+
   const handleLibraryPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     libraryDragStartX.current = e.clientX;
     libraryDragStartScroll.current = e.currentTarget.scrollLeft;
+    libraryWasDragged.current = false;
+    setLibraryPaused(true);
     e.currentTarget.setPointerCapture?.(e.pointerId);
   };
 
   const handleLibraryPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (libraryDragStartX.current === null) return;
+    if (Math.abs(e.clientX - libraryDragStartX.current) > 8) libraryWasDragged.current = true;
     e.currentTarget.scrollLeft = libraryDragStartScroll.current - (e.clientX - libraryDragStartX.current);
   };
 
   const handleLibraryPointerEnd = () => {
     libraryDragStartX.current = null;
+    if (libraryInteractionTimer.current) clearTimeout(libraryInteractionTimer.current);
+    libraryInteractionTimer.current = setTimeout(() => setLibraryPaused(false), 3000);
   };
 
   const handleGoogleSignIn = () => {
@@ -647,7 +661,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
       </div>
 
       {/* ── Top Bar ── */}
-      <header className="w-full px-5 sm:px-6 pt-3.5 sm:pt-6 pb-1.5 sm:pb-3 flex items-center justify-between z-20 relative shrink-0">
+      <header className="w-full px-5 sm:px-8 pt-4 sm:pt-6 pb-2 flex items-center justify-between z-20 relative shrink-0">
         <div className="flex items-center gap-3">
           <img
             src={TRINITY_LOGO}
@@ -658,6 +672,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
             TRINITY UNIVERSE
           </span>
         </div>
+        <button
+          onClick={handleGoogleSignIn}
+          className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-slate-950 px-3.5 sm:px-5 py-2 text-[11px] sm:text-xs font-bold text-white shadow-lg shadow-slate-900/15 transition hover:-translate-y-0.5 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+        >
+          {GOOGLE_SVG}
+          <span>Sign in with Google</span>
+        </button>
       </header>
 
       {/* ── Auth Error Banner ── shown when Google OAuth returns an error code */}
@@ -672,7 +693,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
               className="shrink-0 text-red-400 hover:text-red-600 transition-colors cursor-pointer ml-2"
               aria-label="Dismiss"
             >
-              ✕
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
@@ -813,9 +834,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
 
         {/* ── Stationary Floating Input Box (3-line capacity for mobile & desktop) ── */}
         <div className="absolute bottom-4 sm:bottom-8 lg:bottom-10 left-1/2 -translate-x-1/2 w-[82%] sm:w-[64%] lg:w-[58%] max-w-md z-30 pointer-events-auto">
-          <div className="bg-slate-900/90 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-2 sm:p-2.5 shadow-xl backdrop-blur-xl flex items-start justify-between gap-2 transition-all min-h-[60px]">
+          <div className="landing-prompt-panel bg-[#11131b]/95 border border-white/15 hover:border-sky-400/50 rounded-[18px] p-3 sm:p-4 shadow-[0_18px_45px_rgba(15,23,42,0.32)] backdrop-blur-xl flex items-start justify-between gap-3 transition-all min-h-[92px] sm:min-h-[106px]">
             <div className="flex items-start gap-2 flex-1 min-w-0 pt-0.5">
-              <div className="flex-1 min-w-0 text-[11px] sm:text-xs text-slate-200 font-mono leading-relaxed line-clamp-3 min-h-[48px]">
+              <div className="flex-1 min-w-0 text-[12px] sm:text-sm text-slate-100 font-mono leading-relaxed line-clamp-4 min-h-[56px] whitespace-normal">
                 <span>{typedText}</span>
                 <span
                   className={`inline-block w-1.5 h-3.5 ml-0.5 bg-sky-400 align-middle ${
@@ -843,17 +864,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
       </div>
 
       {/* ── Primary Action Call-to-Action (Positioned close to input box) ── */}
-      <div className="flex flex-col items-center gap-2 px-6 mb-1 sm:mb-4 lg:mb-7 -mt-2 sm:-mt-4 lg:-mt-6 z-10 relative shrink-0">
-        {/* Google Sign In Button */}
-        <button
-          onClick={handleGoogleSignIn}
-          className="w-full max-w-xs sm:max-w-sm py-3 sm:py-3.5 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all cursor-pointer active:scale-[0.98]"
-        >
-          {GOOGLE_SVG}
-          <span>Continue with Google</span>
-        </button>
-      </div>
-
       {/* The same first-page catalog covers are showcased as the library preview. */}
       {libraryBooks.length > 0 && (
         <section className="relative z-10 shrink-0 w-full overflow-hidden mt-8 sm:mt-10 lg:mt-14 pb-4 sm:pb-6 lg:pb-10" aria-label="Trinity Universe Library preview">
@@ -888,6 +898,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
               onPointerMove={handleLibraryPointerMove}
               onPointerUp={handleLibraryPointerEnd}
               onPointerCancel={handleLibraryPointerEnd}
+              onPointerEnter={() => setLibraryPaused(true)}
+              onPointerLeave={() => {
+                if (libraryDragStartX.current === null) setLibraryPaused(false);
+              }}
               onScroll={(event) => {
                 const target = event.currentTarget;
                 const cards = Array.from(target.children) as HTMLElement[];
@@ -907,7 +921,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
             {libraryBooks.map((book, index) => (
               <div
                 key={book.id}
-                onClick={() => handleBookSelect(book)}
+                onClick={() => {
+                  if (!libraryWasDragged.current) handleBookSelect(book);
+                  libraryWasDragged.current = false;
+                }}
                 className="landing-cover-card w-[96px] h-[144px] sm:w-32 sm:h-48 md:w-36 md:h-[216px] lg:w-40 lg:h-60 shrink-0 snap-center overflow-hidden rounded-xl border border-white/70 bg-white/70 shadow-md cursor-grab active:cursor-grabbing transition-[box-shadow,filter] hover:brightness-110 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A36224] relative z-0"
                 title={book.title}
                 role="button"

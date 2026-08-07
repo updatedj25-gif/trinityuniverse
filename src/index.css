@@ -1,9 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 body {
   background-color: #FAF7F2;
   color: #1e293b;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -89,6 +90,23 @@ body {
   touch-action: pan-x;
   overscroll-behavior-x: contain;
   cursor: grab;
+}
+
+.landing-prompt-panel {
+  isolation: isolate;
+}
+
+@media (max-width: 639px) {
+  .landing-prompt-panel {
+    width: min(92vw, 390px);
+  }
+}
+
+button:focus-visible,
+[role="button"]:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 3px;
 }
 
 .landing-cover-scroller::-webkit-scrollbar {

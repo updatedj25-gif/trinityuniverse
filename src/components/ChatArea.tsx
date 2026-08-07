@@ -223,7 +223,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               )}
 
               {/* Exact DeepSeek Chat Input Container */}
-              <div className="bg-white border border-stone-200/90 rounded-[24px] shadow-sm p-4 hover:border-stone-300 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100/50 transition-all flex flex-col justify-between min-h-[130px]">
+              <div className="bg-[#11131b] border border-slate-700/80 rounded-[24px] shadow-[0_18px_45px_rgba(15,23,42,0.22)] p-4 hover:border-slate-500 focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-400/20 transition-all flex flex-col justify-between min-h-[130px]">
                 {/* Textarea Field */}
                 <textarea
                   value={input}
@@ -231,7 +231,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                   onKeyDown={handleKeyDown}
                   placeholder={`Message ${tenant.name}`}
                   rows={2}
-                  className="w-full resize-none border-none outline-none text-sm sm:text-base text-slate-800 placeholder-stone-400 bg-transparent font-sans"
+                  className="w-full resize-none border-none outline-none text-sm sm:text-base text-slate-100 placeholder-slate-500 bg-transparent font-sans"
                 />
 
                 {/* Bottom Controls Bar inside Box */}
