@@ -14,7 +14,7 @@ declare global {
   }
 }
 import { UserProfile } from '../types';
-import { ArrowRight, Sparkles, Code2, Cpu, Brain, Flame, Zap, ShieldCheck, Compass, BarChart3, LineChart, BookOpen, Download, ShoppingCart, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Code2, Cpu, Brain, Flame, Zap, ShieldCheck, Compass, BarChart3, LineChart, BookOpen, Download, ShoppingCart, X } from 'lucide-react';
 
 const TRINITY_LOGO =
   'https://image2url.com/r2/default/images/1767183581317-68102f31-454b-45f6-9d39-025ce8604ac3.png';
@@ -438,7 +438,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
   const [activeSlide, setActiveSlide] = useState(0);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
   const [animating, setAnimating] = useState(false);
-  const touchStartX = useRef<number | null>(null);
+  const pointerStartX = useRef<number | null>(null);
+  const wasDragged = useRef(false);
+  const libraryTrackRef = useRef<HTMLDivElement | null>(null);
+  const libraryDragStartX = useRef<number | null>(null);
+  const libraryDragStartScroll = useRef(0);
 
   // Typewriter effect state for stationary floating input box
   const [typedText, setTypedText] = useState('');
@@ -446,6 +450,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
   const [showAnswer, setShowAnswer] = useState(false);
   const [errorDismissed, setErrorDismissed] = useState(false);
   const [libraryBooks, setLibraryBooks] = useState<LandingBook[]>([]);
+  const [activeLibraryIndex, setActiveLibraryIndex] = useState(0);
   const [selectedBook, setSelectedBook] = useState<LandingBook | null>(null);
   const [bookAddedToCart, setBookAddedToCart] = useState(false);
 
@@ -520,19 +525,46 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
     return () => clearTimeout(t);
   }, [activeSlide, goNext]);
 
-  // Touch swipe handling
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
+  // Pointer swipe handling works for touch phones, tablets, iPads, trackpads, and mice.
+  const handlePointerStart = (e: React.PointerEvent) => {
+    pointerStartX.current = e.clientX;
+    wasDragged.current = false;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
+  const handlePointerEnd = (e: React.PointerEvent) => {
+    if (pointerStartX.current === null) return;
+    const dx = e.clientX - pointerStartX.current;
     if (Math.abs(dx) > 35) {
+      wasDragged.current = true;
       if (dx < 0) goNext();
       else goPrev();
     }
-    touchStartX.current = null;
+    pointerStartX.current = null;
+  };
+
+  const scrollToLibraryIndex = useCallback((index: number) => {
+    const track = libraryTrackRef.current;
+    if (!track || libraryBooks.length === 0) return;
+    const nextIndex = (index + libraryBooks.length) % libraryBooks.length;
+    const card = track.children[nextIndex] as HTMLElement | undefined;
+    card?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    setActiveLibraryIndex(nextIndex);
+  }, [libraryBooks.length]);
+
+  const handleLibraryPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    libraryDragStartX.current = e.clientX;
+    libraryDragStartScroll.current = e.currentTarget.scrollLeft;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+
+  const handleLibraryPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (libraryDragStartX.current === null) return;
+    e.currentTarget.scrollLeft = libraryDragStartScroll.current - (e.clientX - libraryDragStartX.current);
+  };
+
+  const handleLibraryPointerEnd = () => {
+    libraryDragStartX.current = null;
   };
 
   const handleGoogleSignIn = () => {
@@ -658,9 +690,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
 
       {/* ── Slider Motion Section with 18 Alternating Gnosis & Yada Cards ── */}
       <div
-        className="relative w-full h-[330px] sm:h-[445px] lg:h-[545px] shrink-0 flex items-center justify-center overflow-hidden z-10 sm:my-2 lg:my-7"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
+        className="relative w-full h-[330px] sm:h-[445px] lg:h-[545px] shrink-0 flex items-center justify-center overflow-hidden z-10 sm:my-2 lg:my-7 touch-pan-y"
+        onPointerDown={handlePointerStart}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={() => { pointerStartX.current = null; }}
       >
         {GNOSIS_CARDS.map((card, i) => {
           const d = wrapOffset(i - activeSlide, totalCards);
@@ -687,7 +720,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
           return (
             <div
               key={card.id}
-              onClick={() => !isActive && goToSlide(i)}
+              onClick={() => !isActive && !wasDragged.current && goToSlide(i)}
               style={{
                 position: 'absolute',
                  width: isMobile ? 'min(78%, 300px)' : 'min(82%, 430px)',
@@ -797,6 +830,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
             </div>
           </div>
         </div>
+
+        <div className="absolute bottom-[68px] left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 rounded-full bg-white/20 px-2 py-1 backdrop-blur-sm">
+          {GNOSIS_CARDS.map((card, index) => (
+            <button
+              key={card.id}
+              type="button"
+              onClick={() => goToSlide(index)}
+              aria-label={`Show slide ${index + 1}: ${card.title}`}
+              className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                index === activeSlide ? 'w-6 bg-slate-800' : 'w-1.5 bg-slate-400/60 hover:bg-slate-600'
+              }`}
+            />
+          ))}
+        </div>
       </div>
 
       {/* ── Primary Action Call-to-Action (Positioned close to input box) ── */}
@@ -813,7 +860,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
 
       {/* The same first-page catalog covers are showcased as the library preview. */}
       {libraryBooks.length > 0 && (
-        <section className="relative z-10 shrink-0 w-full overflow-hidden mt-3 sm:mt-5 lg:mt-7 pb-4 sm:pb-6 lg:pb-10" aria-label="Trinity Universe Library preview">
+        <section className="relative z-10 shrink-0 w-full overflow-hidden mt-8 sm:mt-10 lg:mt-14 pb-4 sm:pb-6 lg:pb-10" aria-label="Trinity Universe Library preview">
           <div className="flex items-end justify-between gap-4 px-5 sm:px-8 lg:px-12 mb-3 sm:mb-4">
             <div className="text-left">
               <p className="text-[9px] sm:text-[10px] font-bold tracking-[0.28em] uppercase text-[#A36224]">
@@ -829,13 +876,43 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
             </span>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4 lg:gap-5 landing-cover-track">
-            {[...libraryBooks, ...libraryBooks].map((book, index) => (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => scrollToLibraryIndex(activeLibraryIndex - 1)}
+              aria-label="Previous library cover"
+              className="absolute left-2 sm:left-4 top-1/2 z-10 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/80 text-white shadow-lg transition hover:bg-slate-900 cursor-pointer"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+            <div
+              ref={libraryTrackRef}
+              className="landing-cover-scroller flex items-center gap-3 sm:gap-4 lg:gap-5 overflow-x-auto px-12 sm:px-16 lg:px-20 pb-2 snap-x snap-mandatory"
+              onPointerDown={handleLibraryPointerDown}
+              onPointerMove={handleLibraryPointerMove}
+              onPointerUp={handleLibraryPointerEnd}
+              onPointerCancel={handleLibraryPointerEnd}
+              onScroll={(event) => {
+                const target = event.currentTarget;
+                const cards = Array.from(target.children) as HTMLElement[];
+                const center = target.scrollLeft + target.clientWidth / 2;
+                let closest = 0;
+                let distance = Number.POSITIVE_INFINITY;
+                cards.forEach((card, index) => {
+                  const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+                  if (Math.abs(cardCenter - center) < distance) {
+                    distance = Math.abs(cardCenter - center);
+                    closest = index;
+                  }
+                });
+                setActiveLibraryIndex(closest);
+              }}
+            >
+            {libraryBooks.map((book, index) => (
               <div
-                key={`${book.id}-${index}`}
+                key={book.id}
                 onClick={() => handleBookSelect(book)}
-                className="landing-cover-card w-[96px] h-[144px] sm:w-32 sm:h-48 md:w-36 md:h-[216px] lg:w-40 lg:h-60 shrink-0 overflow-hidden rounded-xl border border-white/70 bg-white/70 shadow-md cursor-pointer transition-[box-shadow,filter] hover:brightness-110 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A36224] relative z-0"
-                style={{ animationDelay: `${index * 1.15}s` }}
+                className="landing-cover-card w-[96px] h-[144px] sm:w-32 sm:h-48 md:w-36 md:h-[216px] lg:w-40 lg:h-60 shrink-0 snap-center overflow-hidden rounded-xl border border-white/70 bg-white/70 shadow-md cursor-grab active:cursor-grabbing transition-[box-shadow,filter] hover:brightness-110 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A36224] relative z-0"
                 title={book.title}
                 role="button"
                 tabIndex={0}
@@ -855,6 +932,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
                       <BookOpen className="w-6 h-6 text-amber-200" />
                     </div>
                   )}
+                  <span className={`absolute right-2 top-2 rounded-full px-2 py-1 text-[9px] sm:text-[10px] font-black tracking-wide shadow-md ${
+                    book.price === 0 ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-950'
+                  }`}>
+                    {book.price === 0 ? 'FREE' : `$${book.price.toFixed(2)}`}
+                  </span>
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/65 to-transparent px-2 pt-8 pb-2">
                     <p className="text-[10px] sm:text-xs font-semibold leading-tight text-white line-clamp-3 drop-shadow-md">
                       {book.title}
@@ -862,6 +944,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
                   </div>
                 </div>
               </div>
+            ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => scrollToLibraryIndex(activeLibraryIndex + 1)}
+              aria-label="Next library cover"
+              className="absolute right-2 sm:right-4 top-1/2 z-10 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/80 text-white shadow-lg transition hover:bg-slate-900 cursor-pointer"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-1.5 px-5" aria-label="Library cover indicators">
+            {libraryBooks.map((book, index) => (
+              <button
+                key={book.id}
+                type="button"
+                onClick={() => scrollToLibraryIndex(index)}
+                aria-label={`Show book ${index + 1}: ${book.title}`}
+                className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                  index === activeLibraryIndex ? 'w-5 bg-[#A36224]' : 'w-1.5 bg-slate-300 hover:bg-[#A36224]/60'
+                }`}
+              />
             ))}
           </div>
           <div className="flex justify-end px-5 sm:px-8 lg:px-12 mt-2 sm:mt-3">

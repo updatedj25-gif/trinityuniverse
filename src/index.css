@@ -83,6 +83,22 @@ body {
   animation-play-state: paused;
 }
 
+.landing-cover-scroller {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  cursor: grab;
+}
+
+.landing-cover-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.landing-cover-scroller:active {
+  cursor: grabbing;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-cover-track,
   .landing-cover-card {
