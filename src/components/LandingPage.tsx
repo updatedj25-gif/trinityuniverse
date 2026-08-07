@@ -723,11 +723,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
               onClick={() => !isActive && !wasDragged.current && goToSlide(i)}
               style={{
                 position: 'absolute',
-                 width: isMobile ? 'min(78%, 300px)' : 'min(82%, 430px)',
-                 height: isMobile ? '84%' : '84%',
-                 maxHeight: isMobile ? '252px' : '365px',
                 left: '50%',
-                top: isMobile ? '36%' : '44%',
+                 top: isMobile ? '38%' : '42%',
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,
                 opacity,
                 filter: blur > 0 ? `blur(${blur}px)` : 'none',
@@ -743,13 +740,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
                 boxShadow: isActive
                   ? `0 14px 36px rgba(15, 23, 42, 0.35), 0 0 20px ${card.accentColor}30`
                   : '0 8px 20px rgba(0, 0, 0, 0.2)',
-                padding: isMobile ? '7px 9px' : '10px 12px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 overflow: 'hidden',
               }}
-              className="group select-none"
+              className="gnosis-slide-card group select-none"
             >
               {/* Card Header Bar */}
               <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5 mb-1.5 shrink-0">
@@ -816,7 +812,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
         })}
 
         {/* ── Stationary Floating Input Box (3-line capacity for mobile & desktop) ── */}
-        <div className="absolute bottom-0.5 sm:bottom-1 left-1/2 -translate-x-1/2 w-[76%] max-w-md z-30 pointer-events-auto">
+        <div className="absolute bottom-4 sm:bottom-8 lg:bottom-10 left-1/2 -translate-x-1/2 w-[82%] sm:w-[64%] lg:w-[58%] max-w-md z-30 pointer-events-auto">
           <div className="bg-slate-900/90 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-2 sm:p-2.5 shadow-xl backdrop-blur-xl flex items-start justify-between gap-2 transition-all min-h-[60px]">
             <div className="flex items-start gap-2 flex-1 min-w-0 pt-0.5">
               <div className="flex-1 min-w-0 text-[11px] sm:text-xs text-slate-200 font-mono leading-relaxed line-clamp-3 min-h-[48px]">
@@ -847,7 +843,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
       </div>
 
       {/* ── Primary Action Call-to-Action (Positioned close to input box) ── */}
-      <div className="flex flex-col items-center gap-2 px-6 mb-1 sm:mb-4 lg:mb-7 mt-0 sm:mt-1.5 z-10 relative shrink-0">
+      <div className="flex flex-col items-center gap-2 px-6 mb-1 sm:mb-4 lg:mb-7 -mt-2 sm:-mt-4 lg:-mt-6 z-10 relative shrink-0">
         {/* Google Sign In Button */}
         <button
           onClick={handleGoogleSignIn}
