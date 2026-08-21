@@ -1077,6 +1077,63 @@ Conversation style:
     }
 
     // ── Static Assets ─────────────────────────────────────────────────────────
+    
+    // ── FACE SWAP STUDIO ROUTES ──────────────────────────────────────────────
+    if (url.pathname === "/api/faceswap/generate" && request.method === "POST") {
+      try {
+        const body = (await request.json()) as any;
+        const swapId = "swap_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+        const timestamp = new Date().toISOString();
+
+        const resultUrl = body.swappedResult || body.targetFaceImage || body.originalImage || "";
+        const historyItem = {
+          id: swapId,
+          originalUrl: body.originalImage || "",
+          targetFaceUrl: body.targetFaceImage || "",
+          resultUrl,
+          createdAt: timestamp,
+        };
+
+        const kv = env.CHAT_SESSIONS || env.GNOSIS_SESSIONS;
+        if (kv) {
+          try {
+            let list: any[] = [];
+            const raw = await kv.get("trinity_faceswap_history");
+            if (raw) {
+              try { list = JSON.parse(raw); } catch {}
+            }
+            list = [historyItem, ...list].slice(0, 50);
+            await kv.put("trinity_faceswap_history", JSON.stringify(list));
+          } catch (e) {}
+        }
+
+        return Response.json(
+          { success: true, swapId, resultUrl, item: historyItem },
+          { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+        );
+      } catch (err: any) {
+        return Response.json(
+          { success: false, error: err.message },
+          { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+        );
+      }
+    }
+
+    if (url.pathname === "/api/faceswap/history" && request.method === "GET") {
+      const kv = env.CHAT_SESSIONS || env.GNOSIS_SESSIONS;
+      let list = [];
+      if (kv) {
+        try {
+          const raw = await kv.get("trinity_faceswap_history");
+          if (raw) list = JSON.parse(raw);
+        } catch {}
+      }
+      return Response.json(
+        { history: list },
+        { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+      );
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
