@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tenant, UserProfile } from '../types';
-import { Menu, Plus, User, LogOut } from 'lucide-react';
+import { User, LogOut } from 'lucide-react';
 
 interface NavbarProps {
   tenants: Tenant[];
@@ -9,7 +9,6 @@ interface NavbarProps {
   onOpenAddTenant: () => void;
   user: UserProfile;
   onLogout: () => void;
-  onToggleSidebar?: () => void;
 }
 
 const TRINITY_LOGO =
@@ -19,43 +18,28 @@ export const Navbar: React.FC<NavbarProps> = ({
   tenants,
   activeTenantId,
   onSelectTenant,
-  onOpenAddTenant,
   user,
   onLogout,
-  onToggleSidebar,
 }) => {
   return (
-    <nav className="h-[48px] bg-white border-b border-stone-200/80 px-3 sm:px-4 flex items-center justify-between shrink-0 select-none z-30 shadow-xs">
+    <nav className="h-[48px] bg-white border-b border-stone-200/80 px-4 flex items-center justify-between shrink-0 select-none z-30 shadow-xs">
       
-      {/* LEFT: Hamburger Toggle Button + Logo + Brand Name */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        {/* Hamburger Menu Button to Toggle Sidebar */}
-        <button
-          onClick={onToggleSidebar}
-          className="p-1.5 rounded-lg text-slate-700 hover:bg-stone-100 hover:text-slate-900 transition-colors cursor-pointer flex items-center justify-center"
-          title="Toggle Sidebar Navigation"
-          aria-label="Toggle Sidebar Navigation"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-
-        {/* Logo and Brand Title */}
-        <div className="flex items-center gap-2">
-          <img
-            src={TRINITY_LOGO}
-            alt="Trinity Universe"
-            className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
-            onError={(e) => {
-              (e.target as HTMLElement).style.display = 'none';
-            }}
-          />
-          <span className="font-bold text-xs sm:text-sm tracking-wider text-slate-800 uppercase font-sans">
-            TRINITY UNIVERSE
-          </span>
-        </div>
+      {/* LEFT: Clean Logo + Brand Title (No duplicate hamburger) */}
+      <div className="flex items-center gap-2.5">
+        <img
+          src={TRINITY_LOGO}
+          alt="Trinity Universe"
+          className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+          onError={(e) => {
+            (e.target as HTMLElement).style.display = 'none';
+          }}
+        />
+        <span className="font-bold text-xs sm:text-sm tracking-wider text-slate-800 uppercase font-sans">
+          TRINITY UNIVERSE
+        </span>
       </div>
 
-      {/* CENTER: Gnosis AI / Yada Guide Switcher Pills */}
+      {/* CENTER: Gnosis AI / Yada Guide Switcher */}
       <div className="flex items-center bg-stone-100/90 p-0.5 rounded-full border border-stone-200/60 shadow-inner">
         {tenants.map((t) => {
           const isActive = t.id === activeTenantId;
@@ -65,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               key={t.id}
               onClick={() => onSelectTenant(t.id)}
-              className={`px-3 sm:px-4 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-3.5 sm:px-4 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 isActive
                   ? isYada
                     ? 'bg-[#A36224] text-white shadow-sm'
@@ -79,7 +63,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         })}
       </div>
 
-      {/* RIGHT: User Profile & Actions */}
+      {/* RIGHT: User Profile & Logout */}
       <div className="flex items-center gap-2">
         {user.signedIn ? (
           <div className="flex items-center gap-2">
