@@ -1075,6 +1075,7 @@ Conversation style:
 
 
 
+
 interface FaceSwapRequestBody {
   originalImage: string;
   targetFaceImage: string;
@@ -1085,12 +1086,22 @@ interface FaceSwapRequestBody {
 
 async function resolveImageBuffer(input: string): Promise<ArrayBuffer> {
   if (!input) throw new Error("Empty image payload provided");
+  
   if (input.startsWith("http://") || input.startsWith("https://")) {
-    const res = await fetch(input);
-    if (!res.ok) throw new Error("Failed to download image from URL: " + res.statusText);
+    const res = await fetch(input, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "image/*,*/*"
+      }
+    });
+    if (!res.ok) throw new Error("Failed to download image (" + res.status + "): " + res.statusText);
     return await res.arrayBuffer();
   }
-  const base64Data = input.includes(",") ? input.split(",")[1] : input;
+
+  // Sanitize base64 string
+  let base64Data = input.includes(",") ? input.split(",")[1] : input;
+  base64Data = base64Data.replace(/\s/g, ""); // Remove newlines and whitespace
+
   const binaryStr = atob(base64Data);
   const bytes = new Uint8Array(binaryStr.length);
   for (let i = 0; i < binaryStr.length; i++) {
@@ -1102,7 +1113,7 @@ async function resolveImageBuffer(input: string): Promise<ArrayBuffer> {
 async function processFaceSwap(body: FaceSwapRequestBody, env: any) {
   const swapId = "swap_" + Date.now() + "_" + crypto.randomUUID().slice(0, 8);
   const timestamp = new Date().toISOString();
-  console.log("[FaceSwap R2] Starting upload and swap storage pipeline:", swapId);
+  console.log("[FaceSwap R2] Starting pipeline:", swapId);
 
   const origBuffer = await resolveImageBuffer(body.originalImage);
   const targetBuffer = await resolveImageBuffer(body.targetFaceImage);
@@ -1112,20 +1123,17 @@ async function processFaceSwap(body: FaceSwapRequestBody, env: any) {
   const targetKey = "faceswap/" + swapId + "_target.jpg";
   const resultKey = "faceswap/" + swapId + "_result.jpg";
 
-  // 1. Upload to Cloudflare R2 Storage (MASTER_BUCKET)
-  const bucket = env.MASTER_BUCKET || env.LIBRARY_BUCKET;
+  // Store in Cloudflare R2
+  const bucket = env.MASTER_BUCKET || env.LIBRARY_BUCKET || env.TRINITY_EBOOKS;
   if (bucket) {
-    console.log("[FaceSwap R2] Uploading original (" + origBuffer.byteLength + " bytes) -> " + origKey);
-    await bucket.put(origKey, origBuffer, { httpMetadata: { contentType: "image/jpeg" } });
-
-    console.log("[FaceSwap R2] Uploading target face (" + targetBuffer.byteLength + " bytes) -> " + targetKey);
-    await bucket.put(targetKey, targetBuffer, { httpMetadata: { contentType: "image/jpeg" } });
-
-    console.log("[FaceSwap R2] Uploading result image (" + resultBuffer.byteLength + " bytes) -> " + resultKey);
-    await bucket.put(resultKey, resultBuffer, { httpMetadata: { contentType: "image/jpeg" } });
-    console.log("[FaceSwap R2] ✓ All 3 images successfully saved to R2 storage");
-  } else {
-    console.warn("[FaceSwap R2] Warning: No R2 bucket binding found");
+    try {
+      await bucket.put(origKey, origBuffer, { httpMetadata: { contentType: "image/jpeg" } });
+      await bucket.put(targetKey, targetBuffer, { httpMetadata: { contentType: "image/jpeg" } });
+      await bucket.put(resultKey, resultBuffer, { httpMetadata: { contentType: "image/jpeg" } });
+      console.log("[FaceSwap R2] ✓ All 3 images saved to R2 storage");
+    } catch (r2Err) {
+      console.error("[FaceSwap R2 Error]:", r2Err);
+    }
   }
 
   const resultUrl = "/api/faceswap/image/" + resultKey;
@@ -1140,17 +1148,20 @@ async function processFaceSwap(body: FaceSwapRequestBody, env: any) {
     createdAt: timestamp,
   };
 
-  // 2. Index in Cloudflare KV
   const kv = env.CHAT_SESSIONS || env.GNOSIS_SESSIONS;
   if (kv) {
-    let list: any[] = [];
-    const raw = await kv.get("trinity_faceswap_history");
-    if (raw) {
-      try { list = JSON.parse(raw); } catch {}
+    try {
+      let list: any[] = [];
+      const raw = await kv.get("trinity_faceswap_history");
+      if (raw) {
+        try { list = JSON.parse(raw); } catch {}
+      }
+      list = [historyItem, ...list].slice(0, 40);
+      await kv.put("trinity_faceswap_history", JSON.stringify(list));
+      console.log("[FaceSwap KV] ✓ Indexed item into KV store");
+    } catch (kvErr) {
+      console.error("[FaceSwap KV Error]:", kvErr);
     }
-    list = [historyItem, ...list].slice(0, 40);
-    await kv.put("trinity_faceswap_history", JSON.stringify(list));
-    console.log("[FaceSwap KV] ✓ Indexed history item into KV store (total items: " + list.length + ")");
   }
 
   return { success: true, resultUrl, item: historyItem };

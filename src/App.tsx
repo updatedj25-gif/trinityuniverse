@@ -157,6 +157,8 @@ const App: React.FC = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: text,
+          messages: [{ role: "user", content: text }],
+          tenant: activeTenant.id,
           tenantId: activeTenant.id,
           systemInstruction: activeTenant.systemInstruction,
         }),
