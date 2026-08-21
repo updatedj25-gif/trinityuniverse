@@ -1073,6 +1073,8 @@ Conversation style:
 
 
 
+
+
 interface FaceSwapRequestBody {
   originalImage: string;
   targetFaceImage: string;
@@ -1085,7 +1087,7 @@ async function resolveImageBuffer(input: string): Promise<ArrayBuffer> {
   if (!input) throw new Error("Empty image payload provided");
   if (input.startsWith("http://") || input.startsWith("https://")) {
     const res = await fetch(input);
-    if (!res.ok) throw new Error("Failed to download image: " + res.statusText);
+    if (!res.ok) throw new Error("Failed to download image from URL: " + res.statusText);
     return await res.arrayBuffer();
   }
   const base64Data = input.includes(",") ? input.split(",")[1] : input;
@@ -1100,6 +1102,7 @@ async function resolveImageBuffer(input: string): Promise<ArrayBuffer> {
 async function processFaceSwap(body: FaceSwapRequestBody, env: any) {
   const swapId = "swap_" + Date.now() + "_" + crypto.randomUUID().slice(0, 8);
   const timestamp = new Date().toISOString();
+  console.log("[FaceSwap R2] Starting upload and swap storage pipeline:", swapId);
 
   const origBuffer = await resolveImageBuffer(body.originalImage);
   const targetBuffer = await resolveImageBuffer(body.targetFaceImage);
@@ -1109,12 +1112,20 @@ async function processFaceSwap(body: FaceSwapRequestBody, env: any) {
   const targetKey = "faceswap/" + swapId + "_target.jpg";
   const resultKey = "faceswap/" + swapId + "_result.jpg";
 
-  // Store in Cloudflare R2 (MASTER_BUCKET)
+  // 1. Upload to Cloudflare R2 Storage (MASTER_BUCKET)
   const bucket = env.MASTER_BUCKET || env.LIBRARY_BUCKET;
   if (bucket) {
+    console.log("[FaceSwap R2] Uploading original (" + origBuffer.byteLength + " bytes) -> " + origKey);
     await bucket.put(origKey, origBuffer, { httpMetadata: { contentType: "image/jpeg" } });
+
+    console.log("[FaceSwap R2] Uploading target face (" + targetBuffer.byteLength + " bytes) -> " + targetKey);
     await bucket.put(targetKey, targetBuffer, { httpMetadata: { contentType: "image/jpeg" } });
+
+    console.log("[FaceSwap R2] Uploading result image (" + resultBuffer.byteLength + " bytes) -> " + resultKey);
     await bucket.put(resultKey, resultBuffer, { httpMetadata: { contentType: "image/jpeg" } });
+    console.log("[FaceSwap R2] ✓ All 3 images successfully saved to R2 storage");
+  } else {
+    console.warn("[FaceSwap R2] Warning: No R2 bucket binding found");
   }
 
   const resultUrl = "/api/faceswap/image/" + resultKey;
@@ -1129,6 +1140,7 @@ async function processFaceSwap(body: FaceSwapRequestBody, env: any) {
     createdAt: timestamp,
   };
 
+  // 2. Index in Cloudflare KV
   const kv = env.CHAT_SESSIONS || env.GNOSIS_SESSIONS;
   if (kv) {
     let list: any[] = [];
@@ -1138,6 +1150,7 @@ async function processFaceSwap(body: FaceSwapRequestBody, env: any) {
     }
     list = [historyItem, ...list].slice(0, 40);
     await kv.put("trinity_faceswap_history", JSON.stringify(list));
+    console.log("[FaceSwap KV] ✓ Indexed history item into KV store (total items: " + list.length + ")");
   }
 
   return { success: true, resultUrl, item: historyItem };
