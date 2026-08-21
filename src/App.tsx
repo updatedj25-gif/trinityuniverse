@@ -8,11 +8,11 @@ import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { LibraryPage } from './components/LibraryPage';
 import { LandingPage } from './components/LandingPage';
+import { FaceSwapStudio } from './components/FaceSwapStudio';
 import { SignInModal } from './components/SignInModal';
 import { TenantModal } from './components/TenantModal';
 
 const App: React.FC = () => {
-  // ── Tenants ────────────────────────────────────────────────────────────────
   const [tenants, setTenants] = useState<Tenant[]>(() => {
     try {
       const saved = localStorage.getItem('trinity_tenants');
@@ -21,9 +21,8 @@ const App: React.FC = () => {
   });
 
   const [activeTenantId, setActiveTenantId] = useState<string>('gnosis');
-  const [currentView, setCurrentView] = useState<'chat' | 'library'>('chat');
+  const [currentView, setCurrentView] = useState<'chat' | 'library' | 'faceswap'>('chat');
 
-  // ── Landing ────────────────────────────────────────────────────────────────
   const [showLanding, setShowLanding] = useState<boolean>(() => {
     try {
       const dismissed = localStorage.getItem('trinity_landing_dismissed');
@@ -37,381 +36,256 @@ const App: React.FC = () => {
     return true;
   });
 
-  // ── Sessions ───────────────────────────────────────────────────────────────
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
-    // Legacy hardcoded session IDs — strip them out on first load so returning
-    // users also get a clean empty sidebar instead of stale welcome chats.
     const LEGACY_IDS = new Set([
       'session_gnosis_welcome',
-      'session_gnosis_guide',
       'session_yada_welcome',
-      'session_yada_guide',
+      'session_gnosis_default',
+      'session_yada_default',
     ]);
     try {
-      const saved = localStorage.getItem('trinity_chat_sessions');
+      const saved = localStorage.getItem('trinity_sessions');
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          const cleaned = parsed.filter((s: ChatSession) => !LEGACY_IDS.has(s.id));
-          localStorage.setItem('trinity_chat_sessions', JSON.stringify(cleaned));
-          return cleaned;
+        const parsed: ChatSession[] = JSON.parse(saved);
+        const cleaned = parsed.filter((s) => !LEGACY_IDS.has(s.id));
+        if (cleaned.length !== parsed.length) {
+          localStorage.setItem('trinity_sessions', JSON.stringify(cleaned));
         }
+        return cleaned;
       }
     } catch { /* */ }
     return DEFAULT_INITIAL_SESSIONS;
   });
 
-  // ── Active session per tenant ──────────────────────────────────────────────
-  const [activeSessionMap, setActiveSessionMap] = useState<Record<string, string | null>>(() => {
-    const LEGACY_IDS = new Set([
-      'session_gnosis_welcome',
-      'session_gnosis_guide',
-      'session_yada_welcome',
-      'session_yada_guide',
-    ]);
-    try {
-      const saved = localStorage.getItem('trinity_active_session_map');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === 'object') {
-          // Null-out any pointer that still targets a legacy session
-          const cleaned: Record<string, string | null> = {};
-          for (const [k, v] of Object.entries(parsed)) {
-            cleaned[k] = typeof v === 'string' && LEGACY_IDS.has(v) ? null : (v as string | null);
-          }
-          return cleaned;
-        }
-      }
-    } catch { /* */ }
-    return { gnosis: null, yada: null };
-  });
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isSignInOpen, setIsSignInOpen] = useState<boolean>(false);
+  const [isTenantModalOpen, setIsTenantModalOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // ── User ───────────────────────────────────────────────────────────────────
   const [user, setUser] = useState<UserProfile>(() => {
     try {
       const saved = localStorage.getItem('trinity_user_profile');
-      if (saved) return JSON.parse(saved);
-    } catch { /* */ }
-    return { name: 'Guest User', signedIn: false };
+      return saved ? JSON.parse(saved) : { name: 'Guest User', email: '', signedIn: false };
+    } catch { return { name: 'Guest User', email: '', signedIn: false }; }
   });
 
-  // ── UI ─────────────────────────────────────────────────────────────────────
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-  const [signInOpen, setSignInOpen] = useState<boolean>(false);
-  const [tenantModalOpen, setTenantModalOpen] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const activeTenant = tenants.find((t) => t.id === activeTenantId) || tenants[0];
+  const activeSession = sessions.find((s) => s.id === activeSessionId && s.tenantId === activeTenant.id);
 
-  // ── Persistence ────────────────────────────────────────────────────────────
-  useEffect(() => { localStorage.setItem('trinity_tenants', JSON.stringify(tenants)); }, [tenants]);
-  useEffect(() => { localStorage.setItem('trinity_chat_sessions', JSON.stringify(sessions)); }, [sessions]);
-  useEffect(() => { localStorage.setItem('trinity_active_session_map', JSON.stringify(activeSessionMap)); }, [activeSessionMap]);
-  useEffect(() => { localStorage.setItem('trinity_user_profile', JSON.stringify(user)); }, [user]);
-
-  // ── Auth error from Google OAuth redirect (e.g. ?auth_error=access_denied) ──
-  const [authError, setAuthError] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null;
-    const params = new URLSearchParams(window.location.search);
-    const err = params.get('auth_error');
-    if (err) {
-      // Remove param from URL so it doesn't persist on refresh
-      window.history.replaceState({}, '', window.location.pathname + window.location.hash);
-    }
-    return err;
-  });
-
-  // ── Restore session from server cookie (Google OAuth redirect flow) ─────────
   useEffect(() => {
-    fetch('/api/me', { credentials: 'include' })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: UserProfile | null) => {
-        if (data && data.signedIn) {
-          setUser(data);
-          localStorage.setItem('trinity_user_profile', JSON.stringify(data));
-          setAuthError(null);
-          if (localStorage.getItem('trinity_library_access_pending') === 'true') {
-            localStorage.removeItem('trinity_library_access_pending');
-            setCurrentView('library');
-          }
-          setShowLanding(false);
-        }
-      })
-      .catch(() => { /* api/me not available in dev; ignore */ });
-  }, []);
+    localStorage.setItem('trinity_sessions', JSON.stringify(sessions));
+  }, [sessions]);
 
-  // ── Derived state ──────────────────────────────────────────────────────────
-  const currentTenant = tenants.find((t) => t.id === activeTenantId) ?? tenants[0];
-  const activeSessionId = activeSessionMap[activeTenantId] ?? null;
-  const currentTenantSessions = sessions.filter((s) => s.tenantId === currentTenant.id);
-  const activeSession = currentTenantSessions.find((s) => s.id === activeSessionId);
-  const currentMessages = activeSession?.messages ?? [];
-
-  // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleLandingEnter = (profile: UserProfile) => {
-    setUser(profile);
-    localStorage.setItem('trinity_user_profile', JSON.stringify(profile));
-    localStorage.setItem('trinity_landing_dismissed', 'true');
-    setActiveTenantId('gnosis');
-    setShowLanding(false);
-  };
-
-  const handleVisitLibrary = () => {
-    if (user.signedIn) {
-      setCurrentView('library');
-      setShowLanding(false);
-      return;
-    }
-    localStorage.setItem('trinity_library_access_pending', 'true');
-    setSignInOpen(true);
-  };
-
-  const handleLogout = () => {
-    const clearedUser: UserProfile = { name: 'Guest User', signedIn: false };
-    setUser(clearedUser);
-    localStorage.removeItem('trinity_user_profile');
-    localStorage.removeItem('trinity_landing_dismissed');
-    setShowLanding(true);
-    // Also hit server logout if available
-    fetch('/api/auth/logout').catch(() => {});
-  };
-
-  const handleSelectTenant = (tenantId: string) => {
-    setActiveTenantId(tenantId);
+  const handleSelectTenant = (id: string) => {
+    setActiveTenantId(id);
+    setActiveSessionId(null);
     setCurrentView('chat');
-    if (!activeSessionMap[tenantId]) {
-      const tenantSessions = sessions.filter((s) => s.tenantId === tenantId);
-      setActiveSessionMap((prev) => ({
-        ...prev,
-        [tenantId]: tenantSessions.length > 0 ? tenantSessions[0].id : null,
-      }));
-    }
-  };
-
-  const handleSelectSession = (sessionId: string) => {
-    setCurrentView('chat');
-    setActiveSessionMap((prev) => ({ ...prev, [activeTenantId]: sessionId }));
   };
 
   const handleNewSession = () => {
+    const now = new Date().toISOString();
+    const newSession: ChatSession = {
+      id: `session_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      title: 'New Conversation',
+      tenantId: activeTenant.id,
+      messages: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+    setSessions((prev) => [newSession, ...prev]);
+    setActiveSessionId(newSession.id);
     setCurrentView('chat');
-    setActiveSessionMap((prev) => ({ ...prev, [activeTenantId]: null }));
   };
 
-  const handleClearHistory = () => {
-    if (window.confirm(`Clear all history for ${currentTenant.name}?`)) {
-      setSessions((prev) => prev.filter((s) => s.tenantId !== currentTenant.id));
-      setActiveSessionMap((prev) => ({ ...prev, [currentTenant.id]: null }));
+  const handleSendMessage = async (text: string, attachments: Attachment[] = []) => {
+    let targetSessionId = activeSessionId;
+    const now = new Date().toISOString();
+
+    if (!targetSessionId) {
+      const newSession: ChatSession = {
+        id: `session_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        title: text.slice(0, 30) || 'New Conversation',
+        tenantId: activeTenant.id,
+        messages: [],
+        createdAt: now,
+        updatedAt: now,
+      };
+      setSessions((prev) => [newSession, ...prev]);
+      setActiveSessionId(newSession.id);
+      targetSessionId = newSession.id;
     }
-  };
 
-  const handleDeleteSession = (sessionId: string) => {
-    setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-    if (activeSessionId === sessionId) {
-      setActiveSessionMap((prev) => ({ ...prev, [activeTenantId]: null }));
-    }
-  };
-
-  const handleAddTenant = (newTenant: Tenant) => {
-    setTenants((prev) => [...prev, newTenant]);
-    setActiveTenantId(newTenant.id);
-    setActiveSessionMap((prev) => ({ ...prev, [newTenant.id]: null }));
-  };
-
-  const handleSendMessage = async (content: string, attachments?: Attachment[]) => {
-    let sessionId = activeSessionId;
-    let updatedSessions = [...sessions];
-
-    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+    const userMsg: ChatMessage = {
+      id: `msg_${Date.now()}_user`,
       role: 'user',
-      content,
+      content: text,
       timestamp: now,
       attachments,
     };
 
-    let targetSession = updatedSessions.find(
-      (s) => s.id === sessionId && s.tenantId === currentTenant.id,
+    setSessions((prev) =>
+      prev.map((s) => (s.id === targetSessionId ? { ...s, messages: [...s.messages, userMsg], updatedAt: now } : s))
     );
 
-    if (!targetSession) {
-      const newSessionId = `session_${currentTenant.id}_${Date.now()}`;
-      const title = content.length > 30 ? content.slice(0, 30) + '...' : content;
-      targetSession = {
-        id: newSessionId,
-        tenantId: currentTenant.id,
-        userEmail: user.email,           // ← tag session with signed-in email
-        title: title || 'New Conversation',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        messages: [userMessage],
-      };
-      updatedSessions.unshift(targetSession);
-      sessionId = newSessionId;
-    } else {
-      targetSession = {
-        ...targetSession,
-        updatedAt: new Date().toISOString(),
-        messages: [...targetSession.messages, userMessage],
-      };
-      updatedSessions = updatedSessions.map((s) =>
-        s.id === sessionId ? targetSession! : s,
-      );
-    }
-
-    setSessions(updatedSessions);
-    setActiveSessionMap((prev) => ({ ...prev, [currentTenant.id]: sessionId }));
     setIsLoading(true);
 
     try {
-      const hasImages = userMessage.attachments?.some((a) => a.type === 'image');
-      const selectedModel = hasImages
-        ? currentTenant.visionModel ?? '@cf/meta/llama-3.2-11b-vision-instruct'
-        : currentTenant.primaryModel ?? '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
-
-      const response = await fetch('/api/chat', {
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tenantId: currentTenant.id,
-          model: selectedModel,
-          messages: targetSession.messages.map((m) => ({
-            role: m.role,
-            content: m.content,
-            attachments: m.attachments,
-          })),
-          systemInstruction: currentTenant.systemInstruction,
+          message: text,
+          tenantId: activeTenant.id,
+          systemInstruction: activeTenant.systemInstruction,
         }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error ?? 'Failed to get AI response');
-
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+      const data = (await res.json()) as any;
+      const aiReply: ChatMessage = {
+        id: `msg_${Date.now()}_assistant`,
         role: 'assistant',
-        content: data.text,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        content: data.reply || "I'm processing your request.",
+        timestamp: new Date().toISOString(),
       };
 
       setSessions((prev) =>
-        prev.map((s) =>
-          s.id === sessionId ? { ...s, messages: [...s.messages, assistantMessage] } : s,
-        ),
+        prev.map((s) => (s.id === targetSessionId ? { ...s, messages: [...s.messages, aiReply], updatedAt: new Date().toISOString() } : s))
       );
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'Please verify credentials.';
-      const errMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+    } catch {
+      const errorReply: ChatMessage = {
+        id: `msg_${Date.now()}_error`,
         role: 'assistant',
-        content: `⚠ Issue communicating with ${currentTenant.name}: ${msg}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        content: 'Sorry, I encountered an issue connecting to the edge engine.',
+        timestamp: new Date().toISOString(),
       };
       setSessions((prev) =>
-        prev.map((s) =>
-          s.id === sessionId ? { ...s, messages: [...s.messages, errMessage] } : s,
-        ),
+        prev.map((s) => (s.id === targetSessionId ? { ...s, messages: [...s.messages, errorReply] } : s))
       );
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-  if (showLanding) {
-    return (
-      <>
-        <LandingPage
-          onSignIn={handleLandingEnter}
-          onVisitLibrary={handleVisitLibrary}
-          authError={authError}
-        />
-        <SignInModal
-          isOpen={signInOpen}
-          onClose={() => {
-            localStorage.removeItem('trinity_library_access_pending');
-            setSignInOpen(false);
-          }}
-          googleOnly
-          onSignInSuccess={(profile) => {
-            localStorage.removeItem('trinity_library_access_pending');
-            setUser(profile);
-            setCurrentView('library');
-            setShowLanding(false);
-            setSignInOpen(false);
-          }}
-        />
-      </>
-    );
-  }
+  const handleClearHistory = () => {
+    if (confirm('Clear all conversation history for this persona?')) {
+      setSessions((prev) => prev.filter((s) => s.tenantId !== activeTenant.id));
+      setActiveSessionId(null);
+    }
+  };
+
+  const handleDeleteSession = (id: string) => {
+    setSessions((prev) => prev.filter((s) => s.id !== id));
+    if (activeSessionId === id) setActiveSessionId(null);
+  };
+
+  const handleLogout = () => {
+    const defaultUser: UserProfile = { name: 'Guest User', email: '', signedIn: false };
+    setUser(defaultUser);
+    localStorage.removeItem('trinity_user_profile');
+  };
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#FAF7F2] font-sans text-slate-800">
+    <div className="flex flex-col h-screen w-screen bg-[#FDFBF7] text-slate-800 overflow-hidden font-sans">
+      
+      {/* Navbar */}
       <Navbar
         tenants={tenants}
         activeTenantId={activeTenantId}
         onSelectTenant={handleSelectTenant}
-        onOpenAddTenant={() => setTenantModalOpen(true)}
+        onOpenAddTenant={() => setIsTenantModalOpen(true)}
         user={user}
         onLogout={handleLogout}
       />
-      <div className="h-[46px] shrink-0" />
 
+      {/* Main App Layout */}
       <div className="flex-1 flex overflow-hidden relative">
         <Sidebar
-          tenant={currentTenant}
+          tenant={activeTenant}
           sessions={sessions}
           activeSessionId={activeSessionId}
           currentView={currentView}
-          onSelectSession={handleSelectSession}
+          onSelectSession={(id) => {
+            setActiveSessionId(id);
+            setCurrentView('chat');
+          }}
           onNewSession={handleNewSession}
           onOpenLibrary={() => setCurrentView('library')}
+          onOpenFaceSwap={() => setCurrentView('faceswap')}
           onClearHistory={handleClearHistory}
           onDeleteSession={handleDeleteSession}
           user={user}
-          isOpen={sidebarOpen}
-          onCloseMobile={() => setSidebarOpen(false)}
+          isOpen={isSidebarOpen}
+          onCloseMobile={() => setIsSidebarOpen(false)}
         />
 
-        <div className="flex-1 flex flex-col h-full min-w-0">
-          {currentView === 'library' ? (
+        {/* View Switcher */}
+        <main className="flex-1 flex flex-col min-w-0 bg-[#FDFBF7] overflow-hidden">
+          <Header
+            tenant={activeTenant}
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            onNewChat={handleNewSession}
+          />
+
+          {currentView === 'faceswap' ? (
+            <FaceSwapStudio tenant={activeTenant} />
+          ) : currentView === 'library' ? (
             <LibraryPage
               onGoHome={() => setCurrentView('chat')}
-              onToggleSidebar={() => setSidebarOpen((p) => !p)}
+              onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
             />
           ) : (
-            <>
-              <Header
-                tenant={currentTenant}
-                onToggleSidebar={() => setSidebarOpen((p) => !p)}
-                onNewChat={handleNewSession}
-              />
-              <ChatArea
-                tenant={currentTenant}
-                messages={currentMessages}
-                onSendMessage={handleSendMessage}
-                isLoading={isLoading}
-              />
-            </>
+            <ChatArea
+              tenant={activeTenant}
+              messages={activeSession ? activeSession.messages : []}
+              onSendMessage={handleSendMessage}
+              isLoading={isLoading}
+            />
           )}
-        </div>
+        </main>
       </div>
 
-      <SignInModal
-        isOpen={signInOpen}
-        onClose={() => setSignInOpen(false)}
-        onSignInSuccess={(profile) => {
-          setUser(profile);
-          setShowLanding(false);
-        }}
-      />
+      {/* Landing Page Modal */}
+      {showLanding && (
+        <LandingPage
+          onSignIn={(profile: UserProfile) => {
+            setUser(profile);
+            localStorage.setItem('trinity_user_profile', JSON.stringify(profile));
+            setShowLanding(false);
+          }}
+          onVisitLibrary={() => {
+            setShowLanding(false);
+            setCurrentView('library');
+          }}
+        />
+      )}
 
-      <TenantModal
-        isOpen={tenantModalOpen}
-        onClose={() => setTenantModalOpen(false)}
-        onAddTenant={handleAddTenant}
-      />
+      {/* Sign In Modal */}
+      {isSignInOpen && (
+        <SignInModal
+          isOpen={isSignInOpen}
+          onClose={() => setIsSignInOpen(false)}
+          onSignInSuccess={(profile: UserProfile) => {
+            setUser(profile);
+            localStorage.setItem('trinity_user_profile', JSON.stringify(profile));
+            setIsSignInOpen(false);
+          }}
+        />
+      )}
+
+      {/* Tenant Modal */}
+      {isTenantModalOpen && (
+        <TenantModal
+          isOpen={isTenantModalOpen}
+          onClose={() => setIsTenantModalOpen(false)}
+          onAddTenant={(newTenant: Tenant) => {
+            const updated = [...tenants, newTenant];
+            setTenants(updated);
+            localStorage.setItem('trinity_tenants', JSON.stringify(updated));
+            setIsTenantModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };

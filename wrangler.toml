@@ -19,7 +19,7 @@ index_name = "gnosis-master-index"
 [[d1_databases]]
 binding = "DB"
 database_name = "divination-db"
-database_id = "25b1f304-4ab2-41c0-bf5d-a0c0b3c28c41"
+database_id = "20eb4026-8cc2-4988-b8eb-83670eb2bc81"
 
 # ── R2 Buckets ───────────────────────────────────────────────
 [[r2_buckets]]
@@ -93,20 +93,20 @@ bucket_name = "ai-orchestrator-test-bucket"
 # ── KV Namespaces ─────────────────────────────────────────────
 [[kv_namespaces]]
 binding = "GNOSIS_SESSIONS"
-id = "f77344676aba47ef80496eaaa93135b9"
+id = "687656e74c8e4cbaad18d35c75f700bb"
 
 [[kv_namespaces]]
 binding = "BOOK_STORE"
-id = "61937ec5ed4a4a9d8185b55a5c5190ba"
+id = "8e5ded4468094913af1a2bd07dee1b83"
 
 [[kv_namespaces]]
 binding = "CHAT_SESSIONS"
-id = "c3dd8e43cd874a1bb53b244f43be07fd"
+id = "dadd98a1674a4e9992aae09befdd6d1a"
 
 [[kv_namespaces]]
 binding = "CHAT_CONTEXT_CACHE"
-id = "97c6de5ad30f4d0db27fc723ffde75d7"
+id = "4e37d7628aef41d18302601d133e2388"
 
 [[kv_namespaces]]
 binding = "YADA_SESSIONS"
-id = "bf21f261457748cdb90dd7660ad73f16"
+id = "1065106a537a4c7d9fb44e8ddccb98d9"

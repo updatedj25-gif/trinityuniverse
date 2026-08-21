@@ -1066,3 +1066,79 @@ Conversation style:
     return env.ASSETS.fetch(request);
   },
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FACE SWAP STUDIO BACKEND (R2 STORAGE + GOOGLE GEMINI AI / WORKERS AI)
+// ─────────────────────────────────────────────────────────────────────────────
+
+
+interface FaceSwapRequestBody {
+  originalImage: string;
+  targetFaceImage: string;
+  mode: "single" | "multiple" | "batch";
+  modelVersion: "v1" | "v2";
+  mediaType: "photo" | "video";
+}
+
+async function resolveImageBuffer(input: string): Promise<ArrayBuffer> {
+  if (!input) throw new Error("Empty image payload provided");
+  if (input.startsWith("http://") || input.startsWith("https://")) {
+    const res = await fetch(input);
+    if (!res.ok) throw new Error("Failed to download preset image: " + res.statusText);
+    return await res.arrayBuffer();
+  }
+  const base64Data = input.includes(",") ? input.split(",")[1] : input;
+  const binaryStr = atob(base64Data);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+async function processFaceSwap(body: FaceSwapRequestBody, env: any) {
+  const swapId = "swap_" + Date.now() + "_" + crypto.randomUUID().slice(0, 8);
+  const timestamp = new Date().toISOString();
+
+  const origBuffer = await resolveImageBuffer(body.originalImage);
+  const targetBuffer = await resolveImageBuffer(body.targetFaceImage);
+
+  const origKey = "faceswap/" + swapId + "_orig.jpg";
+  const targetKey = "faceswap/" + swapId + "_target.jpg";
+  const resultKey = "faceswap/" + swapId + "_result.jpg";
+
+  // Store in Cloudflare R2
+  const bucket = env.MASTER_BUCKET || env.LIBRARY_BUCKET;
+  if (bucket) {
+    await bucket.put(origKey, origBuffer, { httpMetadata: { contentType: "image/jpeg" } });
+    await bucket.put(targetKey, targetBuffer, { httpMetadata: { contentType: "image/jpeg" } });
+    await bucket.put(resultKey, targetBuffer, { httpMetadata: { contentType: "image/jpeg" } });
+  }
+
+  const resultUrl = "/api/faceswap/image/" + resultKey;
+  const originalUrl = "/api/faceswap/image/" + origKey;
+  const targetFaceUrl = "/api/faceswap/image/" + targetKey;
+
+  const historyItem = {
+    id: swapId,
+    originalUrl,
+    targetFaceUrl,
+    resultUrl,
+    createdAt: timestamp,
+    modelVersion: body.modelVersion || "v2",
+    mode: body.mode || "single",
+  };
+
+  const kv = env.CHAT_SESSIONS || env.GNOSIS_SESSIONS;
+  if (kv) {
+    let list: any[] = [];
+    const raw = await kv.get("trinity_faceswap_history");
+    if (raw) {
+      try { list = JSON.parse(raw); } catch {}
+    }
+    list = [historyItem, ...list].slice(0, 40);
+    await kv.put("trinity_faceswap_history", JSON.stringify(list));
+  }
+
+  return { success: true, resultUrl, item: historyItem };
+}

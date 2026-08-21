@@ -1,15 +1,16 @@
 import React from 'react';
 import { Tenant, ChatSession, UserProfile } from '../types';
-import { Plus, Trash2, MessageSquare, BookOpen, X } from 'lucide-react';
+import { Plus, Trash2, MessageSquare, BookOpen, Sparkles, X } from 'lucide-react';
 
 interface SidebarProps {
   tenant: Tenant;
   sessions: ChatSession[];
   activeSessionId: string | null;
-  currentView: 'chat' | 'library';
+  currentView: 'chat' | 'library' | 'faceswap';
   onSelectSession: (sessionId: string) => void;
   onNewSession: () => void;
   onOpenLibrary: () => void;
+  onOpenFaceSwap: () => void;
   onClearHistory: () => void;
   onDeleteSession: (sessionId: string) => void;
   user: UserProfile;
@@ -25,6 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectSession,
   onNewSession,
   onOpenLibrary,
+  onOpenFaceSwap,
   onClearHistory,
   onDeleteSession,
   user,
@@ -45,46 +47,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         />
       )}
 
-      {/*
-        ── WHY THIS LAYOUT WORKS ──────────────────────────────────────────────
-        Previous attempts used h-[calc(100dvh-46px)] or flex-1 chains to set
-        the sidebar height. Both fail on Android Chrome because:
-          • dvh resolves to 0 on many Android Chrome versions
-          • flex-1 depends on its parent having an explicit height; when the
-            root container's h-screen hasn't settled on first render, flex-1
-            collapses to 0 — overflow-hidden then clips all content, leaving
-            only the beige background visible (the reported bug).
-
-        FIX:
-          1. aside uses fixed top-[46px] bottom-0 — browser computes height
-             natively, no dvh, no flex inheritance.
-          2. Inner div uses absolute inset-y-0 left-0 — height comes directly
-             from the aside's CSS geometry, zero flex-1 dependency.
-          3. transition-[width,opacity] instead of transition-all — prevents
-             accidental height animation during open/close.
-        ──────────────────────────────────────────────────────────────────────
-      */}
       <aside
         className={[
           'bg-[#F6F3EE] overflow-hidden select-none shrink-0',
           'transition-[width,opacity] duration-300 ease-in-out',
-          // Mobile: fixed below Navbar, stretches to viewport bottom
           'fixed top-[46px] bottom-0 left-0 z-50',
-          // Desktop: back to relative flow
           'lg:relative lg:top-auto lg:bottom-auto lg:z-auto lg:h-full',
           isOpen
             ? 'w-64 sm:w-72 opacity-100 border-r border-stone-200/80'
             : 'w-0 opacity-0 pointer-events-none border-r-0',
         ].join(' ')}
       >
-        {/*
-          Absolute inner div — fills the aside fully using inset-y-0.
-          Fixed width (w-64) prevents content from squeezing during the
-          width-transition animation on the outer aside.
-        */}
         <div className="absolute inset-y-0 left-0 w-64 sm:w-72 flex flex-col">
-
-          {/* Full-height scrollable content wrapper */}
           <div className="flex flex-col h-full overflow-y-auto p-4">
 
             {/* Tenant name + Close button */}
@@ -107,8 +81,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             </div>
 
-            {/* 1. Ebook Library   2. New Chat */}
+            {/* Navigation Actions: 1. Face Swap Studio, 2. Ebook Library, 3. New Chat */}
             <div className="space-y-2 mb-4 shrink-0">
+              {/* FACE SWAP STUDIO BUTTON */}
+              <button
+                onClick={() => {
+                  onOpenFaceSwap();
+                  onCloseMobile();
+                }}
+                className={`w-full py-2.5 px-4 rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm border transition-all cursor-pointer ${
+                  currentView === 'faceswap'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-700 shadow-md'
+                    : tenant.id === 'yada'
+                    ? 'bg-white text-[#A36224] border-[#E5C9A8] hover:bg-[#FFF9F2] hover:border-[#A36224]'
+                    : 'bg-white text-slate-800 border-stone-200 hover:bg-stone-50 hover:border-stone-300'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 shrink-0 text-amber-400" />
+                <span>Face Swap Studio</span>
+              </button>
+
               <button
                 onClick={() => {
                   onOpenLibrary();
@@ -132,7 +124,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onCloseMobile();
                 }}
                 className={`w-full py-2.5 px-4 rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm border transition-all cursor-pointer ${
-                  tenant.id === 'yada'
+                  currentView === 'chat' && !activeSessionId
+                    ? tenant.id === 'yada'
+                      ? 'bg-[#A36224] text-white border-[#8a511d]'
+                      : 'bg-slate-800 text-white border-slate-900'
+                    : tenant.id === 'yada'
                     ? 'bg-white text-[#A36224] border-[#E5C9A8] hover:bg-[#FFF9F2] hover:border-[#A36224]'
                     : 'bg-white text-slate-800 border-stone-200 hover:bg-stone-50 hover:border-stone-300'
                 }`}
@@ -142,14 +138,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             </div>
 
-            {/* Yada subtitle */}
+            {/* Subtitle */}
             {tenant.subtitle && (
               <p className="text-xs italic text-stone-500 mb-3 px-1 font-serif shrink-0">
                 {tenant.subtitle}
               </p>
             )}
 
-            {/* 3. Chat History header */}
+            {/* History Header */}
             <div className="flex items-center justify-between mb-2 px-1 shrink-0">
               <span className="text-[11px] font-semibold tracking-wider text-stone-400 uppercase">
                 {tenant.id === 'yada' ? 'CONSULTATIONS HISTORY' : 'CHAT HISTORY'}
@@ -166,7 +162,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
             </div>
 
-            {/* Chat History list — flex-1 fills remaining space, scrolls independently */}
+            {/* History list */}
             <div className="flex-1 overflow-y-auto space-y-1 pr-1 min-h-0">
               {currentTenantSessions.length === 0 ? (
                 <p className="text-xs italic text-stone-400 py-3 px-1">
@@ -174,7 +170,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </p>
               ) : (
                 currentTenantSessions.map((session) => {
-                  const isActive = session.id === activeSessionId;
+                  const isActive = session.id === activeSessionId && currentView === 'chat';
                   return (
                     <div
                       key={session.id}
