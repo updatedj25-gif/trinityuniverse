@@ -584,13 +584,13 @@ export default {
 
     // ── CORS preflight ────────────────────────────────────────────────────────
     if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: CORS_HEADERS });
+      return new Response(null, { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
     }
 
     // ── Bot / scraper rejection (non-API routes only) ─────────────────────────
     const ua = request.headers.get('user-agent') ?? '';
     if (BOT_UA_PATTERNS.test(ua) && url.pathname.startsWith('/api/chat')) {
-      return Response.json({ error: 'Forbidden' }, { status: 403, headers: CORS_HEADERS });
+      return Response.json({ error: 'Forbidden' }, { status: 403, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
     }
 
     // ── GET /api/me ───────────────────────────────────────────────────────────
@@ -732,7 +732,7 @@ export default {
         if (!allowed) {
           return Response.json(
             { error: 'Too many requests. Please slow down.', code: 'rate_limited' },
-            { status: 429, headers: CORS_HEADERS }
+            { status: 429, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
           );
         }
 
@@ -748,7 +748,7 @@ export default {
         const { messages, systemInstruction, model, tenantId = 'gnosis', sessionId = 'default' } = body;
 
         if (!messages || !Array.isArray(messages)) {
-          return Response.json({ error: 'Messages array is required.' }, { status: 400, headers: CORS_HEADERS });
+          return Response.json({ error: 'Messages array is required.' }, { status: 400, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
         }
 
         // ── Get session user (optional — for storage attribution) ────────────
@@ -783,7 +783,7 @@ export default {
                 blocked: true,
                 code: 'security_violation',
               },
-              { status: 400, headers: CORS_HEADERS }
+              { status: 400, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
             );
           }
           sanitizedMessages.push({ ...m, content: clean });
@@ -901,7 +901,7 @@ Conversation style:
           console.error('[AiError]', aiErr?.message || aiErr);
           return Response.json(
             { text: 'I processed your request but encountered an issue generating a response. Please try again.', modelUsed: selectedModel, errorHandled: true },
-            { headers: CORS_HEADERS }
+            { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
           );
         }
 
@@ -934,14 +934,14 @@ Conversation style:
 
         return Response.json(
           { text, modelUsed: selectedModel, ragUsed: ragChunks.length > 0, geofencedEU: isEUResident },
-          { headers: CORS_HEADERS }
+          { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
         );
 
       } catch (error: unknown) {
         console.error('[/api/chat fatal]', error);
         return Response.json(
           { text: 'An unexpected error occurred. Please try again.', errorHandled: true },
-          { headers: CORS_HEADERS }
+          { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
         );
       }
     }
@@ -954,18 +954,18 @@ Conversation style:
       try {
         const { tenantId, key } = (await request.json()) as { tenantId: string; key: string };
         if (!tenantId || !key) {
-          return Response.json({ error: 'tenantId and key are required' }, { status: 400, headers: CORS_HEADERS });
+          return Response.json({ error: 'tenantId and key are required' }, { status: 400, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
         }
 
         const bucket = tenantId === 'yada' ? env.YADA_CHAT_BUCKET : env.GNOSIS_CHAT_BUCKET;
         if (!bucket) {
-          return Response.json({ error: `${tenantId} bucket not bound` }, { status: 503, headers: CORS_HEADERS });
+          return Response.json({ error: `${tenantId} bucket not bound` }, { status: 503, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
         }
 
         const result = await ingestFile(env, bucket, key, tenantId);
-        return Response.json(result, { headers: CORS_HEADERS });
+        return Response.json(result, { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
       } catch (e: any) {
-        return Response.json({ error: e?.message ?? 'Ingest failed' }, { status: 500, headers: CORS_HEADERS });
+        return Response.json({ error: e?.message ?? 'Ingest failed' }, { status: 500, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
       }
     }
 
@@ -1000,7 +1000,7 @@ Conversation style:
         processBucket(env.YADA_CHAT_BUCKET, 'yada'),
       ]);
 
-      return Response.json({ results, errors }, { headers: CORS_HEADERS });
+      return Response.json({ results, errors }, { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -1008,7 +1008,7 @@ Conversation style:
     // ─────────────────────────────────────────────────────────────────────────
     if (url.pathname === '/api/ingest-status' && request.method === 'GET') {
       if (!env.BOOK_STORE) {
-        return Response.json({ error: 'BOOK_STORE not bound' }, { status: 503, headers: CORS_HEADERS });
+        return Response.json({ error: 'BOOK_STORE not bound' }, { status: 503, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
       }
       try {
         const [gnosisList, yadaList] = await Promise.all([
@@ -1028,9 +1028,9 @@ Conversation style:
           parse(yadaList.keys),
         ]);
 
-        return Response.json({ gnosis, yada }, { headers: CORS_HEADERS });
+        return Response.json({ gnosis, yada }, { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
       } catch (e: any) {
-        return Response.json({ error: e?.message }, { status: 500, headers: CORS_HEADERS });
+        return Response.json({ error: e?.message }, { status: 500, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
       }
     }
 
@@ -1064,7 +1064,7 @@ Conversation style:
 
     // ── GET /api/library/catalog ──────────────────────────────────────────────
     if (url.pathname === '/api/library/catalog' && request.method === 'GET') {
-      if (!env.DB) return Response.json([], { headers: CORS_HEADERS });
+      if (!env.DB) return Response.json([], { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
       try {
         const { results } = await env.DB
           .prepare(`SELECT id, title, slug, author, niche, price, file_key, cover_filename, is_featured, tag, publication_year FROM ebook_catalog ORDER BY display_order ASC`)
@@ -1072,7 +1072,7 @@ Conversation style:
         return Response.json(results, { headers: { ...CORS_HEADERS, 'Cache-Control': 'public, max-age=300' } });
       } catch (e: unknown) {
         console.error('[/api/library/catalog]', e);
-        return Response.json([], { headers: CORS_HEADERS });
+        return Response.json([], { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
       }
     }
 
@@ -1105,6 +1105,11 @@ Conversation style:
 // SAFE HIGH-SPEED FACE SWAP ENGINE (CLOUDFLARE R2 & KV)
 // ─────────────────────────────────────────────────────────────────────────────
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESILIENT FACE SWAP ENGINE (R2 + KV + INLINE CORS)
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface FaceSwapRequestBody {
   originalImage: string;
   targetFaceImage: string;
@@ -1113,60 +1118,59 @@ interface FaceSwapRequestBody {
   mediaType?: string;
 }
 
-async function resolveImageBuffer(input: string): Promise<ArrayBuffer> {
-  if (!input) throw new Error("Empty image input");
-  if (input.startsWith("http://") || input.startsWith("https://")) {
-    const res = await fetch(input, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "image/*,*/*"
-      }
-    });
-    if (!res.ok) throw new Error("Failed to download preset image: " + res.status);
-    return await res.arrayBuffer();
+function safeBase64ToArrayBuffer(input: string): ArrayBuffer {
+  try {
+    let base64 = input.includes(",") ? input.split(",")[1] : input;
+    base64 = base64.replace(/\s/g, "");
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+  } catch {
+    return new ArrayBuffer(0);
   }
-  let base64 = input.includes(",") ? input.split(",")[1] : input;
-  base64 = base64.replace(/\s/g, "");
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes.buffer;
 }
 
 async function processInsightFaceSwap(body: FaceSwapRequestBody, env: any) {
   const swapId = "swap_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
   const timestamp = new Date().toISOString();
-  console.log("[FaceSwap] Processing swap transaction:", swapId);
 
-  let origBuffer: ArrayBuffer;
-  let targetBuffer: ArrayBuffer;
-  let resultBuffer: ArrayBuffer;
+  let origBuffer: ArrayBuffer = safeBase64ToArrayBuffer(body.originalImage || "");
+  let targetBuffer: ArrayBuffer = safeBase64ToArrayBuffer(body.targetFaceImage || "");
+  let resultBuffer: ArrayBuffer = safeBase64ToArrayBuffer(body.swappedResult || body.targetFaceImage || "");
 
-  try {
-    origBuffer = await resolveImageBuffer(body.originalImage);
-    targetBuffer = await resolveImageBuffer(body.targetFaceImage);
-    resultBuffer = body.swappedResult ? await resolveImageBuffer(body.swappedResult) : targetBuffer;
-  } catch (err: any) {
-    console.error("[FaceSwap Buffer Error]:", err.message);
-    throw new Error("Invalid image format provided: " + err.message);
+  // If inputs are URLs, download them
+  if (body.originalImage && (body.originalImage.startsWith("http://") || body.originalImage.startsWith("https://"))) {
+    try {
+      const res = await fetch(body.originalImage);
+      if (res.ok) origBuffer = await res.arrayBuffer();
+    } catch {}
+  }
+  if (body.targetFaceImage && (body.targetFaceImage.startsWith("http://") || body.targetFaceImage.startsWith("https://"))) {
+    try {
+      const res = await fetch(body.targetFaceImage);
+      if (res.ok) targetBuffer = await res.arrayBuffer();
+    } catch {}
+  }
+  if (resultBuffer.byteLength === 0) {
+    resultBuffer = targetBuffer;
   }
 
   const origKey = "faceswap/" + swapId + "_orig.jpg";
   const targetKey = "faceswap/" + swapId + "_target.jpg";
   const resultKey = "faceswap/" + swapId + "_result.jpg";
 
-  // 1. Upload all 3 images to Cloudflare R2
+  // R2 Storage
   const bucket = env.MASTER_BUCKET || env.LIBRARY_BUCKET || env.GNOSIS_CHAT_BUCKET;
   if (bucket) {
     try {
-      await bucket.put(origKey, origBuffer, { httpMetadata: { contentType: "image/jpeg" } });
-      await bucket.put(targetKey, targetBuffer, { httpMetadata: { contentType: "image/jpeg" } });
-      await bucket.put(resultKey, resultBuffer, { httpMetadata: { contentType: "image/jpeg" } });
-      console.log("[FaceSwap R2] ✓ Successfully saved 3 images to R2 storage:", resultKey);
-    } catch (r2Err) {
-      console.error("[FaceSwap R2 Error]:", r2Err);
+      if (origBuffer.byteLength > 0) await bucket.put(origKey, origBuffer, { httpMetadata: { contentType: "image/jpeg" } });
+      if (targetBuffer.byteLength > 0) await bucket.put(targetKey, targetBuffer, { httpMetadata: { contentType: "image/jpeg" } });
+      if (resultBuffer.byteLength > 0) await bucket.put(resultKey, resultBuffer, { httpMetadata: { contentType: "image/jpeg" } });
+    } catch (e) {
+      console.warn("[R2 Save Warn]:", e);
     }
   }
 
@@ -1182,20 +1186,19 @@ async function processInsightFaceSwap(body: FaceSwapRequestBody, env: any) {
     createdAt: timestamp,
   };
 
-  // 2. Index in Cloudflare KV
+  // KV Indexing
   const kv = env.CHAT_SESSIONS || env.GNOSIS_SESSIONS;
   if (kv) {
     try {
-      let list: any[] = [];
+      let list = [];
       const raw = await kv.get("trinity_faceswap_history");
       if (raw) {
         try { list = JSON.parse(raw); } catch {}
       }
       list = [historyItem, ...list].slice(0, 50);
       await kv.put("trinity_faceswap_history", JSON.stringify(list));
-      console.log("[FaceSwap KV] ✓ Indexed transaction into KV store");
-    } catch (kvErr) {
-      console.error("[FaceSwap KV Error]:", kvErr);
+    } catch (e) {
+      console.warn("[KV Save Warn]:", e);
     }
   }
 
