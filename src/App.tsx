@@ -168,7 +168,7 @@ const App: React.FC = () => {
       const aiReply: ChatMessage = {
         id: "msg_" + Date.now() + "_assistant",
         role: "assistant",
-        content: data.reply || "I am processing your request.",
+        content: data.text || data.reply || data.response || data.message || "I am processing your request.",
         timestamp: new Date().toISOString(),
       };
 
