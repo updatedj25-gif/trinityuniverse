@@ -1,3 +1,17 @@
+
+function sanitizeAiResponse(rawText: string): string {
+  if (!rawText) return "";
+  // Strip <think>...</think> blocks from DeepSeek or reasoning models
+  let clean = rawText.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+  // Strip unmatched leading <think> if truncated
+  if (clean.startsWith("<think>")) {
+    const endIdx = clean.indexOf("</think>");
+    if (endIdx !== -1) clean = clean.substring(endIdx + 8).trim();
+    else clean = clean.replace(/<think>[\s\S]*/gi, "").trim();
+  }
+  return clean || rawText.replace(/<\/?think>/gi, "").trim();
+}
+
 /**
  * Trinity Universe — Full-stack Cloudflare Worker
  *
