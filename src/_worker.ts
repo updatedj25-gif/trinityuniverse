@@ -580,30 +580,6 @@ const CORS_HEADERS = {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-
-    // ── FACE SWAP STUDIO GENERATE & STORAGE ──────────────────────────────────
-     catch (err: any) {
-        return Response.json(
-          { success: false, error: err.message },
-          { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
-        );
-      }
-    }
-
-    
-
-
-    // ── FACE SWAP STUDIO GENERATE & STORAGE ──────────────────────────────────
-     catch (err: any) {
-        return Response.json(
-          { success: false, error: err.message },
-          { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
-        );
-      }
-    }
-
-    
-
     const url = new URL(request.url);
 
     // ── CORS preflight ────────────────────────────────────────────────────────
@@ -1102,14 +1078,6 @@ Conversation style:
 
     // ── Static Assets ─────────────────────────────────────────────────────────
     
-    // ── FACE SWAP STUDIO ROUTES ──────────────────────────────────────────────
-     catch (err: any) {
-        return Response.json(
-          { success: false, error: err.message },
-          { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
-        );
-      }
-    }
 
     
 
