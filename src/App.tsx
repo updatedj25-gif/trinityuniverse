@@ -23,6 +23,7 @@ const App: React.FC = () => {
   const [activeTenantId, setActiveTenantId] = useState<string>('gnosis');
   const [currentView, setCurrentView] = useState<'chat' | 'library' | 'faceswap'>('chat');
 
+  // ── Landing Page Display State ──────────────────────────────────────────────
   const [showLanding, setShowLanding] = useState<boolean>(() => {
     try {
       const dismissed = localStorage.getItem('trinity_landing_dismissed');
@@ -183,12 +184,34 @@ const App: React.FC = () => {
     const defaultUser: UserProfile = { name: 'Guest User', email: '', signedIn: false };
     setUser(defaultUser);
     localStorage.removeItem('trinity_user_profile');
+    localStorage.removeItem('trinity_landing_dismissed');
+    setShowLanding(true);
   };
 
+  // ── 1. IF ON LANDING PAGE: RENDER STANDALONE LANDING (NO LEAKING NAVBAR) ───
+  if (showLanding) {
+    return (
+      <LandingPage
+        onSignIn={(profile: UserProfile) => {
+          setUser(profile);
+          localStorage.setItem('trinity_user_profile', JSON.stringify(profile));
+          localStorage.setItem('trinity_landing_dismissed', 'true');
+          setShowLanding(false);
+        }}
+        onVisitLibrary={() => {
+          localStorage.setItem('trinity_landing_dismissed', 'true');
+          setShowLanding(false);
+          setCurrentView('library');
+        }}
+      />
+    );
+  }
+
+  // ── 2. MAIN APPLICATION WORKSPACE (CHAT / LIBRARY / FACE SWAP STUDIO) ──────
   return (
     <div className="flex flex-col h-screen w-screen bg-[#FDFBF7] text-slate-800 overflow-hidden font-sans">
       
-      {/* Navbar */}
+      {/* Top Navbar */}
       <Navbar
         tenants={tenants}
         activeTenantId={activeTenantId}
@@ -245,22 +268,7 @@ const App: React.FC = () => {
         </main>
       </div>
 
-      {/* Landing Page Modal */}
-      {showLanding && (
-        <LandingPage
-          onSignIn={(profile: UserProfile) => {
-            setUser(profile);
-            localStorage.setItem('trinity_user_profile', JSON.stringify(profile));
-            setShowLanding(false);
-          }}
-          onVisitLibrary={() => {
-            setShowLanding(false);
-            setCurrentView('library');
-          }}
-        />
-      )}
-
-      {/* Sign In Modal */}
+      {/* Modals */}
       {isSignInOpen && (
         <SignInModal
           isOpen={isSignInOpen}
@@ -273,7 +281,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Tenant Modal */}
       {isTenantModalOpen && (
         <TenantModal
           isOpen={isTenantModalOpen}
