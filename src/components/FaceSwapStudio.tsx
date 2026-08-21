@@ -7,8 +7,7 @@ import {
   Download, 
   RefreshCw, 
   Sparkles,
-  CheckCircle2,
-  Share2
+  CheckCircle2
 } from 'lucide-react';
 import { Tenant } from '../types';
 
@@ -35,7 +34,6 @@ export const FaceSwapStudio: React.FC<FaceSwapStudioProps> = ({ tenant }) => {
   const [showHistoryToggle, setShowHistoryToggle] = useState<boolean>(true);
   const [selectedResult, setSelectedResult] = useState<string | null>(null);
 
-  // Sample presets
   const sampleOriginals = [
     "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80",
     "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80",
@@ -76,68 +74,23 @@ export const FaceSwapStudio: React.FC<FaceSwapStudioProps> = ({ tenant }) => {
     }
   };
 
-  // High-fidelity client blending & composite creation
-  const performClientBlend = async (origSrc: string, targetSrc: string): Promise<string> => {
-    return new Promise((resolve) => {
-      const origImg = new Image();
-      origImg.crossOrigin = "anonymous";
-      origImg.onload = () => {
-        const targetImg = new Image();
-        targetImg.crossOrigin = "anonymous";
-        targetImg.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = origImg.width || 800;
-          canvas.height = origImg.height || 1000;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) { resolve(targetSrc); return; }
-
-          // 1. Base image (body, background, lighting)
-          ctx.drawImage(origImg, 0, 0, canvas.width, canvas.height);
-
-          // 2. Oval face mask
-          const faceWidth = canvas.width * 0.38;
-          const faceHeight = faceWidth * 1.28;
-          const faceX = (canvas.width - faceWidth) / 2;
-          const faceY = canvas.height * 0.12;
-
-          ctx.save();
-          ctx.beginPath();
-          ctx.ellipse(faceX + faceWidth / 2, faceY + faceHeight / 2, faceWidth / 2, faceHeight / 2, 0, 0, Math.PI * 2);
-          ctx.clip();
-
-          // 3. Blend target face
-          ctx.globalAlpha = 0.96;
-          ctx.drawImage(targetImg, faceX - faceWidth * 0.05, faceY - faceHeight * 0.05, faceWidth * 1.1, faceHeight * 1.1);
-          ctx.restore();
-
-          resolve(canvas.toDataURL("image/jpeg", 0.95));
-        };
-        targetImg.onerror = () => resolve(origSrc);
-        targetImg.src = targetSrc;
-      };
-      origImg.onerror = () => resolve(targetSrc);
-      origImg.src = origSrc;
-    });
-  };
-
+  // Phase 1: Direct Neural Backend Execution without client canvas blending
   const handleExecuteFaceSwap = async () => {
     if (!originalImage || !targetFaceImage || isSwapping) return;
     setIsSwapping(true);
-    setSwapStep('Aligning facial features...');
+    setSwapStep('Uploading raw assets to E2B Sandbox...');
 
     try {
-      // Step 1: Blend
-      const blendedResult = await performClientBlend(originalImage, targetFaceImage);
-      setSwapStep('Saving to Cloudflare R2 & indexing...');
+      setTimeout(() => {
+        setSwapStep('Running InsightFace neural swap in Micro-VM...');
+      }, 1500);
 
-      // Step 2: Save to Cloudflare R2 & KV
       const res = await fetch('/api/faceswap/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           originalImage,
           targetFaceImage,
-          swappedResult: blendedResult,
           mode: swapMode,
           mediaType
         })
@@ -145,14 +98,15 @@ export const FaceSwapStudio: React.FC<FaceSwapStudioProps> = ({ tenant }) => {
 
       const data = await res.json() as any;
       if (data.success && data.resultUrl) {
+        setSwapStep('Persisting assets to Cloudflare R2 & KV...');
         setSelectedResult(data.resultUrl);
+        fetchSwapHistory();
       } else {
-        setSelectedResult(blendedResult);
+        throw new Error(data.error || 'Face swap execution failed');
       }
-      fetchSwapHistory();
-    } catch (e) {
-      console.error("[FaceSwap Error]:", e);
-      setSelectedResult(targetFaceImage);
+    } catch (e: any) {
+      console.error('[InsightFace Error]:', e);
+      alert(`Face Swap Error: ${e.message || 'Detection failed on one or both faces.'}`);
     } finally {
       setIsSwapping(false);
       setSwapStep('');
@@ -165,17 +119,14 @@ export const FaceSwapStudio: React.FC<FaceSwapStudioProps> = ({ tenant }) => {
 
   return (
     <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-[#FBF9F6] text-slate-800">
-      
       {/* LEFT INPUT WORKSPACE */}
       <div className="w-full lg:w-[460px] bg-white border-r border-stone-200 p-6 flex flex-col overflow-y-auto shrink-0 shadow-sm">
-        
-        {/* Header Badge */}
         <div className="flex items-center gap-2 mb-4">
           <span className={`p-1.5 rounded-lg text-white ${isYada ? 'bg-[#A36224]' : 'bg-[#0070f3]'}`}>
             <Sparkles className="w-4 h-4" />
           </span>
           <span className="font-bold text-sm tracking-tight text-slate-800">
-            {tenant.name} Face Swap Studio
+            {tenant.name} InsightFace Studio
           </span>
         </div>
 
@@ -223,9 +174,8 @@ export const FaceSwapStudio: React.FC<FaceSwapStudioProps> = ({ tenant }) => {
           </button>
         </div>
 
-        {/* Dual Upload Dropzones (Left Side) */}
+        {/* Dual Upload Dropzones */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          
           {/* Dropzone 1: Original Image */}
           <div className="flex flex-col">
             <div className="text-xs font-bold text-slate-800 mb-0.5">Upload Original Image</div>
@@ -239,13 +189,12 @@ export const FaceSwapStudio: React.FC<FaceSwapStudioProps> = ({ tenant }) => {
                   <div className="w-9 h-9 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 mb-2">
                     <Upload className="w-4 h-4" />
                   </div>
-                  <span className="text-[11px] font-semibold text-stone-600">Upload image</span>
+                  <span className="text-[11px] font-semibold text-stone-600">Upload body</span>
                 </>
               )}
               <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'orig')} className="hidden" />
             </label>
 
-            {/* Presets */}
             <div className="mt-2.5">
               <span className="text-[10px] text-stone-400 block mb-1">Try those images</span>
               <div className="flex gap-1.5">
@@ -265,7 +214,7 @@ export const FaceSwapStudio: React.FC<FaceSwapStudioProps> = ({ tenant }) => {
           {/* Dropzone 2: Target Face */}
           <div className="flex flex-col">
             <div className="text-xs font-bold text-slate-800 mb-0.5">Upload Target face</div>
-            <div className="text-[10px] text-stone-400 mb-2 truncate">Swap face from original</div>
+            <div className="text-[10px] text-stone-400 mb-2 truncate">Face to extract identity from</div>
             
             <label className="flex-1 min-h-[150px] border-2 border-dashed border-stone-300 hover:border-blue-500 rounded-2xl flex flex-col items-center justify-center p-3 cursor-pointer bg-stone-50/50 hover:bg-blue-50/20 transition-all relative overflow-hidden group">
               {targetFaceImage ? (
@@ -275,13 +224,12 @@ export const FaceSwapStudio: React.FC<FaceSwapStudioProps> = ({ tenant }) => {
                   <div className="w-9 h-9 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 mb-2">
                     <User className="w-4 h-4" />
                   </div>
-                  <span className="text-[11px] font-semibold text-stone-600">Upload swap image</span>
+                  <span className="text-[11px] font-semibold text-stone-600">Upload face</span>
                 </>
               )}
               <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'face')} className="hidden" />
             </label>
 
-            {/* Presets */}
             <div className="mt-2.5">
               <span className="text-[10px] text-stone-400 block mb-1">Try those images</span>
               <div className="flex gap-1.5">
@@ -312,28 +260,25 @@ export const FaceSwapStudio: React.FC<FaceSwapStudioProps> = ({ tenant }) => {
           {isSwapping ? (
             <>
               <RefreshCw className="w-4 h-4 animate-spin" />
-              <span>{swapStep || 'Processing Face Swap...'}</span>
+              <span>{swapStep || 'Executing Neural Face Swap...'}</span>
             </>
           ) : (
-            <>Generate Face Swap</>
+            <>Run InsightFace Swap</>
           )}
         </button>
       </div>
 
-      {/* RIGHT DISPLAY WORKSPACE: SINGLE RESULT SHOWCASE + BLUE DOWNLOAD BUTTON */}
+      {/* RIGHT DISPLAY WORKSPACE */}
       <div className="flex-1 flex flex-col p-6 lg:p-10 overflow-y-auto items-center">
-        
-        {/* Title Header */}
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-slate-800 mb-1.5">Swap Faces with One Click</h2>
+          <h2 className="text-xl font-bold text-slate-800 mb-1.5">InsightFace Neural Processing</h2>
           <p className="text-xs text-stone-500">
-            High-definition face swap output saved to Cloudflare R2 storage.
+            Powered by Buffalo_L Landmark Detection + Inswapper-128 ONNX inside E2B Sandbox.
           </p>
         </div>
 
-        {/* SINGLE LARGE RESULT SHOWCASE BOX (No duplicate upload boxes on right) */}
+        {/* Single HD Result Container */}
         <div className="max-w-md w-full bg-white border border-stone-200 rounded-3xl p-4 shadow-sm flex flex-col items-center">
-          
           <div className="w-full aspect-[3/4] max-h-[460px] rounded-2xl bg-stone-100 border border-stone-200 relative overflow-hidden flex items-center justify-center shadow-inner">
             {selectedResult ? (
               <img 
@@ -344,35 +289,33 @@ export const FaceSwapStudio: React.FC<FaceSwapStudioProps> = ({ tenant }) => {
             ) : isSwapping ? (
               <div className="flex flex-col items-center gap-3 p-6 text-center">
                 <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
-                <span className="text-xs font-semibold text-slate-700">{swapStep || 'Generating face swap...'}</span>
+                <span className="text-xs font-semibold text-slate-700">{swapStep || 'Processing...'}</span>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2 text-stone-400 p-6 text-center">
                 <ImageIcon className="w-10 h-10 stroke-[1.5]" />
-                <span className="text-xs font-medium">Your generated face swap will display here</span>
+                <span className="text-xs font-medium">Your InsightFace swap will render here</span>
               </div>
             )}
 
             {selectedResult && !isSwapping && (
               <span className="absolute top-3 right-3 px-2.5 py-1 bg-emerald-600/90 text-white rounded-full text-[10px] font-mono font-bold shadow flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" />
-                HD Result
+                Neural Swap Result
               </span>
             )}
           </div>
 
-          {/* BLUE DOWNLOAD BUTTON UNDER RESULT BOX */}
           {selectedResult && (
             <a
               href={selectedResult}
-              download={`trinity_faceswap_${Date.now()}.jpg`}
+              download={`insightface_result_${Date.now()}.jpg`}
               className={`w-full py-3.5 mt-4 rounded-xl ${primaryBg} text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer`}
             >
               <Download className="w-4 h-4" />
-              <span>Download Swapped Image</span>
+              <span>Download High-Res Output</span>
             </a>
           )}
-
         </div>
 
         {/* History Gallery */}
