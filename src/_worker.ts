@@ -826,7 +826,7 @@ Conversation style:
         // ── Select model ─────────────────────────────────────────────────────
         let selectedModel = model || (tenantId === 'yada'
           ? '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
-          : '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b');
+          : '@cf/meta/llama-3.3-70b-instruct-fp8-fast');
 
         // ── Build CF messages ────────────────────────────────────────────────
         let hasImageAttachment = false;
