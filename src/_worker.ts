@@ -580,6 +580,30 @@ const CORS_HEADERS = {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+
+    // ── FACE SWAP STUDIO GENERATE & STORAGE ──────────────────────────────────
+     catch (err: any) {
+        return Response.json(
+          { success: false, error: err.message },
+          { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+        );
+      }
+    }
+
+    
+
+
+    // ── FACE SWAP STUDIO GENERATE & STORAGE ──────────────────────────────────
+     catch (err: any) {
+        return Response.json(
+          { success: false, error: err.message },
+          { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+        );
+      }
+    }
+
+    
+
     const url = new URL(request.url);
 
     // ── CORS preflight ────────────────────────────────────────────────────────
@@ -1079,17 +1103,29 @@ Conversation style:
     // ── Static Assets ─────────────────────────────────────────────────────────
     
     // ── FACE SWAP STUDIO ROUTES ──────────────────────────────────────────────
-    if (url.pathname === "/api/faceswap/generate" && request.method === "POST") {
+     catch (err: any) {
+        return Response.json(
+          { success: false, error: err.message },
+          { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+        );
+      }
+    }
+
+    
+
+    
+    // ── FACE SWAP STUDIO ROUTES ──────────────────────────────────────────────
+    if (url.pathname === '/api/faceswap/generate' && request.method === 'POST') {
       try {
         const body = (await request.json()) as any;
-        const swapId = "swap_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+        const swapId = 'swap_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
         const timestamp = new Date().toISOString();
 
-        const resultUrl = body.swappedResult || body.targetFaceImage || body.originalImage || "";
+        const resultUrl = body.swappedResult || body.targetFaceImage || body.originalImage || '';
         const historyItem = {
           id: swapId,
-          originalUrl: body.originalImage || "",
-          targetFaceUrl: body.targetFaceImage || "",
+          originalUrl: body.originalImage || '',
+          targetFaceUrl: body.targetFaceImage || '',
           resultUrl,
           createdAt: timestamp,
         };
@@ -1098,39 +1134,39 @@ Conversation style:
         if (kv) {
           try {
             let list: any[] = [];
-            const raw = await kv.get("trinity_faceswap_history");
+            const raw = await kv.get('trinity_faceswap_history');
             if (raw) {
               try { list = JSON.parse(raw); } catch {}
             }
             list = [historyItem, ...list].slice(0, 50);
-            await kv.put("trinity_faceswap_history", JSON.stringify(list));
+            await kv.put('trinity_faceswap_history', JSON.stringify(list));
           } catch (e) {}
         }
 
         return Response.json(
           { success: true, swapId, resultUrl, item: historyItem },
-          { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+          { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
         );
       } catch (err: any) {
         return Response.json(
           { success: false, error: err.message },
-          { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+          { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
         );
       }
     }
 
-    if (url.pathname === "/api/faceswap/history" && request.method === "GET") {
+    if (url.pathname === '/api/faceswap/history' && request.method === 'GET') {
       const kv = env.CHAT_SESSIONS || env.GNOSIS_SESSIONS;
       let list = [];
       if (kv) {
         try {
-          const raw = await kv.get("trinity_faceswap_history");
+          const raw = await kv.get('trinity_faceswap_history');
           if (raw) list = JSON.parse(raw);
         } catch {}
       }
       return Response.json(
         { history: list },
-        { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       );
     }
 
@@ -1167,13 +1203,7 @@ Conversation style:
 // RESILIENT FACE SWAP ENGINE (R2 + KV + INLINE CORS)
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface FaceSwapRequestBody {
-  originalImage: string;
-  targetFaceImage: string;
-  swappedResult?: string;
-  mode?: string;
-  mediaType?: string;
-}
+
 
 function safeBase64ToArrayBuffer(input: string): ArrayBuffer {
   try {
@@ -1190,79 +1220,3 @@ function safeBase64ToArrayBuffer(input: string): ArrayBuffer {
   }
 }
 
-async function processInsightFaceSwap(body: FaceSwapRequestBody, env: any) {
-  const swapId = "swap_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
-  const timestamp = new Date().toISOString();
-
-  let origBuffer: ArrayBuffer = safeBase64ToArrayBuffer(body.originalImage || "");
-  let targetBuffer: ArrayBuffer = safeBase64ToArrayBuffer(body.targetFaceImage || "");
-  let resultBuffer: ArrayBuffer = safeBase64ToArrayBuffer(body.swappedResult || body.targetFaceImage || "");
-
-  // If inputs are URLs, download them
-  if (body.originalImage && (body.originalImage.startsWith("http://") || body.originalImage.startsWith("https://"))) {
-    try {
-      const res = await fetch(body.originalImage);
-      if (res.ok) origBuffer = await res.arrayBuffer();
-    } catch {}
-  }
-  if (body.targetFaceImage && (body.targetFaceImage.startsWith("http://") || body.targetFaceImage.startsWith("https://"))) {
-    try {
-      const res = await fetch(body.targetFaceImage);
-      if (res.ok) targetBuffer = await res.arrayBuffer();
-    } catch {}
-  }
-  if (resultBuffer.byteLength === 0) {
-    resultBuffer = targetBuffer;
-  }
-
-  const origKey = "faceswap/" + swapId + "_orig.jpg";
-  const targetKey = "faceswap/" + swapId + "_target.jpg";
-  const resultKey = "faceswap/" + swapId + "_result.jpg";
-
-  // R2 Storage
-  const bucket = env.MASTER_BUCKET || env.LIBRARY_BUCKET || env.GNOSIS_CHAT_BUCKET;
-  if (bucket) {
-    try {
-      if (origBuffer.byteLength > 0) await bucket.put(origKey, origBuffer, { httpMetadata: { contentType: "image/jpeg" } });
-      if (targetBuffer.byteLength > 0) await bucket.put(targetKey, targetBuffer, { httpMetadata: { contentType: "image/jpeg" } });
-      if (resultBuffer.byteLength > 0) await bucket.put(resultKey, resultBuffer, { httpMetadata: { contentType: "image/jpeg" } });
-    } catch (e) {
-      console.warn("[R2 Save Warn]:", e);
-    }
-  }
-
-  const resultUrl = "/api/faceswap/image/" + resultKey;
-  const originalUrl = "/api/faceswap/image/" + origKey;
-  const targetFaceUrl = "/api/faceswap/image/" + targetKey;
-
-  const historyItem = {
-    id: swapId,
-    originalUrl,
-    targetFaceUrl,
-    resultUrl,
-    createdAt: timestamp,
-  };
-
-  // KV Indexing
-  const kv = env.CHAT_SESSIONS || env.GNOSIS_SESSIONS;
-  if (kv) {
-    try {
-      let list = [];
-      const raw = await kv.get("trinity_faceswap_history");
-      if (raw) {
-        try { list = JSON.parse(raw); } catch {}
-      }
-      list = [historyItem, ...list].slice(0, 50);
-      await kv.put("trinity_faceswap_history", JSON.stringify(list));
-    } catch (e) {
-      console.warn("[KV Save Warn]:", e);
-    }
-  }
-
-  return {
-    success: true,
-    swapId,
-    resultUrl,
-    item: historyItem
-  };
-}
