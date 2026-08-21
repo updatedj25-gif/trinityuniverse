@@ -891,7 +891,9 @@ Conversation style:
           );
         }
 
-        const text = result?.response?.trim() || result?.description?.trim() || 'I was unable to generate a response. Please try again.';
+        let text = (result?.response || result?.description || "").trim();
+  text = text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+  if (!text) text = "I processed your request. How would you like to explore this further?";
 
         // ── Structured storage for fine-tuning ───────────────────────────────
         const messageId = crypto.randomUUID();

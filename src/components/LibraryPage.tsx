@@ -252,7 +252,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onGoHome, onToggleSide
             </p>
 
             {/* ── Book Grid ────────────────────────────────────────────────── */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 sm:gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-5 gap-3.5 sm:gap-4.5 max-w-7xl mx-auto">
               {filtered.map(book => {
                 const nc = NICHE_COLORS[book.niche] || { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' };
                 const isFree = book.price === 0;

@@ -176,6 +176,295 @@ const handleLogout = (_req: express.Request, res: express.Response) => {
   return res.redirect('/');
 };
 
+
+// ── GET /api/library/catalog (Production DB Sync) ───────────────────────────
+const PROD_CATALOG = [
+  {
+    "id": 1,
+    "title": "The Kybalion: Hermetic Philosophy",
+    "slug": "the-kybalion-hermetic-philosophy",
+    "author": "Three Initiates",
+    "niche": "Spirituality & Hidden Knowledge",
+    "price": 4.99,
+    "file_key": "ebooks/the-kybalion-hermetic-philosophy.epub",
+    "cover_filename": "covers/the-kybalion-hermetic-philosophy.png",
+    "is_featured": 1,
+    "tag": "esoteric",
+    "publication_year": 1908
+  },
+  {
+    "id": 2,
+    "title": "Goetia: The Lesser Key of Solomon",
+    "slug": "goetia-lesser-key-of-solomon",
+    "author": "S.L. MacGregor Mathers",
+    "niche": "Spirituality & Hidden Knowledge",
+    "price": 4.99,
+    "file_key": "ebooks/goetia-lesser-key-of-solomon.epub",
+    "cover_filename": "covers/goetia-lesser-key-of-solomon.png",
+    "is_featured": 0,
+    "tag": "occult",
+    "publication_year": 1904
+  },
+  {
+    "id": 3,
+    "title": "The Initiates of the Flame",
+    "slug": "the-initiates-of-the-flame",
+    "author": "Manly P. Hall",
+    "niche": "Spirituality & Hidden Knowledge",
+    "price": 4.99,
+    "file_key": "ebooks/the-initiates-of-the-flame.epub",
+    "cover_filename": "covers/the-initiates-of-the-flame.png",
+    "is_featured": 0,
+    "tag": "mystery-school",
+    "publication_year": 1922
+  },
+  {
+    "id": 4,
+    "title": "The Notebooks of Leonardo Da Vinci",
+    "slug": "notebooks-of-leonardo-da-vinci",
+    "author": "Leonardo da Vinci",
+    "niche": "Advanced Science",
+    "price": 7.99,
+    "file_key": "ebooks/notebooks-of-leonardo-da-vinci.epub",
+    "cover_filename": "covers/notebooks-of-leonardo-da-vinci.png",
+    "is_featured": 1,
+    "tag": "renaissance-science",
+    "publication_year": 1888
+  },
+  {
+    "id": 5,
+    "title": "The Story of the Heavens",
+    "slug": "the-story-of-the-heavens",
+    "author": "Robert S. Ball",
+    "niche": "Advanced Science",
+    "price": 7.99,
+    "file_key": "ebooks/the-story-of-the-heavens.epub",
+    "cover_filename": "covers/the-story-of-the-heavens.png",
+    "is_featured": 0,
+    "tag": "astronomy",
+    "publication_year": 1900
+  },
+  {
+    "id": 6,
+    "title": "Creative Evolution",
+    "slug": "creative-evolution",
+    "author": "Henri Bergson",
+    "niche": "Advanced Science",
+    "price": 7.99,
+    "file_key": "ebooks/creative-evolution.epub",
+    "cover_filename": "covers/creative-evolution.png",
+    "is_featured": 0,
+    "tag": "philosophy-of-science",
+    "publication_year": 1911
+  },
+  {
+    "id": 7,
+    "title": "Steam: Its Generation and Use",
+    "slug": "steam-its-generation-and-use",
+    "author": "Babcock & Wilcox Company",
+    "niche": "Hidden Physics",
+    "price": 4.99,
+    "file_key": "ebooks/steam-its-generation-and-use.epub",
+    "cover_filename": "covers/steam-its-generation-and-use.png",
+    "is_featured": 0,
+    "tag": "thermodynamics",
+    "publication_year": 1906
+  },
+  {
+    "id": 8,
+    "title": "Mechanical Drawing Self-Taught",
+    "slug": "mechanical-drawing-self-taught",
+    "author": "Joshua Rose",
+    "niche": "Hidden Physics",
+    "price": 4.99,
+    "file_key": "ebooks/mechanical-drawing-self-taught.epub",
+    "cover_filename": "covers/mechanical-drawing-self-taught.png",
+    "is_featured": 0,
+    "tag": "engineering",
+    "publication_year": 1910
+  },
+  {
+    "id": 9,
+    "title": "Concrete Construction: Methods and Costs",
+    "slug": "concrete-construction-methods-costs",
+    "author": "Halbert Powers Gillette",
+    "niche": "Technology",
+    "price": 4.99,
+    "file_key": "ebooks/concrete-construction-methods-costs.epub",
+    "cover_filename": "covers/concrete-construction-methods-costs.png",
+    "is_featured": 0,
+    "tag": "construction-tech",
+    "publication_year": 1908
+  },
+  {
+    "id": 10,
+    "title": "Color Images from Mars: Spirit & Opportunity",
+    "slug": "color-images-mars-rovers",
+    "author": "Bob Webster",
+    "niche": "Technology",
+    "price": 4.99,
+    "file_key": "ebooks/color-images-mars-rovers.epub",
+    "cover_filename": "covers/color-images-mars-rovers.png",
+    "is_featured": 1,
+    "tag": "space-technology",
+    "publication_year": 2004
+  },
+  {
+    "id": 11,
+    "title": "Searchlights on Health: The Complete Sexual Science",
+    "slug": "searchlights-on-health",
+    "author": "B.G. Jefferis",
+    "niche": "Holistic & Biological Wellness",
+    "price": 4.99,
+    "file_key": "ebooks/searchlights-on-health.epub",
+    "cover_filename": "covers/searchlights-on-health.png",
+    "is_featured": 0,
+    "tag": "wellness",
+    "publication_year": 1894
+  },
+  {
+    "id": 12,
+    "title": "Manual of Surgery: Sixth Edition",
+    "slug": "manual-of-surgery-sixth-edition",
+    "author": "Alexis Thomson",
+    "niche": "Holistic & Biological Wellness",
+    "price": 4.99,
+    "file_key": "ebooks/manual-of-surgery-sixth-edition.epub",
+    "cover_filename": "covers/manual-of-surgery-sixth-edition.png",
+    "is_featured": 0,
+    "tag": "medical-science",
+    "publication_year": 1921
+  },
+  {
+    "id": 13,
+    "title": "Reminiscences of a Stock Operator",
+    "slug": "reminiscences-of-a-stock-operator",
+    "author": "Edwin Lefevre",
+    "niche": "Forex",
+    "price": 9,
+    "file_key": "ebooks/reminiscences-of-a-stock-operator.epub",
+    "cover_filename": "covers/reminiscences-of-a-stock-operator.png",
+    "is_featured": 1,
+    "tag": "trading",
+    "publication_year": 1923
+  },
+  {
+    "id": 14,
+    "title": "Fifty Years in Wall Street",
+    "slug": "fifty-years-in-wall-street",
+    "author": "Henry Clews",
+    "niche": "Forex",
+    "price": 9,
+    "file_key": "ebooks/fifty-years-in-wall-street.epub",
+    "cover_filename": "covers/fifty-years-in-wall-street.png",
+    "is_featured": 0,
+    "tag": "finance-history",
+    "publication_year": 1908
+  },
+  {
+    "id": 15,
+    "title": "Democracy and Education",
+    "slug": "democracy-and-education",
+    "author": "John Dewey",
+    "niche": "Education",
+    "price": 0,
+    "file_key": "ebooks/democracy-and-education.pdf",
+    "cover_filename": "covers/democracy-and-education.png",
+    "is_featured": 1,
+    "tag": "educational-philosophy",
+    "publication_year": 1916
+  },
+  {
+    "id": 16,
+    "title": "The Montessori Method",
+    "slug": "the-montessori-method",
+    "author": "Maria Montessori",
+    "niche": "Education",
+    "price": 0,
+    "file_key": "ebooks/the-montessori-method.epub",
+    "cover_filename": "covers/the-montessori-method.png",
+    "is_featured": 0,
+    "tag": "child-development",
+    "publication_year": 1936
+  },
+  {
+    "id": 17,
+    "title": "The Art of Money Getting",
+    "slug": "the-art-of-money-getting",
+    "author": "P.T. Barnum",
+    "niche": "General Business",
+    "price": 0,
+    "file_key": "ebooks/the-art-of-money-getting.epub",
+    "cover_filename": "covers/the-art-of-money-getting.png",
+    "is_featured": 1,
+    "tag": "success-mindset",
+    "publication_year": 1937
+  },
+  {
+    "id": 18,
+    "title": "The Science of Getting Rich",
+    "slug": "the-science-of-getting-rich",
+    "author": "W.D. Wattles",
+    "niche": "General Business",
+    "price": 0,
+    "file_key": "ebooks/the-science-of-getting-rich.epub",
+    "cover_filename": "covers/the-science-of-getting-rich.png",
+    "is_featured": 0,
+    "tag": "startup-innovation",
+    "publication_year": 2014
+  },
+  {
+    "id": 19,
+    "title": "The Prince",
+    "slug": "the-prince-machiavelli",
+    "author": "Niccolò Machiavelli",
+    "niche": "Government",
+    "price": 4.99,
+    "file_key": "ebooks/the-prince-machiavelli.pdf",
+    "cover_filename": "covers/the-prince-machiavelli.png",
+    "is_featured": 1,
+    "tag": "political-strategy",
+    "publication_year": 1532
+  },
+  {
+    "id": 20,
+    "title": "Leviathan: The Matter, Form and Power of Government",
+    "slug": "leviathan-hobbes",
+    "author": "Thomas Hobbes",
+    "niche": "Government",
+    "price": 4.99,
+    "file_key": "ebooks/leviathan-hobbes.pdf",
+    "cover_filename": "covers/leviathan-hobbes.png",
+    "is_featured": 0,
+    "tag": "political-philosophy",
+    "publication_year": 1651
+  }
+];
+
+app.get("/api/library/catalog", (_req, res) => {
+  res.json(PROD_CATALOG);
+});
+
+// ── GET /api/r2/* (Live R2 Bucket Image Proxy) ─────────────────────────────
+app.get("/api/r2/*", async (req: express.Request, res: express.Response) => {
+  const fileKey = (req.params as any)[0] || req.path.replace("/api/r2/", "");
+  try {
+    const prodUrl = `https://trinityuniverse.org/api/r2/${fileKey}`;
+    const response = await fetch(prodUrl);
+    if (!response.ok) {
+      return res.status(response.status).send("File not found");
+    }
+    const contentType = response.headers.get("content-type") || "image/png";
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    const arrayBuffer = await response.arrayBuffer();
+    return res.send(Buffer.from(arrayBuffer));
+  } catch (err) {
+    console.error("R2 proxy error for " + fileKey, err);
+    return res.status(500).send("Error proxying image");
+  }
+});
+
 app.get('/auth/logout', handleLogout);
 app.get('/api/auth/logout', handleLogout);
 
@@ -337,10 +626,9 @@ app.post('/api/chat', async (req, res) => {
       });
     }
 
-    const replyText =
-      cfData?.result?.response?.trim() ||
-      cfData?.result?.description?.trim() ||
-      'I was unable to generate a response from Cloudflare AI.';
+    let replyText = (cfData?.result?.response || cfData?.result?.description || "").trim();
+    replyText = replyText.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+    if (!replyText) replyText = "I processed your request. How would you like to explore this further?";
 
     return res.json({ text: replyText, modelUsed: selectedModel, geofencedEU: isEUResident });
   } catch (error: any) {

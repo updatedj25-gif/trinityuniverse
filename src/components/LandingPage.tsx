@@ -406,6 +406,269 @@ const GOOGLE_SVG = (
   </svg>
 );
 
+const DEFAULT_LANDING_BOOKS: LandingBook[] = [
+  {
+    "id": 1,
+    "title": "The Kybalion: Hermetic Philosophy",
+    "slug": "the-kybalion-hermetic-philosophy",
+    "author": "Three Initiates",
+    "niche": "Spirituality & Hidden Knowledge",
+    "price": 4.99,
+    "file_key": "ebooks/the-kybalion-hermetic-philosophy.epub",
+    "cover_filename": "covers/the-kybalion-hermetic-philosophy.png",
+    "is_featured": 1,
+    "tag": "esoteric",
+    "publication_year": 1908
+  },
+  {
+    "id": 2,
+    "title": "Goetia: The Lesser Key of Solomon",
+    "slug": "goetia-lesser-key-of-solomon",
+    "author": "S.L. MacGregor Mathers",
+    "niche": "Spirituality & Hidden Knowledge",
+    "price": 4.99,
+    "file_key": "ebooks/goetia-lesser-key-of-solomon.epub",
+    "cover_filename": "covers/goetia-lesser-key-of-solomon.png",
+    "is_featured": 0,
+    "tag": "occult",
+    "publication_year": 1904
+  },
+  {
+    "id": 3,
+    "title": "The Initiates of the Flame",
+    "slug": "the-initiates-of-the-flame",
+    "author": "Manly P. Hall",
+    "niche": "Spirituality & Hidden Knowledge",
+    "price": 4.99,
+    "file_key": "ebooks/the-initiates-of-the-flame.epub",
+    "cover_filename": "covers/the-initiates-of-the-flame.png",
+    "is_featured": 0,
+    "tag": "mystery-school",
+    "publication_year": 1922
+  },
+  {
+    "id": 4,
+    "title": "The Notebooks of Leonardo Da Vinci",
+    "slug": "notebooks-of-leonardo-da-vinci",
+    "author": "Leonardo da Vinci",
+    "niche": "Advanced Science",
+    "price": 7.99,
+    "file_key": "ebooks/notebooks-of-leonardo-da-vinci.epub",
+    "cover_filename": "covers/notebooks-of-leonardo-da-vinci.png",
+    "is_featured": 1,
+    "tag": "renaissance-science",
+    "publication_year": 1888
+  },
+  {
+    "id": 5,
+    "title": "The Story of the Heavens",
+    "slug": "the-story-of-the-heavens",
+    "author": "Robert S. Ball",
+    "niche": "Advanced Science",
+    "price": 7.99,
+    "file_key": "ebooks/the-story-of-the-heavens.epub",
+    "cover_filename": "covers/the-story-of-the-heavens.png",
+    "is_featured": 0,
+    "tag": "astronomy",
+    "publication_year": 1900
+  },
+  {
+    "id": 6,
+    "title": "Creative Evolution",
+    "slug": "creative-evolution",
+    "author": "Henri Bergson",
+    "niche": "Advanced Science",
+    "price": 7.99,
+    "file_key": "ebooks/creative-evolution.epub",
+    "cover_filename": "covers/creative-evolution.png",
+    "is_featured": 0,
+    "tag": "philosophy-of-science",
+    "publication_year": 1911
+  },
+  {
+    "id": 7,
+    "title": "Steam: Its Generation and Use",
+    "slug": "steam-its-generation-and-use",
+    "author": "Babcock & Wilcox Company",
+    "niche": "Hidden Physics",
+    "price": 4.99,
+    "file_key": "ebooks/steam-its-generation-and-use.epub",
+    "cover_filename": "covers/steam-its-generation-and-use.png",
+    "is_featured": 0,
+    "tag": "thermodynamics",
+    "publication_year": 1906
+  },
+  {
+    "id": 8,
+    "title": "Mechanical Drawing Self-Taught",
+    "slug": "mechanical-drawing-self-taught",
+    "author": "Joshua Rose",
+    "niche": "Hidden Physics",
+    "price": 4.99,
+    "file_key": "ebooks/mechanical-drawing-self-taught.epub",
+    "cover_filename": "covers/mechanical-drawing-self-taught.png",
+    "is_featured": 0,
+    "tag": "engineering",
+    "publication_year": 1910
+  },
+  {
+    "id": 9,
+    "title": "Concrete Construction: Methods and Costs",
+    "slug": "concrete-construction-methods-costs",
+    "author": "Halbert Powers Gillette",
+    "niche": "Technology",
+    "price": 4.99,
+    "file_key": "ebooks/concrete-construction-methods-costs.epub",
+    "cover_filename": "covers/concrete-construction-methods-costs.png",
+    "is_featured": 0,
+    "tag": "construction-tech",
+    "publication_year": 1908
+  },
+  {
+    "id": 10,
+    "title": "Color Images from Mars: Spirit & Opportunity",
+    "slug": "color-images-mars-rovers",
+    "author": "Bob Webster",
+    "niche": "Technology",
+    "price": 4.99,
+    "file_key": "ebooks/color-images-mars-rovers.epub",
+    "cover_filename": "covers/color-images-mars-rovers.png",
+    "is_featured": 1,
+    "tag": "space-technology",
+    "publication_year": 2004
+  },
+  {
+    "id": 11,
+    "title": "Searchlights on Health: The Complete Sexual Science",
+    "slug": "searchlights-on-health",
+    "author": "B.G. Jefferis",
+    "niche": "Holistic & Biological Wellness",
+    "price": 4.99,
+    "file_key": "ebooks/searchlights-on-health.epub",
+    "cover_filename": "covers/searchlights-on-health.png",
+    "is_featured": 0,
+    "tag": "wellness",
+    "publication_year": 1894
+  },
+  {
+    "id": 12,
+    "title": "Manual of Surgery: Sixth Edition",
+    "slug": "manual-of-surgery-sixth-edition",
+    "author": "Alexis Thomson",
+    "niche": "Holistic & Biological Wellness",
+    "price": 4.99,
+    "file_key": "ebooks/manual-of-surgery-sixth-edition.epub",
+    "cover_filename": "covers/manual-of-surgery-sixth-edition.png",
+    "is_featured": 0,
+    "tag": "medical-science",
+    "publication_year": 1921
+  },
+  {
+    "id": 13,
+    "title": "Reminiscences of a Stock Operator",
+    "slug": "reminiscences-of-a-stock-operator",
+    "author": "Edwin Lefevre",
+    "niche": "Forex",
+    "price": 9,
+    "file_key": "ebooks/reminiscences-of-a-stock-operator.epub",
+    "cover_filename": "covers/reminiscences-of-a-stock-operator.png",
+    "is_featured": 1,
+    "tag": "trading",
+    "publication_year": 1923
+  },
+  {
+    "id": 14,
+    "title": "Fifty Years in Wall Street",
+    "slug": "fifty-years-in-wall-street",
+    "author": "Henry Clews",
+    "niche": "Forex",
+    "price": 9,
+    "file_key": "ebooks/fifty-years-in-wall-street.epub",
+    "cover_filename": "covers/fifty-years-in-wall-street.png",
+    "is_featured": 0,
+    "tag": "finance-history",
+    "publication_year": 1908
+  },
+  {
+    "id": 15,
+    "title": "Democracy and Education",
+    "slug": "democracy-and-education",
+    "author": "John Dewey",
+    "niche": "Education",
+    "price": 0,
+    "file_key": "ebooks/democracy-and-education.pdf",
+    "cover_filename": "covers/democracy-and-education.png",
+    "is_featured": 1,
+    "tag": "educational-philosophy",
+    "publication_year": 1916
+  },
+  {
+    "id": 16,
+    "title": "The Montessori Method",
+    "slug": "the-montessori-method",
+    "author": "Maria Montessori",
+    "niche": "Education",
+    "price": 0,
+    "file_key": "ebooks/the-montessori-method.epub",
+    "cover_filename": "covers/the-montessori-method.png",
+    "is_featured": 0,
+    "tag": "child-development",
+    "publication_year": 1936
+  },
+  {
+    "id": 17,
+    "title": "The Art of Money Getting",
+    "slug": "the-art-of-money-getting",
+    "author": "P.T. Barnum",
+    "niche": "General Business",
+    "price": 0,
+    "file_key": "ebooks/the-art-of-money-getting.epub",
+    "cover_filename": "covers/the-art-of-money-getting.png",
+    "is_featured": 1,
+    "tag": "success-mindset",
+    "publication_year": 1937
+  },
+  {
+    "id": 18,
+    "title": "The Science of Getting Rich",
+    "slug": "the-science-of-getting-rich",
+    "author": "W.D. Wattles",
+    "niche": "General Business",
+    "price": 0,
+    "file_key": "ebooks/the-science-of-getting-rich.epub",
+    "cover_filename": "covers/the-science-of-getting-rich.png",
+    "is_featured": 0,
+    "tag": "startup-innovation",
+    "publication_year": 2014
+  },
+  {
+    "id": 19,
+    "title": "The Prince",
+    "slug": "the-prince-machiavelli",
+    "author": "Niccolò Machiavelli",
+    "niche": "Government",
+    "price": 4.99,
+    "file_key": "ebooks/the-prince-machiavelli.pdf",
+    "cover_filename": "covers/the-prince-machiavelli.png",
+    "is_featured": 1,
+    "tag": "political-strategy",
+    "publication_year": 1532
+  },
+  {
+    "id": 20,
+    "title": "Leviathan: The Matter, Form and Power of Government",
+    "slug": "leviathan-hobbes",
+    "author": "Thomas Hobbes",
+    "niche": "Government",
+    "price": 4.99,
+    "file_key": "ebooks/leviathan-hobbes.pdf",
+    "cover_filename": "covers/leviathan-hobbes.png",
+    "is_featured": 0,
+    "tag": "political-philosophy",
+    "publication_year": 1651
+  }
+];
+
 interface LandingBook {
   id: number;
   title: string;
@@ -416,6 +679,9 @@ interface LandingBook {
   price: number;
   tag: string | null;
   publication_year: number | null;
+  slug?: string;
+  is_featured?: number;
+  display_order?: number;
 }
 
 interface LandingPageProps {
@@ -452,7 +718,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
   const [isTyping, setIsTyping] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const [errorDismissed, setErrorDismissed] = useState(false);
-  const [libraryBooks, setLibraryBooks] = useState<LandingBook[]>([]);
+  const [libraryBooks, setLibraryBooks] = useState<LandingBook[]>(DEFAULT_LANDING_BOOKS);
   const [activeLibraryIndex, setActiveLibraryIndex] = useState(0);
   const [selectedBook, setSelectedBook] = useState<LandingBook | null>(null);
   const [bookAddedToCart, setBookAddedToCart] = useState(false);
@@ -464,7 +730,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
     fetch('/api/library/catalog')
       .then(response => response.ok ? response.json() : [])
       .then((books: LandingBook[]) => {
-        if (!cancelled) setLibraryBooks(books.slice(0, 20));
+        if (!cancelled && Array.isArray(books) && books.length > 0) setLibraryBooks(books.slice(0, 20));
       })
       .catch(() => {
         if (!cancelled) setLibraryBooks([]);
@@ -661,23 +927,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
       </div>
 
       {/* ── Top Bar ── */}
-      <header className="w-full px-5 sm:px-8 pt-4 sm:pt-6 pb-2 flex items-center justify-between z-20 relative shrink-0">
-        <div className="flex items-center gap-3">
+      <header className="w-full px-3.5 sm:px-8 pt-3 sm:pt-6 pb-2 flex items-center justify-between gap-2 z-20 relative shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
           <img
             src={TRINITY_LOGO}
             alt="Trinity Universe"
-            className="w-9 h-9 sm:w-11 sm:h-11 object-contain drop-shadow-md transition-transform hover:scale-105 animate-breathe"
+            className="w-7 h-7 sm:w-10 sm:h-10 object-contain drop-shadow-md transition-transform hover:scale-105 animate-breathe shrink-0"
           />
-          <span className="text-base sm:text-lg font-black tracking-[0.22em] text-slate-800 uppercase">
+          <span className="text-xs sm:text-base lg:text-lg font-black tracking-[0.14em] sm:tracking-[0.22em] text-slate-800 uppercase whitespace-nowrap">
             TRINITY UNIVERSE
           </span>
         </div>
         <button
           onClick={handleGoogleSignIn}
-          className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-slate-950 px-3.5 sm:px-5 py-2 text-[11px] sm:text-xs font-bold text-white shadow-lg shadow-slate-900/15 transition hover:-translate-y-0.5 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          className="inline-flex min-h-8 sm:min-h-10 items-center gap-1.5 sm:gap-2 rounded-xl bg-slate-950 px-2.5 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold text-white shadow-md shadow-slate-900/15 transition hover:-translate-y-0.5 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shrink-0 cursor-pointer whitespace-nowrap"
         >
           {GOOGLE_SVG}
-          <span>Sign in with Google</span>
+          <span>Sign in<span className="hidden xs:inline sm:inline"> with Google</span></span>
         </button>
       </header>
 
@@ -711,22 +977,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
 
       {/* ── Slider Motion Section with 18 Alternating Gnosis & Yada Cards ── */}
       <div
-        className="relative w-full h-[330px] sm:h-[445px] lg:h-[545px] shrink-0 flex items-center justify-center overflow-hidden z-10 sm:my-2 lg:my-7 touch-pan-y"
+        className="relative w-full h-[385px] sm:h-[465px] lg:h-[505px] shrink-0 flex items-center justify-center overflow-hidden z-10 my-1 sm:my-2 touch-pan-y"
         onPointerDown={handlePointerStart}
         onPointerUp={handlePointerEnd}
         onPointerCancel={() => { pointerStartX.current = null; }}
       >
+        {/* 1. Animated Sliding Cards */}
         {GNOSIS_CARDS.map((card, i) => {
           const d = wrapOffset(i - activeSlide, totalCards);
           const isActive = d === 0;
-
-          // Display offsets up to 2 cards left and 2 cards right (-2, -1, 0, 1, 2)
           const isVisible = Math.abs(d) <= 2;
-
           if (!isVisible) return null;
 
-          // X translation calculation:
-          // Center card at 0%, 1-step at +-54%, 2-step at +-100%
           let stepX = 0;
           if (d === 1) stepX = 54;
           else if (d === -1) stepX = -54;
@@ -743,32 +1005,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
               key={card.id}
               onClick={() => !isActive && !wasDragged.current && goToSlide(i)}
               style={{
-                position: 'absolute',
-                left: '50%',
-                 top: isMobile ? '38%' : '42%',
+                position: "absolute",
+                left: "50%",
+                top: isMobile ? "32%" : "35%",
                 transform: `translate(calc(-50% + ${stepX}%), -50%) scale(${scale})`,
                 opacity,
-                filter: blur > 0 ? `blur(${blur}px)` : 'none',
-                transition:
-                  'transform 0.55s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.55s ease, filter 0.55s ease',
+                filter: blur > 0 ? `blur(${blur}px)` : "none",
+                transition: "transform 0.55s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.55s ease, filter 0.55s ease",
                 zIndex,
-                cursor: isActive ? 'default' : 'pointer',
-                borderRadius: '16px',
+                cursor: isActive ? "default" : "pointer",
+                borderRadius: "16px",
                 background: card.bgGradient,
-                border: isActive
-                  ? `1px solid ${card.accentColor}60`
-                  : '1px solid rgba(255, 255, 255, 0.12)',
-                boxShadow: isActive
-                  ? `0 14px 36px rgba(15, 23, 42, 0.35), 0 0 20px ${card.accentColor}30`
-                  : '0 8px 20px rgba(0, 0, 0, 0.2)',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                overflow: 'hidden',
+                border: isActive ? `1px solid ${card.accentColor}60` : "1px solid rgba(255, 255, 255, 0.12)",
+                boxShadow: isActive ? `0 14px 36px rgba(15, 23, 42, 0.35), 0 0 20px ${card.accentColor}30` : "0 8px 20px rgba(0, 0, 0, 0.2)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                overflow: "hidden",
               }}
               className="gnosis-slide-card group select-none"
             >
-              {/* Card Header Bar */}
               <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5 mb-1.5 shrink-0">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-[9px] sm:text-[10.5px] font-semibold text-slate-200 tracking-wider truncate">
@@ -781,40 +1037,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
                 </div>
               </div>
 
-              {/* Card Content Area (Simulated AI Response Box) */}
               <div className="flex-1 overflow-hidden flex flex-col justify-start space-y-1">
                 <h3 className="text-[10px] sm:text-sm font-bold text-white tracking-tight leading-snug truncate">
                   {card.title}
                 </h3>
 
-                {/* Simulated AI Chat Response Display (reveals smoothly ONLY after prompt finishes typing) */}
                 <div
                   className={`bg-slate-950/75 border border-white/10 rounded-xl p-1.5 sm:p-2.5 text-[9px] sm:text-[11px] text-slate-300 space-y-1 sm:space-y-1.5 backdrop-blur-sm transition-all duration-500 overflow-hidden ${
                     isActive && showAnswer
-                      ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
-                      : 'opacity-0 translate-y-3 scale-95 pointer-events-none'
+                      ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
+                      : "opacity-0 translate-y-3 scale-95 pointer-events-none"
                   }`}
                 >
                   <div className="flex items-center gap-1 font-semibold text-white">
-                    <span
-                      className="w-1.5 h-1.5 rounded-full shrink-0"
-                      style={{ backgroundColor: card.accentColor }}
-                    />
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: card.accentColor }} />
                     <span className="truncate text-[9px] sm:text-[10.5px]">{card.chatAiResponse.heading}</span>
                   </div>
-
                   <p className="text-slate-300/90 text-[8.5px] sm:text-[10.5px] leading-relaxed line-clamp-2">
                     {card.chatAiResponse.body}
                   </p>
-
-                  {/* Code snippet if available */}
                   {card.chatAiResponse.codeSnippet && (
                     <pre className="bg-black/70 border border-slate-800 text-[8px] sm:text-[9.5px] text-sky-300 p-1 sm:p-1.5 rounded-lg font-mono overflow-x-auto whitespace-pre-wrap leading-tight max-h-[38px] sm:max-h-[46px]">
                       {card.chatAiResponse.codeSnippet}
                     </pre>
                   )}
-
-                  {/* Bullet insights if available */}
                   {card.chatAiResponse.bullets && (
                     <ul className="space-y-0.5 pl-0.5">
                       {card.chatAiResponse.bullets.slice(0, 2).map((b, idx) => (
@@ -827,28 +1073,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
                   )}
                 </div>
               </div>
-
             </div>
           );
         })}
 
-        {/* ── Stationary Floating Input Box (3-line capacity for mobile & desktop) ── */}
-        <div className="absolute bottom-4 sm:bottom-8 lg:bottom-10 left-1/2 -translate-x-1/2 w-[82%] sm:w-[64%] lg:w-[58%] max-w-md z-30 pointer-events-auto">
-          <div className="landing-prompt-panel bg-[#11131b]/95 border border-white/15 hover:border-sky-400/50 rounded-[18px] p-3 sm:p-4 shadow-[0_18px_45px_rgba(15,23,42,0.32)] backdrop-blur-xl flex items-start justify-between gap-3 transition-all min-h-[92px] sm:min-h-[106px]">
-            <div className="flex items-start gap-2 flex-1 min-w-0 pt-0.5">
-              <div className="flex-1 min-w-0 text-[12px] sm:text-sm text-slate-100 font-mono leading-relaxed line-clamp-4 min-h-[56px] whitespace-normal">
-                <span>{typedText}</span>
-                <span
-                  className={`inline-block w-1.5 h-3.5 ml-0.5 bg-sky-400 align-middle ${
-                    isTyping ? 'opacity-100' : 'animate-pulse'
-                  }`}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="absolute bottom-[68px] left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 rounded-full bg-white/20 px-2 py-1 backdrop-blur-sm">
+        {/* 2. Slide Indicator Dots */}
+        <div className="absolute bottom-[136px] sm:bottom-[154px] lg:bottom-[164px] left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 rounded-full bg-stone-300/50 px-2.5 py-1 backdrop-blur-sm pointer-events-auto">
           {GNOSIS_CARDS.map((card, index) => (
             <button
               key={card.id}
@@ -856,10 +1086,35 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onVisitLibra
               onClick={() => goToSlide(index)}
               aria-label={`Show slide ${index + 1}: ${card.title}`}
               className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                index === activeSlide ? 'w-6 bg-slate-800' : 'w-1.5 bg-slate-400/60 hover:bg-slate-600'
+                index === activeSlide ? "w-5 bg-slate-800" : "w-1.5 bg-slate-400/60 hover:bg-slate-600"
               }`}
             />
           ))}
+        </div>
+
+        {/* 3. Stationary Floating Prompt Box */}
+        <div className="absolute bottom-[52px] sm:bottom-[60px] lg:bottom-[66px] left-1/2 -translate-x-1/2 w-[90%] sm:w-[68%] lg:w-[54%] max-w-md z-30 pointer-events-auto">
+          <div className="landing-prompt-panel bg-[#11131b]/95 border border-white/15 hover:border-sky-400/50 rounded-[18px] p-2.5 sm:p-3.5 shadow-[0_16px_38px_rgba(15,23,42,0.30)] backdrop-blur-xl flex items-start justify-between gap-3 transition-all min-h-[72px] sm:min-h-[82px]">
+            <div className="flex items-start gap-2 flex-1 min-w-0 pt-0.5">
+              <div className="flex-1 min-w-0 text-[11.5px] sm:text-sm text-slate-100 font-mono leading-relaxed line-clamp-3 min-h-[42px] whitespace-normal">
+                <span>{typedText}</span>
+                <span className={`inline-block w-1.5 h-3.5 ml-0.5 bg-sky-400 align-middle ${isTyping ? "opacity-100" : "animate-pulse"}`} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. Get Started Button directly beneath prompt box */}
+        <div className="absolute bottom-1 sm:bottom-1.5 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            className="group inline-flex items-center justify-center gap-2 px-6 py-2 sm:px-8 sm:py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs sm:text-sm tracking-wide shadow-lg shadow-slate-950/25 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] border border-white/20 transition-all duration-150 cursor-pointer whitespace-nowrap"
+          >
+            {GOOGLE_SVG}
+            <span>Get Started with Google</span>
+            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:translate-x-1 transition-transform" />
+          </button>
         </div>
       </div>
 

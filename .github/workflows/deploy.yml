@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare Workers
+name: Deploy Trinity Universe to Cloudflare
 
 on:
   push:
@@ -7,58 +7,29 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
-    name: Build & Deploy
+  deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
+    name: Build & Deploy to Cloudflare Workers
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: 22
+          cache: 'npm'
 
-      - name: Install dependencies
-        run: bun install
+      - name: Install Dependencies
+        run: npm ci --prefer-offline || npm install --no-audit
 
-      - name: Type check
-        run: bun run lint
+      - name: Build Static Assets
+        run: npx vite build
 
-      - name: Build
-        run: bun run build
-
-      # Push Google OAuth & session secrets to Cloudflare Workers.
-      # Steps are skipped gracefully when the corresponding GitHub secret is not set
-      # (the values are already deployed directly via the Cloudflare API).
-      - name: Push secrets — trinityuniverse-frontend
-        env:
-          G_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          G_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          S_SECRET: ${{ secrets.SESSION_SECRET }}
-        run: |
-          [ -n "$G_CLIENT_ID" ]     && printf '%s' "$G_CLIENT_ID"     | bunx wrangler secret put GOOGLE_CLIENT_ID     --config wrangler.frontend.toml || echo "skip GOOGLE_CLIENT_ID"
-          [ -n "$G_CLIENT_SECRET" ] && printf '%s' "$G_CLIENT_SECRET" | bunx wrangler secret put GOOGLE_CLIENT_SECRET --config wrangler.frontend.toml || echo "skip GOOGLE_CLIENT_SECRET"
-          [ -n "$S_SECRET" ]        && printf '%s' "$S_SECRET"        | bunx wrangler secret put SESSION_SECRET       --config wrangler.frontend.toml || echo "skip SESSION_SECRET"
-
-      - name: Push secrets — gnosis-master
-        env:
-          G_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          G_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          S_SECRET: ${{ secrets.SESSION_SECRET }}
-        run: |
-          [ -n "$G_CLIENT_ID" ]     && printf '%s' "$G_CLIENT_ID"     | bunx wrangler secret put GOOGLE_CLIENT_ID     --config wrangler.toml || echo "skip GOOGLE_CLIENT_ID"
-          [ -n "$G_CLIENT_SECRET" ] && printf '%s' "$G_CLIENT_SECRET" | bunx wrangler secret put GOOGLE_CLIENT_SECRET --config wrangler.toml || echo "skip GOOGLE_CLIENT_SECRET"
-          [ -n "$S_SECRET" ]        && printf '%s' "$S_SECRET"        | bunx wrangler secret put SESSION_SECRET       --config wrangler.toml || echo "skip SESSION_SECRET"
-
-      - name: Deploy trinityuniverse-frontend (Static Assets Worker)
-        run: bunx wrangler deploy --config wrangler.frontend.toml
-
-      - name: Deploy gnosis-master (Backend Worker)
-        run: bunx wrangler deploy --config wrangler.toml
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '3.109.2'
+          command: deploy --config wrangler.frontend.toml
