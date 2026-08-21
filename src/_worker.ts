@@ -1076,69 +1076,70 @@ Conversation style:
 
 
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SAFE FACE SWAP STORAGE ENGINE (R2 + KV)
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface FaceSwapRequestBody {
   originalImage: string;
   targetFaceImage: string;
   swappedResult?: string;
-  mode?: "single" | "multiple" | "batch";
-  mediaType?: "photo" | "video";
+  mode?: string;
+  mediaType?: string;
 }
 
 async function resolveImageBuffer(input: string): Promise<ArrayBuffer> {
-  if (!input) throw new Error("Empty image payload provided");
-  
+  if (!input) throw new Error("Empty image input");
   if (input.startsWith("http://") || input.startsWith("https://")) {
     const res = await fetch(input, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Accept": "image/*,*/*"
       }
     });
-    if (!res.ok) throw new Error("Failed to download image (" + res.status + "): " + res.statusText);
+    if (!res.ok) throw new Error("Failed to fetch preset image: " + res.status);
     return await res.arrayBuffer();
   }
-
-  // Sanitize base64 string
-  let base64Data = input.includes(",") ? input.split(",")[1] : input;
-  base64Data = base64Data.replace(/\s/g, ""); // Remove newlines and whitespace
-
-  const binaryStr = atob(base64Data);
-  const bytes = new Uint8Array(binaryStr.length);
-  for (let i = 0; i < binaryStr.length; i++) {
-    bytes[i] = binaryStr.charCodeAt(i);
+  let base64 = input.includes(",") ? input.split(",")[1] : input;
+  base64 = base64.replace(/\s/g, "");
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
   }
   return bytes.buffer;
 }
 
 async function processFaceSwap(body: FaceSwapRequestBody, env: any) {
-  const swapId = "swap_" + Date.now() + "_" + crypto.randomUUID().slice(0, 8);
+  const swapId = "swap_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
   const timestamp = new Date().toISOString();
-  console.log("[FaceSwap R2] Starting pipeline:", swapId);
 
-  const origBuffer = await resolveImageBuffer(body.originalImage);
-  const targetBuffer = await resolveImageBuffer(body.targetFaceImage);
-  const resultBuffer = body.swappedResult ? await resolveImageBuffer(body.swappedResult) : targetBuffer;
+  let resultUrl = body.swappedResult || body.targetFaceImage || "";
+  let originalUrl = body.originalImage || "";
+  let targetFaceUrl = body.targetFaceImage || "";
 
-  const origKey = "faceswap/" + swapId + "_orig.jpg";
-  const targetKey = "faceswap/" + swapId + "_target.jpg";
-  const resultKey = "faceswap/" + swapId + "_result.jpg";
+  try {
+    const origBuffer = await resolveImageBuffer(body.originalImage);
+    const targetBuffer = await resolveImageBuffer(body.targetFaceImage);
+    const resultBuffer = body.swappedResult ? await resolveImageBuffer(body.swappedResult) : targetBuffer;
 
-  // Store in Cloudflare R2
-  const bucket = env.MASTER_BUCKET || env.LIBRARY_BUCKET || env.TRINITY_EBOOKS;
-  if (bucket) {
-    try {
+    const origKey = "faceswap/" + swapId + "_orig.jpg";
+    const targetKey = "faceswap/" + swapId + "_target.jpg";
+    const resultKey = "faceswap/" + swapId + "_result.jpg";
+
+    const bucket = env.MASTER_BUCKET || env.LIBRARY_BUCKET || env.GNOSIS_CHAT_BUCKET;
+    if (bucket) {
       await bucket.put(origKey, origBuffer, { httpMetadata: { contentType: "image/jpeg" } });
       await bucket.put(targetKey, targetBuffer, { httpMetadata: { contentType: "image/jpeg" } });
       await bucket.put(resultKey, resultBuffer, { httpMetadata: { contentType: "image/jpeg" } });
-      console.log("[FaceSwap R2] ✓ All 3 images saved to R2 storage");
-    } catch (r2Err) {
-      console.error("[FaceSwap R2 Error]:", r2Err);
+      resultUrl = "/api/faceswap/image/" + resultKey;
+      originalUrl = "/api/faceswap/image/" + origKey;
+      targetFaceUrl = "/api/faceswap/image/" + targetKey;
     }
+  } catch (storageErr) {
+    console.error("[FaceSwap Storage Fallback]:", storageErr);
   }
-
-  const resultUrl = "/api/faceswap/image/" + resultKey;
-  const originalUrl = "/api/faceswap/image/" + origKey;
-  const targetFaceUrl = "/api/faceswap/image/" + targetKey;
 
   const historyItem = {
     id: swapId,
@@ -1148,20 +1149,19 @@ async function processFaceSwap(body: FaceSwapRequestBody, env: any) {
     createdAt: timestamp,
   };
 
-  const kv = env.CHAT_SESSIONS || env.GNOSIS_SESSIONS;
-  if (kv) {
-    try {
-      let list: any[] = [];
+  try {
+    const kv = env.CHAT_SESSIONS || env.GNOSIS_SESSIONS;
+    if (kv) {
+      let list = [];
       const raw = await kv.get("trinity_faceswap_history");
       if (raw) {
         try { list = JSON.parse(raw); } catch {}
       }
       list = [historyItem, ...list].slice(0, 40);
       await kv.put("trinity_faceswap_history", JSON.stringify(list));
-      console.log("[FaceSwap KV] ✓ Indexed item into KV store");
-    } catch (kvErr) {
-      console.error("[FaceSwap KV Error]:", kvErr);
     }
+  } catch (kvErr) {
+    console.error("[FaceSwap KV Fallback]:", kvErr);
   }
 
   return { success: true, resultUrl, item: historyItem };
