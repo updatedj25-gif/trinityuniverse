@@ -1,20 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Tenant, ChatMessage, Attachment } from '../types';
-import {
-  ArrowUp,
-  Volume2,
-  VolumeX,
-  Copy,
-  Check,
-  Paperclip,
+import { 
+  Plus, 
+  ArrowUp, 
+  BookOpen, 
+  Sparkles, 
+  Bot, 
+  User, 
+  RotateCw, 
   Image as ImageIcon,
-  FileText,
-  X,
-  Zap,
-  Gem,
-  Eye,
-  Plus,
-  BookOpen,
+  Paperclip,
+  X
 } from 'lucide-react';
 
 interface ChatAreaProps {
@@ -30,35 +26,41 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   messages,
   onSendMessage,
   isLoading,
+  onRegenerate,
 }) => {
   const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [speakingId, setSpeakingId] = useState<string | null>(null);
+  const [activePill, setActivePill] = useState<string>('Instant');
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // DeepSeek Style Toggle States
-  const [knowledgeActive, setKnowledgeActive] = useState(false);
-  const [selectedMode, setSelectedMode] = useState<'instant' | 'expert' | 'vision'>('instant');
+  const isYada = tenant.id === 'yada';
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Auto-scroll to bottom of messages
-  useEffect(() => {
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages, isLoading]);
+
+  // Auto-resize textarea seamlessly
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+    }
+  }, [input]);
 
   const handleSend = () => {
     if ((!input.trim() && attachments.length === 0) || isLoading) return;
-
-    let finalPrompt = input.trim();
-    if (knowledgeActive) {
-      finalPrompt = `[Knowledge Mode Enabled] ${finalPrompt}`;
-    }
-
-    onSendMessage(finalPrompt, attachments);
+    onSendMessage(input.trim(), attachments);
     setInput('');
     setAttachments([]);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -73,219 +75,70 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     if (!files || files.length === 0) return;
 
     Array.from(files).forEach((file) => {
-      const isImage = file.type.startsWith('image/');
-      if (isImage) {
-        setSelectedMode('vision');
-      }
-
       const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        const newAttach: Attachment = {
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+      reader.onload = () => {
+        const newAttachment: Attachment = {
+          id: `att_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
           name: file.name,
-          type: isImage ? 'image' : 'file',
-          url: URL.createObjectURL(file),
-          dataUrl: isImage ? result : undefined,
-          content: !isImage ? result : undefined,
+          type: file.type.startsWith('image/') ? 'image' : 'file',
+          url: reader.result as string,
+          dataUrl: reader.result as string,
         };
-        setAttachments((prev) => [...prev, newAttach]);
+        setAttachments((prev) => [...prev, newAttachment]);
       };
-
-      if (isImage) {
-        reader.readAsDataURL(file);
-      } else {
-        reader.readAsText(file);
-      }
+      reader.readAsDataURL(file);
     });
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const removeAttachment = (id: string) => {
     setAttachments((prev) => prev.filter((a) => a.id !== id));
   };
 
-  const handleCopy = (text: string, msgId: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(msgId);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const handleSpeak = (text: string, msgId: string) => {
-    if ('speechSynthesis' in window) {
-      if (speakingId === msgId) {
-        window.speechSynthesis.cancel();
-        setSpeakingId(null);
-        return;
-      }
-
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = tenant.id === 'yada' ? 0.9 : 1.0;
-
-      utterance.onend = () => setSpeakingId(null);
-      utterance.onerror = () => setSpeakingId(null);
-
-      setSpeakingId(msgId);
-      window.speechSynthesis.speak(utterance);
-    }
-  };
+  const modelPills = [
+    { label: 'Instant', icon: <Sparkles className="w-3.5 h-3.5" /> },
+    { label: 'Expert', icon: <span>💎</span> },
+    { label: 'Vision', icon: <span>👁️</span> },
+  ];
 
   return (
-    <div
-      className={`flex-1 flex flex-col justify-between h-full relative overflow-hidden ${tenant.canvasBg}`}
-    >
-      {/* Hidden File Upload Input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        onChange={handleFileUpload}
-        className="hidden"
-      />
-
-      {/* Main Messages or Landing Page Center */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 z-10 scroll-smooth">
+    <div className="flex-1 flex flex-col h-full bg-[#FDFBF7] relative overflow-hidden select-text">
+      
+      {/* Scrollable Chat Area */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
         {messages.length === 0 ? (
-          /* Empty Landing State */
-          <div className="h-full min-h-[440px] flex flex-col items-center justify-center text-center px-4 max-w-2xl mx-auto">
-            {/* Title only — no icon box */}
-            <div className="flex items-center gap-3 mb-5">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 font-sans">
-                Start chatting with {tenant.name}
-              </h1>
-            </div>
+          /* Empty State */
+          <div className="max-w-2xl mx-auto h-full flex flex-col items-center justify-center text-center px-4 pt-8">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-800 mb-6 font-sans">
+              {tenant.id === 'yada' ? 'Consult with Yada Guide' : `Start chatting with ${tenant.name}`}
+            </h1>
 
-            {/* Mode Switcher Pill Bar (Instant, Expert, Vision) */}
-            <div className="inline-flex items-center p-1 bg-stone-100/90 border border-stone-200/90 rounded-full mb-8 text-xs sm:text-sm font-medium">
-              <button
-                onClick={() => setSelectedMode('instant')}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full transition-all cursor-pointer ${
-                  selectedMode === 'instant'
-                    ? 'bg-white text-blue-600 shadow-2xs font-semibold border border-blue-100'
-                    : 'text-stone-600 hover:text-slate-900'
-                }`}
-              >
-                <Zap className="w-3.5 h-3.5 text-blue-500" />
-                <span>Instant</span>
-              </button>
-
-              <button
-                onClick={() => setSelectedMode('expert')}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full transition-all cursor-pointer ${
-                  selectedMode === 'expert'
-                    ? 'bg-white text-blue-600 shadow-2xs font-semibold border border-blue-100'
-                    : 'text-stone-600 hover:text-slate-900'
-                }`}
-              >
-                <Gem className="w-3.5 h-3.5 text-slate-600" />
-                <span>Expert</span>
-              </button>
-
-              <button
-                onClick={() => setSelectedMode('vision')}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full transition-all cursor-pointer ${
-                  selectedMode === 'vision'
-                    ? 'bg-white text-blue-600 shadow-2xs font-semibold border border-blue-100'
-                    : 'text-stone-600 hover:text-slate-900'
-                }`}
-              >
-                <Eye className="w-3.5 h-3.5 text-slate-600" />
-                <span>Vision</span>
-              </button>
-            </div>
-
-            {/* Chat Input Box on Landing Page */}
-            <div className="w-full relative text-left">
-              {/* Attachment Preview Strip */}
-              {attachments.length > 0 && (
-                <div className="flex flex-wrap gap-2 p-2 mb-2 bg-white/90 border border-stone-200 rounded-xl shadow-2xs">
-                  {attachments.map((att) => (
-                    <div
-                      key={att.id}
-                      className="flex items-center gap-1.5 bg-stone-100 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700"
-                    >
-                      {att.type === 'image' ? (
-                        <ImageIcon className="w-3.5 h-3.5 text-blue-500" />
-                      ) : (
-                        <FileText className="w-3.5 h-3.5 text-amber-500" />
-                      )}
-                      <span className="truncate max-w-[120px]">{att.name}</span>
-                      <button
-                        onClick={() => removeAttachment(att.id)}
-                        className="text-stone-400 hover:text-red-500 ml-1 cursor-pointer"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Exact DeepSeek Chat Input Container */}
-              <div className="bg-[#11131b] border border-slate-700/80 rounded-[24px] shadow-[0_18px_45px_rgba(15,23,42,0.22)] p-4 hover:border-slate-500 focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-400/20 transition-all flex flex-col justify-between min-h-[130px]">
-                {/* Textarea Field */}
-                <textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={`Message ${tenant.name}`}
-                  rows={2}
-                  className="w-full resize-none border-none outline-none text-sm sm:text-base text-slate-100 placeholder-slate-500 bg-transparent font-sans"
-                />
-
-                {/* Bottom Controls Bar inside Box */}
-                <div className="flex items-center justify-between pt-3 border-t border-transparent">
-                  {/* Left Controls: Add Image Plus Icon & Knowledge Toggle Button */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full text-stone-600 hover:text-slate-900 hover:bg-stone-200/70 border border-stone-200/90 bg-stone-100/60 transition-all cursor-pointer flex items-center justify-center shrink-0"
-                      title="Add image or attachment"
-                    >
-                      <Plus className="w-4 h-4 text-stone-600" />
-                    </button>
-
-                    <button
-                      onClick={() => setKnowledgeActive((prev) => !prev)}
-                      className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-1.5 rounded-full border transition-all cursor-pointer ${
-                        knowledgeActive
-                          ? 'bg-blue-50 text-blue-600 border-blue-200 font-semibold shadow-2xs'
-                          : 'bg-stone-50/80 text-stone-600 border-stone-200/80 hover:bg-stone-100'
-                      }`}
-                    >
-                      <BookOpen className={`w-3.5 h-3.5 ${knowledgeActive ? 'text-blue-600' : 'text-stone-500'}`} />
-                      <span>Knowledge</span>
-                    </button>
-                  </div>
-
-                  {/* Right Action: Circular Send Button */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleSend}
-                      disabled={(!input.trim() && attachments.length === 0) || isLoading}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                        input.trim() || attachments.length > 0
-                          ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-2xs'
-                          : 'bg-stone-200 text-stone-400 cursor-not-allowed'
-                      }`}
-                      title="Send message"
-                    >
-                      <ArrowUp className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Suggested Prompts beneath input */}
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-6 max-w-xl">
-              {tenant.suggestedPrompts.map((promptText, idx) => (
+            {/* Model Selector Pills */}
+            <div className="flex items-center gap-2 p-1 rounded-full bg-stone-100/90 border border-stone-200/80 mb-8 shadow-xs">
+              {modelPills.map((pill) => (
                 <button
-                  key={idx}
+                  key={pill.label}
+                  onClick={() => setActivePill(pill.label)}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                    activePill === pill.label
+                      ? 'bg-white text-slate-800 shadow-sm border border-stone-200/60'
+                      : 'text-stone-500 hover:text-slate-800'
+                  }`}
+                >
+                  {pill.icon}
+                  <span>{pill.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Suggested Prompts List */}
+            <div className="w-full max-w-lg space-y-2 mt-2">
+              {tenant.suggestedPrompts && tenant.suggestedPrompts.map((promptText, i) => (
+                <button
+                  key={i}
                   onClick={() => onSendMessage(promptText)}
-                  className="px-3 py-1.5 rounded-full text-xs bg-white/80 border border-stone-200 hover:bg-stone-50 text-stone-600 hover:text-slate-900 transition-all cursor-pointer shadow-2xs"
+                  className="w-full p-3 rounded-full text-xs font-medium text-slate-700 bg-white border border-stone-200/80 hover:bg-stone-50 hover:border-stone-300 transition-all shadow-2xs text-center cursor-pointer truncate"
                 >
                   {promptText}
                 </button>
@@ -293,98 +146,69 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             </div>
           </div>
         ) : (
-          /* Active Chat Messages Stream */
+          /* Message Stream */
           <div className="max-w-3xl mx-auto space-y-6 pb-4">
-            {messages.map((msg) => {
-              const isUser = msg.role === 'user';
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${
-                    isUser ? 'items-end' : 'items-start'
-                  }`}
-                >
-                  {/* Sender Name */}
-                  <span className="text-[11px] font-medium text-stone-400 mb-1 px-1">
-                    {isUser ? 'You' : tenant.name}
-                  </span>
+            {messages.map((m) => (
+              <div
+                key={m.id}
+                className={`flex gap-3 sm:gap-4 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                {m.role === 'assistant' && (
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-xs shadow-xs ${
+                    isYada ? 'bg-[#A36224]' : 'bg-blue-600'
+                  }`}>
+                    <Bot className="w-4 h-4" />
+                  </div>
+                )}
 
-                  {/* Message Bubble Container */}
-                  <div
-                    className={`group relative max-w-[85%] sm:max-w-[78%] rounded-2xl p-4 shadow-2xs transition-all ${
-                      isUser
-                        ? 'bg-slate-900 text-white rounded-tr-xs'
-                        : tenant.id === 'yada'
-                        ? 'bg-[#FFF9F2] text-slate-800 border border-[#F3E3D1] rounded-tl-xs font-serif'
-                        : 'bg-white text-slate-800 border border-stone-200/90 rounded-tl-xs font-sans'
-                    }`}
-                  >
-                    {/* Attachments if any */}
-                    {msg.attachments && msg.attachments.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {msg.attachments.map((a) => (
-                          <div
-                            key={a.id}
-                            className="flex items-center gap-1.5 text-xs bg-black/10 px-2 py-1 rounded-md"
-                          >
-                            <Paperclip className="w-3 h-3" />
-                            <span className="truncate max-w-[120px]">
-                              {a.name}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Content Text */}
-                    <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
-                      {msg.content}
-                    </p>
-
-                    {/* Action Bar for Assistant Messages */}
-                    {!isUser && (
-                      <div className="flex items-center gap-2 mt-3 pt-2 border-t border-stone-200/40 text-stone-400 text-xs">
-                        <button
-                          onClick={() => handleCopy(msg.content, msg.id)}
-                          className="hover:text-slate-700 transition-colors p-1 rounded cursor-pointer"
-                          title="Copy to clipboard"
-                        >
-                          {copiedId === msg.id ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                <div className={`flex flex-col max-w-[85%] sm:max-w-[75%] ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  {/* Attachments preview */}
+                  {m.attachments && m.attachments.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {m.attachments.map((att) => (
+                        <div key={att.id} className="rounded-xl overflow-hidden border border-stone-200 max-w-[200px]">
+                          {att.type === 'image' ? (
+                            <img src={att.url} alt={att.name} className="w-full h-auto object-cover max-h-40" />
                           ) : (
-                            <Copy className="w-3.5 h-3.5" />
+                            <div className="p-2 bg-stone-100 text-xs font-mono text-slate-700 flex items-center gap-1.5">
+                              <Paperclip className="w-3.5 h-3.5" />
+                              <span className="truncate">{att.name}</span>
+                            </div>
                           )}
-                        </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                        <button
-                          onClick={() => handleSpeak(msg.content, msg.id)}
-                          className={`hover:text-slate-700 transition-colors p-1 rounded cursor-pointer ${
-                            speakingId === msg.id ? 'text-amber-600 animate-pulse' : ''
-                          }`}
-                          title="Listen to voice reply"
-                        >
-                          {speakingId === msg.id ? (
-                            <VolumeX className="w-3.5 h-3.5" />
-                          ) : (
-                            <Volume2 className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                      </div>
-                    )}
+                  {/* Message Bubble */}
+                  <div className={`px-4 py-3 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-xs ${
+                    m.role === 'user'
+                      ? isYada
+                        ? 'bg-[#A36224] text-white rounded-br-xs'
+                        : 'bg-blue-600 text-white rounded-br-xs'
+                      : 'bg-white text-slate-800 border border-stone-200/80 rounded-bl-xs'
+                  }`}>
+                    <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
                   </div>
                 </div>
-              );
-            })}
 
-            {/* Thinking Indicator */}
+                {m.role === 'user' && (
+                  <div className="w-8 h-8 rounded-full bg-stone-200 text-stone-700 font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                    <User className="w-4 h-4" />
+                  </div>
+                )}
+              </div>
+            ))}
+
             {isLoading && (
-              <div className="flex flex-col items-start">
-                <span className="text-[11px] font-medium text-stone-400 mb-1 px-1">
-                  {tenant.name}
-                </span>
-                <div className="bg-white border border-stone-200/90 rounded-2xl rounded-tl-xs p-4 shadow-2xs flex items-center gap-2 text-stone-500 text-sm">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
-                  <span>Thinking...</span>
+              <div className="flex gap-3 sm:gap-4 justify-start items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-xs ${
+                  isYada ? 'bg-[#A36224]' : 'bg-blue-600'
+                }`}>
+                  <RotateCw className="w-4 h-4 animate-spin" />
+                </div>
+                <div className="bg-white border border-stone-200/80 px-4 py-3 rounded-2xl text-xs text-stone-500 italic shadow-2xs">
+                  {tenant.name} is thinking...
                 </div>
               </div>
             )}
@@ -394,93 +218,91 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         )}
       </div>
 
-      {/* Input Box Bar at Bottom when conversation is ACTIVE */}
-      {messages.length > 0 && (
-        <div className="p-4 sm:p-6 z-20">
-          <div className="max-w-3xl mx-auto w-full relative">
-            {/* Attachment Preview Strip */}
+      {/* ── CLEAN LIGHT CHAT INPUT BOX (NO BLACK BG, NO FOCUS RECTANGLES) ── */}
+      <div className="p-4 sm:p-6 bg-gradient-to-t from-[#FDFBF7] via-[#FDFBF7] to-transparent shrink-0">
+        <div className="max-w-2xl mx-auto">
+          
+          {/* Main Input Container: Pure White, Soft Border, Smooth Shadow */}
+          <div className="bg-white border border-stone-200/90 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-sm hover:shadow-md transition-all">
+            
+            {/* Attachment preview chips */}
             {attachments.length > 0 && (
-              <div className="flex flex-wrap gap-2 p-2 mb-2 bg-white/90 border border-stone-200 rounded-xl shadow-2xs">
+              <div className="flex flex-wrap gap-2 mb-2.5 pb-2 border-b border-stone-100">
                 {attachments.map((att) => (
-                  <div
-                    key={att.id}
-                    className="flex items-center gap-1.5 bg-stone-100 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700"
-                  >
-                    {att.type === 'image' ? (
-                      <ImageIcon className="w-3.5 h-3.5 text-blue-500" />
-                    ) : (
-                      <FileText className="w-3.5 h-3.5 text-amber-500" />
-                    )}
-                    <span className="truncate max-w-[120px]">{att.name}</span>
-                    <button
-                      onClick={() => removeAttachment(att.id)}
-                      className="text-stone-400 hover:text-red-500 ml-1 cursor-pointer"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+                  <div key={att.id} className="flex items-center gap-1.5 bg-stone-100 px-2.5 py-1 rounded-lg text-xs text-slate-700 font-mono">
+                    <Paperclip className="w-3 h-3 text-stone-500" />
+                    <span className="max-w-[120px] truncate">{att.name}</span>
+                    <X onClick={() => removeAttachment(att.id)} className="w-3 h-3 text-stone-400 hover:text-red-500 cursor-pointer ml-1" />
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Exact DeepSeek Chat Input Box */}
-            <div className="bg-white border border-stone-200/90 rounded-[24px] shadow-sm p-4 hover:border-stone-300 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100/50 transition-all flex flex-col justify-between min-h-[120px]">
-              {/* Textarea Field */}
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={`Message ${tenant.name}`}
-                rows={2}
-                className="w-full resize-none border-none outline-none text-sm sm:text-base text-slate-800 placeholder-stone-400 bg-transparent font-sans"
-              />
+            {/* Seamless Textarea: No Focus Ring, No Colored Outlines */}
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={tenant.placeholderText || `Message ${tenant.name}...`}
+              rows={1}
+              className="w-full bg-transparent text-slate-800 placeholder-stone-400 text-xs sm:text-sm resize-none focus:outline-none focus:ring-0 outline-none border-none p-0 leading-relaxed max-h-36 overflow-y-auto block"
+              style={{ outline: 'none', boxShadow: 'none', border: 'none' }}
+            />
 
-              {/* Bottom Controls Bar inside Box */}
-              <div className="flex items-center justify-between pt-3">
-                {/* Left Controls: Add Image Plus Icon & Knowledge Toggle Button */}
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full text-stone-600 hover:text-slate-900 hover:bg-stone-200/70 border border-stone-200/90 bg-stone-100/60 transition-all cursor-pointer flex items-center justify-center shrink-0"
-                    title="Add image or attachment"
-                  >
-                    <Plus className="w-4 h-4 text-stone-600" />
-                  </button>
+            {/* Bottom Action Bar inside Input Box */}
+            <div className="flex items-center justify-between mt-3 pt-1">
+              
+              {/* Left Action Buttons */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  multiple
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200/80 text-stone-600 transition-colors flex items-center justify-center cursor-pointer border border-stone-200/60"
+                  title="Upload attachment"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
 
-                  <button
-                    onClick={() => setKnowledgeActive((prev) => !prev)}
-                    className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-1.5 rounded-full border transition-all cursor-pointer ${
-                      knowledgeActive
-                        ? 'bg-blue-50 text-blue-600 border-blue-200 font-semibold shadow-2xs'
-                        : 'bg-stone-50/80 text-stone-600 border-stone-200/80 hover:bg-stone-100'
-                    }`}
-                  >
-                    <BookOpen className={`w-3.5 h-3.5 ${knowledgeActive ? 'text-blue-600' : 'text-stone-500'}`} />
-                    <span>Knowledge</span>
-                  </button>
-                </div>
-
-                {/* Right Action: Circular Send Button */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleSend}
-                    disabled={(!input.trim() && attachments.length === 0) || isLoading}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                      input.trim() || attachments.length > 0
-                        ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-2xs'
-                        : 'bg-stone-200 text-stone-400 cursor-not-allowed'
-                    }`}
-                    title="Send message"
-                  >
-                    <ArrowUp className="w-4 h-4 text-white" />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 hover:bg-stone-200/80 text-stone-700 text-xs font-semibold transition-colors cursor-pointer border border-stone-200/60"
+                >
+                  <BookOpen className="w-3.5 h-3.5 text-stone-500" />
+                  <span>Knowledge</span>
+                </button>
               </div>
+
+              {/* Right Send Button */}
+              <button
+                type="button"
+                onClick={handleSend}
+                disabled={(!input.trim() && attachments.length === 0) || isLoading}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                  (input.trim() || attachments.length > 0) && !isLoading
+                    ? isYada
+                      ? 'bg-[#A36224] hover:bg-[#8a511d] text-white shadow-sm'
+                      : 'bg-slate-900 hover:bg-slate-800 text-white shadow-sm'
+                    : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                }`}
+                title="Send message"
+              >
+                <ArrowUp className="w-4 h-4" />
+              </button>
+
             </div>
+
           </div>
         </div>
-      )}
+      </div>
+
     </div>
   );
 };
