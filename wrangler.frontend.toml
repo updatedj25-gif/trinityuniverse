@@ -1,3 +1,4 @@
+account_id = "0ce9db89ed837235f4e096640a043c75"
 # ============================================================
 # TRINITY UNIVERSE — Frontend Worker
 # Serves the Vite static build + handles all /api/* routes
@@ -6,6 +7,7 @@
 name = "trinityuniverse-frontend"
 main = "src/_worker.ts"
 compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
 
 [assets]
 directory = "./dist"
