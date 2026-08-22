@@ -6,6 +6,7 @@ account_id = "0ce9db89ed837235f4e096640a043c75"
 name = "gnosis-master"
 main = "src/_worker.ts"
 compatibility_date = "2026-02-11"
+compatibility_flags = ["nodejs_compat"]
 
 # ── Workers AI binding ───────────────────────────────────────
 [ai]
