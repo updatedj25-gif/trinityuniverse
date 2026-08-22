@@ -1,4 +1,32 @@
 
+// ── E2B Sandboxed Code Execution Engine ──────────────────────────────────────
+async function runCodeInSandbox(codeStr: string, apiKey: string) {
+  try {
+    const { CodeInterpreter } = await import("@e2b/code-interpreter");
+    const sandbox = await CodeInterpreter.create({ apiKey });
+    try {
+      const execution = await sandbox.runCode(codeStr);
+      return {
+        success: !execution.error,
+        stdout: execution.logs.stdout.join("\n"),
+        stderr: execution.logs.stderr.join("\n"),
+        error: execution.error ? `${execution.error.name}: ${execution.error.value}` : undefined,
+        results: execution.results,
+      };
+    } finally {
+      await sandbox.kill().catch(() => {});
+    }
+  } catch (err: any) {
+    return {
+      success: false,
+      stdout: "",
+      stderr: err.message || "Sandbox execution failed",
+      error: err.message || "Sandbox error",
+    };
+  }
+}
+
+
 function sanitizeAiResponse(rawText: string): string {
   if (!rawText) return "";
   // Strip <think>...</think> blocks from DeepSeek or reasoning models
@@ -98,6 +126,7 @@ interface VectorizeIndex {
 }
 
 interface Env {
+  E2B_API_KEY?: string;
   ASSETS: { fetch: (request: Request) => Promise<Response> };
   AI: any;
   /** Session KV */
