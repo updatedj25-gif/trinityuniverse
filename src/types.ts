@@ -41,12 +41,23 @@ export interface Attachment {
   content?: string;
 }
 
+export interface SandboxExecutionLog {
+  code?: string;
+  language?: string;
+  stdout?: string;
+  stderr?: string;
+  error?: string;
+  success?: boolean;
+}
+
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'tool' | 'system';
   content: string;
   timestamp: string;
   attachments?: Attachment[];
+  status?: string;
+  sandboxLogs?: SandboxExecutionLog[];
 }
 
 export interface ChatSession {
@@ -65,4 +76,24 @@ export interface UserProfile {
   email?: string;
   avatarUrl?: string;
   signedIn: boolean;
+}
+
+export type SandboxStatus = 
+  | 'idle'
+  | 'thinking'
+  | 'spinning_up_sandbox'
+  | 'running_code'
+  | 'verifying_output'
+  | 'self_correcting'
+  | 'completed'
+  | 'error';
+
+export interface StreamEventPayload {
+  type: 'status' | 'text' | 'sandbox_result' | 'done' | 'error';
+  status?: SandboxStatus;
+  message?: string;
+  chunk?: string;
+  text?: string;
+  execution?: SandboxExecutionLog;
+  error?: string;
 }

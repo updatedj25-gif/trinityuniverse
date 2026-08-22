@@ -145,45 +145,163 @@ const App: React.FC = () => {
       attachments,
     };
 
+    const assistantMsgId = "msg_" + Date.now() + "_assistant";
+    const initialAssistantMsg: ChatMessage = {
+      id: assistantMsgId,
+      role: "assistant",
+      content: "",
+      timestamp: new Date().toISOString(),
+      status: "Analyzing prompt...",
+      sandboxLogs: [],
+    };
+
     setSessions((prev) =>
-      prev.map((s) => (s.id === targetSessionId ? { ...s, messages: [...s.messages, userMsg], updatedAt: now } : s))
+      prev.map((s) =>
+        s.id === targetSessionId
+          ? { ...s, messages: [...s.messages, userMsg, initialAssistantMsg], updatedAt: now }
+          : s
+      )
     );
 
     setIsLoading(true);
 
     try {
+      const activeMessages = (sessions.find((s) => s.id === targetSessionId)?.messages || []).concat(userMsg);
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: text,
-          messages: [{ role: "user", content: text }],
-          tenant: activeTenant.id,
+          messages: activeMessages,
           tenantId: activeTenant.id,
           systemInstruction: activeTenant.systemInstruction,
         }),
       });
 
-      const data = (await res.json()) as any;
-      const aiReply: ChatMessage = {
-        id: "msg_" + Date.now() + "_assistant",
-        role: "assistant",
-        content: data.text || data.reply || data.response || data.message || "I am processing your request.",
-        timestamp: new Date().toISOString(),
-      };
+      if (!res.ok || !res.body) {
+        throw new Error("Failed to connect to the orchestrator.");
+      }
 
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+      let accumulatedText = "";
+      const sandboxLogs: any[] = [];
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
+
+        for (const block of lines) {
+          const line = block.trim();
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.replace(/^data: /, "").trim();
+          if (!jsonStr) continue;
+
+          try {
+            const data = JSON.parse(jsonStr);
+
+            if (data.type === "status") {
+              setSessions((prev) =>
+                prev.map((s) =>
+                  s.id === targetSessionId
+                    ? {
+                        ...s,
+                        messages: s.messages.map((m) =>
+                          m.id === assistantMsgId
+                            ? { ...m, status: data.message || data.status }
+                            : m
+                        ),
+                      }
+                    : s
+                )
+              );
+            } else if (data.type === "sandbox_result" && data.execution) {
+              sandboxLogs.push(data.execution);
+              setSessions((prev) =>
+                prev.map((s) =>
+                  s.id === targetSessionId
+                    ? {
+                        ...s,
+                        messages: s.messages.map((m) =>
+                          m.id === assistantMsgId
+                            ? { ...m, sandboxLogs: [...sandboxLogs] }
+                            : m
+                        ),
+                      }
+                    : s
+                )
+              );
+            } else if (data.type === "text") {
+              accumulatedText = data.text || (accumulatedText + (data.chunk || ""));
+              setSessions((prev) =>
+                prev.map((s) =>
+                  s.id === targetSessionId
+                    ? {
+                        ...s,
+                        messages: s.messages.map((m) =>
+                          m.id === assistantMsgId
+                            ? { ...m, content: accumulatedText, status: undefined }
+                            : m
+                        ),
+                      }
+                    : s
+                )
+              );
+            } else if (data.type === "done") {
+              accumulatedText = data.text || accumulatedText;
+              setSessions((prev) =>
+                prev.map((s) =>
+                  s.id === targetSessionId
+                    ? {
+                        ...s,
+                        messages: s.messages.map((m) =>
+                          m.id === assistantMsgId
+                            ? { ...m, content: accumulatedText || "Execution completed.", status: undefined }
+                            : m
+                        ),
+                      }
+                    : s
+                )
+              );
+            } else if (data.type === "error") {
+              accumulatedText = accumulatedText || (data.error || "An error occurred during execution.");
+              setSessions((prev) =>
+                prev.map((s) =>
+                  s.id === targetSessionId
+                    ? {
+                        ...s,
+                        messages: s.messages.map((m) =>
+                          m.id === assistantMsgId
+                            ? { ...m, content: accumulatedText, status: undefined }
+                            : m
+                        ),
+                      }
+                    : s
+                )
+              );
+            }
+          } catch {}
+        }
+      }
+    } catch (err: any) {
       setSessions((prev) =>
-        prev.map((s) => (s.id === targetSessionId ? { ...s, messages: [...s.messages, aiReply], updatedAt: new Date().toISOString() } : s))
-      );
-    } catch {
-      const errorReply: ChatMessage = {
-        id: "msg_" + Date.now() + "_error",
-        role: "assistant",
-        content: "Sorry, I encountered an issue connecting to the engine.",
-        timestamp: new Date().toISOString(),
-      };
-      setSessions((prev) =>
-        prev.map((s) => (s.id === targetSessionId ? { ...s, messages: [...s.messages, errorReply] } : s))
+        prev.map((s) =>
+          s.id === targetSessionId
+            ? {
+                ...s,
+                messages: s.messages.map((m) =>
+                  m.id === assistantMsgId
+                    ? { ...m, content: "Sorry, I encountered an issue connecting to the sandbox engine.", status: undefined }
+                    : m
+                ),
+              }
+            : s
+        )
       );
     } finally {
       setIsLoading(false);

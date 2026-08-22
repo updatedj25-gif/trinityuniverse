@@ -1,17 +1,84 @@
 
+export interface SandboxExecutionLog {
+  code?: string;
+  language?: string;
+  stdout?: string;
+  stderr?: string;
+  error?: string;
+  success?: boolean;
+}
+
+export type SandboxStatus = 
+  | "idle"
+  | "thinking"
+  | "spinning_up_sandbox"
+  | "running_code"
+  | "verifying_output"
+  | "self_correcting"
+  | "completed"
+  | "error";
+
+export interface StreamEventPayload {
+  type: "status" | "text" | "sandbox_result" | "done" | "error";
+  status?: SandboxStatus;
+  message?: string;
+  chunk?: string;
+  text?: string;
+  execution?: SandboxExecutionLog;
+  error?: string;
+}
+
+const SANDBOX_TOOL = {
+  type: "function",
+  function: {
+    name: "run_sandbox_code",
+    description: "Executes Python or shell code inside an isolated E2B Linux microVM. Use this tool when you need to calculate math, run data analysis, write/execute scripts, verify code snippets, or test algorithms in real time.",
+    parameters: {
+      type: "object",
+      properties: {
+        code: {
+          type: "string",
+          description: "The complete executable code snippet to run inside the E2B sandbox microVM."
+        },
+        language: {
+          type: "string",
+          enum: ["python", "bash", "javascript"],
+          description: "The runtime programming language. Defaults to python."
+        }
+      },
+      required: ["code"]
+    }
+  }
+};
+
+
 // ── E2B Sandboxed Code Execution Engine (v2+ Sandbox API) ────────────────────
-async function runCodeInSandbox(codeStr: string, apiKey: string) {
+async function runCodeInSandbox(codeStr: string, apiKey?: string, language: string = "python") {
+  const token = apiKey || (typeof process !== "undefined" ? process.env.E2B_API_KEY : undefined);
+  if (!token) {
+    return {
+      success: false,
+      stdout: "",
+      stderr: "E2B_API_KEY is not configured on the server.",
+      error: "E2B_API_KEY missing",
+    };
+  }
   try {
     const { Sandbox } = await import("@e2b/code-interpreter");
-    const sandbox = await Sandbox.create({ apiKey });
+    const sandbox = await Sandbox.create({ apiKey: token });
     try {
-      const execution = await sandbox.runCode(codeStr);
+      const execution = await sandbox.runCode(codeStr, { language: language as any });
+      const stdout = (execution.logs?.stdout || []).join("\n");
+      const stderr = (execution.logs?.stderr || []).join("\n");
+      const errorMsg = execution.error ? `${execution.error.name}: ${execution.error.value}\n${execution.error.traceback || ""}`.trim() : undefined;
       return {
         success: !execution.error,
-        stdout: (execution.logs?.stdout || []).join("\n"),
-        stderr: (execution.logs?.stderr || []).join("\n"),
-        error: execution.error ? `${execution.error.name}: ${execution.error.value}` : undefined,
+        stdout,
+        stderr,
+        error: errorMsg,
         results: execution.results || [],
+        code: codeStr,
+        language,
       };
     } finally {
       await sandbox.kill().catch(() => {});
@@ -22,6 +89,8 @@ async function runCodeInSandbox(codeStr: string, apiKey: string) {
       stdout: "",
       stderr: err.message || "Sandbox execution failed",
       error: err.message || "Sandbox execution error",
+      code: codeStr,
+      language,
     };
   }
 }
@@ -751,66 +820,62 @@ export default {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // POST /api/chat — RAG-enhanced, security-hardened AI chat
+    // POST /api/chat — Streaming RAG & E2B Sandboxed AI Orchestrator
     // ─────────────────────────────────────────────────────────────────────────
-    if (url.pathname === '/api/chat' && request.method === 'POST') {
+    if (url.pathname === "/api/chat" && request.method === "POST") {
       try {
-        // ── Rate limiting ────────────────────────────────────────────────────
-        const clientIP = request.headers.get('cf-connecting-ip') ?? request.headers.get('x-forwarded-for') ?? 'unknown';
+        const clientIP = request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for") ?? "unknown";
         const allowed = await checkRateLimit(env.CHAT_CONTEXT_CACHE, clientIP);
         if (!allowed) {
           return Response.json(
-            { error: 'Too many requests. Please slow down.', code: 'rate_limited' },
+            { error: "Too many requests. Please slow down.", code: "rate_limited" },
             { status: 429, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
           );
         }
 
-        // ── Parse request ────────────────────────────────────────────────────
         const body = (await request.json()) as {
           messages: ChatMessage[];
           systemInstruction?: string;
           model?: string;
           tenantId?: string;
           sessionId?: string;
+          stream?: boolean;
         };
 
-        const { messages, systemInstruction, model, tenantId = 'gnosis', sessionId = 'default' } = body;
+        const { messages, systemInstruction, model, tenantId = "gnosis", sessionId = "default" } = body;
 
         if (!messages || !Array.isArray(messages)) {
-          return Response.json({ error: 'Messages array is required.' }, { status: 400, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
+          return Response.json({ error: "Messages array is required." }, { status: 400, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
         }
 
-        // ── Get session user (optional — for storage attribution) ────────────
         const sessionUser = env.GNOSIS_SESSIONS
-          ? await getSessionUser(env.GNOSIS_SESSIONS, request.headers.get('cookie'))
+          ? await getSessionUser(env.GNOSIS_SESSIONS, request.headers.get("cookie"))
           : null;
 
-        // ── EU Geofencing ────────────────────────────────────────────────────
         const EU_COUNTRIES = new Set([
-          'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR',
-          'HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE',
+          "AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR",
+          "HU","IE","IT","LV","LT","LU","MT","NL","PL","PT","RO","SK","SI","ES","SE",
         ]);
-        const clientCountry = (request.headers.get('cf-ipcountry') || (request as any).cf?.country || '').toUpperCase();
+        const clientCountry = (request.headers.get("cf-ipcountry") || (request as any).cf?.country || "").toUpperCase();
         const isEUResident = EU_COUNTRIES.has(clientCountry);
 
-        // ── Security scan all user messages ──────────────────────────────────
+        // Security scan
         const securityFlags: string[] = [];
         const sanitizedMessages: ChatMessage[] = [];
 
         for (const m of messages) {
-          if (m.role !== 'user') {
+          if (m.role !== "user") {
             sanitizedMessages.push(m);
             continue;
           }
-          const { clean, blocked, reason } = sanitizeInput(m.content ?? '');
+          const { clean, blocked, reason } = sanitizeInput(m.content ?? "");
           if (blocked) {
             securityFlags.push(`injection_attempt:${reason}`);
-            // Return a firm but non-revealing rejection
             return Response.json(
               {
-                text: 'Your message contained patterns that cannot be processed. Please rephrase your question.',
+                text: "Your message contained patterns that cannot be processed. Please rephrase your question.",
                 blocked: true,
-                code: 'security_violation',
+                code: "security_violation",
               },
               { status: 400, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
             );
@@ -818,164 +883,228 @@ export default {
           sanitizedMessages.push({ ...m, content: clean });
         }
 
-        // ── Retrieve RAG context ─────────────────────────────────────────────
-        const lastUserMessage = [...sanitizedMessages].reverse().find((m) => m.role === 'user');
+        // Retrieve RAG context
+        const lastUserMessage = [...sanitizedMessages].reverse().find((m) => m.role === "user");
         const ragChunks: string[] = lastUserMessage
           ? await retrieveContext(env, lastUserMessage.content, tenantId)
           : [];
 
-        // ── Build system prompt ──────────────────────────────────────────────
-        // System prompt is built server-side. User content is NEVER interpolated into it.
-        const baseInstruction = systemInstruction?.slice(0, 3000) ?? 'You are a helpful AI assistant.';
-
-        let ragContext = '';
+        const baseInstruction = systemInstruction?.slice(0, 3000) ?? "You are a helpful AI assistant.";
+        let ragContext = "";
         if (ragChunks.length > 0) {
-          ragContext = `
-
-=== KNOWLEDGE FROM YOUR LIBRARY ===
-Draw from the following excerpts naturally in your response. Do not say "according to the document" — speak from genuine understanding. If the excerpts don't cover the topic, use your general knowledge.
-
-${ragChunks.join('\n\n---\n\n')}
-=== END OF LIBRARY CONTEXT ===
-`;
+          ragContext = `\n\n=== KNOWLEDGE FROM YOUR LIBRARY ===\n${ragChunks.join("\n\n---\n\n")}\n=== END OF LIBRARY CONTEXT ===\n`;
         }
 
-        const humanLikeGuidance = `
+        const sandboxGuidance = `\n\nYou have access to an isolated Linux microVM runtime via the "run_sandbox_code" tool. If you need to perform calculations, verify code, test scripts, run benchmarks, or generate program outputs, call "run_sandbox_code". When the tool returns output, verify it and explain the result to the user.`;
+        const hardcodedAgreement = " Developer License Agreement: Verified and agreed under developer account credentials (agree=true).";
+        const effectiveSystemInstruction = `${baseInstruction}${ragContext}${sandboxGuidance}${hardcodedAgreement}`;
 
-Conversation style:
-- Respond naturally, as a knowledgeable and warm companion would.
-- Never mention "RAG", "context window", "documents", "chunks", or any internal system details.
-- If you know the answer from your library or training, give it fully and clearly.
-- Use the human's own words and energy — be conversational, not corporate.
-- Vary your sentence length. Short punchy sentences. Then deeper, more elaborated thoughts when the topic demands it.`;
+        let selectedModel = model || "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
-        const hardcodedAgreement = ' Developer License Agreement: Verified and agreed under developer account credentials (agree=true).';
-        const effectiveSystemInstruction = `${baseInstruction}${ragContext}${humanLikeGuidance}${hardcodedAgreement}`;
-
-        // ── Select model ─────────────────────────────────────────────────────
-        let selectedModel = model || (tenantId === 'yada'
-          ? '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
-          : '@cf/meta/llama-3.3-70b-instruct-fp8-fast');
-
-        // ── Build CF messages ────────────────────────────────────────────────
-        let hasImageAttachment = false;
-        const imageArrays: number[][] = [];
-        const cfMessages: Array<{ role: string; content: string }> = [];
-
-        cfMessages.push({ role: 'system', content: effectiveSystemInstruction });
+        // Build conversation messages for model
+        const llmMessages: Array<{ role: string; content: string; name?: string; tool_calls?: any[] }> = [
+          { role: "system", content: effectiveSystemInstruction }
+        ];
 
         for (const m of sanitizedMessages) {
-          let textContent = m.content || '';
+          let textContent = m.content || "";
           if (m.attachments && m.attachments.length > 0) {
             for (const att of m.attachments) {
-              if (att.type === 'file' && att.content) {
+              if (att.type === "file" && att.content) {
                 textContent += `\n\n[Attached File: ${att.name}]\n${att.content.slice(0, 2000)}`;
-              } else if (att.type === 'image' && att.dataUrl) {
-                hasImageAttachment = true;
-                try {
-                  const base64Data = att.dataUrl.split(',')[1];
-                  if (base64Data) {
-                    const binaryString = atob(base64Data);
-                    const bytes = new Uint8Array(binaryString.length);
-                    for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
-                    imageArrays.push(Array.from(bytes));
-                  }
-                } catch (e) {
-                  console.error('Image parse error:', e);
-                }
               }
             }
           }
-          cfMessages.push({ role: m.role === 'assistant' ? 'assistant' : 'user', content: textContent });
+          llmMessages.push({ role: m.role === "assistant" ? "assistant" : "user", content: textContent });
         }
 
-        // EU restriction on vision models
-        if (hasImageAttachment) {
-          if (isEUResident) {
-            selectedModel = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
-            hasImageAttachment = false;
-            cfMessages.push({ role: 'system', content: '[Notice: Vision features restricted for EU users. Routed to EU-compliant text model.]' });
-          } else {
-            selectedModel = '@cf/meta/llama-3.2-11b-vision-instruct';
-          }
-        }
+        // Create SSE Stream
+        const { readable, writable } = new TransformStream();
+        const writer = writable.getWriter();
+        const encoder = new TextEncoder();
 
-        // ── Run AI with auto-agree ───────────────────────────────────────────
-        const runAiWithAutoAgree = async (modelName: string, payload: any) => {
-          if (modelName.includes('vision') || modelName.includes('llama-3.2')) {
-            try { await env.AI.run(modelName, { prompt: 'agree' }); } catch { /* benign */ }
-          }
+        const sendSSE = async (payload: StreamEventPayload) => {
           try {
-            return (await env.AI.run(modelName, payload)) as { response?: string; description?: string };
-          } catch (firstErr: any) {
-            const errStr = String(firstErr?.message || firstErr);
-            if (errStr.toLowerCase().includes('agree') || errStr.toLowerCase().includes('model agreement')) {
-              try { await env.AI.run(modelName, { prompt: 'agree' }); } catch { /* benign */ }
-              return (await env.AI.run(modelName, payload)) as { response?: string; description?: string };
-            }
-            throw firstErr;
-          }
+            await writer.write(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
+          } catch {}
         };
 
-        let result: { response?: string; description?: string } | null = null;
+        // Orchestration Loop in background task
+        (async () => {
+          const executionHistory: SandboxExecutionLog[] = [];
+          let accumulatedReply = "";
+          let loopCount = 0;
+          const maxLoops = 4;
 
-        try {
-          if (hasImageAttachment && imageArrays.length > 0) {
-            const promptText = cfMessages[cfMessages.length - 1]?.content || 'Analyze this image in detail.';
-            result = await runAiWithAutoAgree(selectedModel, { prompt: promptText, image: imageArrays[0], max_tokens: 2048 });
-          } else {
-            result = await runAiWithAutoAgree(selectedModel, { messages: cfMessages, max_tokens: 2048 });
+          try {
+            await sendSSE({ type: "status", status: "thinking", message: "Analyzing prompt..." });
+
+            while (loopCount < maxLoops) {
+              loopCount++;
+
+              // Call AI Model with tools
+              let responseText = "";
+              let toolCalls: any[] = [];
+
+              try {
+                const aiResult: any = await env.AI.run(selectedModel, {
+                  messages: llmMessages,
+                  tools: [SANDBOX_TOOL],
+                  max_tokens: 2048,
+                });
+
+                if (aiResult?.tool_calls && Array.isArray(aiResult.tool_calls) && aiResult.tool_calls.length > 0) {
+                  toolCalls = aiResult.tool_calls;
+                } else if (aiResult?.response) {
+                  responseText = aiResult.response;
+                } else if (aiResult?.description) {
+                  responseText = aiResult.description;
+                }
+              } catch (aiErr: any) {
+                // Fallback attempt without tools if model threw schema error
+                const plainResult: any = await env.AI.run(selectedModel, {
+                  messages: llmMessages,
+                  max_tokens: 2048,
+                });
+                responseText = plainResult?.response || plainResult?.description || "";
+              }
+
+              // Check if plain text returned (or tool call not triggered)
+              if (!toolCalls.length) {
+                // Check if model emitted embedded code action in text
+                const codeMatch = responseText.match(/```(python|bash|javascript)[\s\S]*?```/i);
+                const wantsRun = /run_sandbox_code|execute this|verify in sandbox/i.test(responseText);
+
+                if (codeMatch && wantsRun && loopCount === 1) {
+                  toolCalls = [{
+                    name: "run_sandbox_code",
+                    arguments: { code: codeMatch[2].trim(), language: codeMatch[1].toLowerCase() }
+                  }];
+                } else {
+                  accumulatedReply = sanitizeAiResponse(responseText);
+                  await sendSSE({ type: "text", chunk: accumulatedReply, text: accumulatedReply });
+                  break;
+                }
+              }
+
+              // Handle Tool Call
+              for (const call of toolCalls) {
+                const funcName = call.name || call.function?.name;
+                let args = call.arguments || call.function?.arguments || {};
+                if (typeof args === "string") {
+                  try { args = JSON.parse(args); } catch { args = { code: args }; }
+                }
+
+                if (funcName === "run_sandbox_code" && args.code) {
+                  await sendSSE({
+                    type: "status",
+                    status: "spinning_up_sandbox",
+                    message: "⚡ Spinning up isolated E2B microVM...",
+                  });
+
+                  await sendSSE({
+                    type: "status",
+                    status: "running_code",
+                    message: "⚡ Executing code in E2B sandbox...",
+                    execution: { code: args.code, language: args.language || "python" },
+                  });
+
+                  const execResult = await runCodeInSandbox(args.code, env.E2B_API_KEY, args.language || "python");
+                  executionHistory.push(execResult);
+
+                  await sendSSE({
+                    type: "sandbox_result",
+                    execution: execResult,
+                  });
+
+                  // Add tool interaction to message chain for self-correction feedback loop
+                  llmMessages.push({
+                    role: "assistant",
+                    content: `Calling run_sandbox_code with code:\n\`\`\`${args.language || "python"}\n${args.code}\n\`\`\``,
+                  });
+
+                  if (!execResult.success) {
+                    await sendSSE({
+                      type: "status",
+                      status: "self_correcting",
+                      message: "⚡ Sandbox returned error. Self-correcting and retrying...",
+                    });
+
+                    llmMessages.push({
+                      role: "user",
+                      content: "[E2B Sandbox Error Output]:\n" + (execResult.error || execResult.stderr) + "\nPlease analyze the error, correct the code, and re-execute or provide the verified explanation.",
+                    });
+                  } else {
+                    await sendSSE({
+                      type: "status",
+                      status: "verifying_output",
+                      message: "⚡ Sandbox completed. Verifying results...",
+                    });
+
+                    llmMessages.push({
+                      role: "user",
+                      content: "[E2B Sandbox Success Output]:\nStdout:\n" + (execResult.stdout || "(empty)") + "\n\nPlease explain and format the verified output cleanly for the user.",
+                    });
+                  }
+                }
+              }
+            }
+
+            if (!accumulatedReply) {
+              accumulatedReply = "I have executed the code in the sandbox microVM.";
+            }
+
+            // Save conversation exchange to KV for fine-tuning
+            const messageId = crypto.randomUUID();
+            await saveExchange(env.CHAT_SESSIONS, {
+              messageId,
+              sessionId,
+              userId: sessionUser?.sub ?? clientIP,
+              userEmail: sessionUser?.email ?? "anonymous",
+              tenantId,
+              timestamp: new Date().toISOString(),
+              model: selectedModel,
+              ragUsed: ragChunks.length > 0,
+              ragChunks: ragChunks.map((c) => c.slice(0, 200)),
+              securityFlags,
+              exchange: { messages: llmMessages },
+              geofencedEU: isEUResident,
+            });
+
+            await sendSSE({
+              type: "done",
+              text: accumulatedReply,
+            });
+
+          } catch (err: any) {
+            console.error("Pipeline error:", err);
+            await sendSSE({
+              type: "error",
+              error: err.message || "An unexpected error occurred during execution.",
+            });
+          } finally {
+            await writer.close().catch(() => {});
           }
-        } catch (aiErr: any) {
-          console.error('[AiError]', aiErr?.message || aiErr);
-          return Response.json(
-            { text: 'I processed your request but encountered an issue generating a response. Please try again.', modelUsed: selectedModel, errorHandled: true },
-            { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
-          );
-        }
+        })();
 
-        let text = (result?.response || result?.description || "").trim();
-  text = text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
-  if (!text) text = "I processed your request. How would you like to explore this further?";
-
-        // ── Structured storage for fine-tuning ───────────────────────────────
-        const messageId = crypto.randomUUID();
-        const ftMessages = [
-          { role: 'system', content: baseInstruction },
-          ...sanitizedMessages.map((m) => ({ role: m.role, content: m.content })),
-          { role: 'assistant', content: text },
-        ];
-
-        await saveExchange(env.CHAT_SESSIONS, {
-          messageId,
-          sessionId,
-          userId: sessionUser?.sub ?? clientIP,
-          userEmail: sessionUser?.email ?? 'anonymous',
-          tenantId,
-          timestamp: new Date().toISOString(),
-          model: selectedModel,
-          ragUsed: ragChunks.length > 0,
-          ragChunks: ragChunks.map((c) => c.slice(0, 200)),
-          securityFlags,
-          exchange: { messages: ftMessages },
-          geofencedEU: isEUResident,
+        return new Response(readable, {
+          headers: {
+            "Content-Type": "text/event-stream; charset=utf-8",
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+          },
         });
 
-        return Response.json(
-          { text, modelUsed: selectedModel, ragUsed: ragChunks.length > 0, geofencedEU: isEUResident },
-          { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
-        );
-
       } catch (error: unknown) {
-        console.error('[/api/chat fatal]', error);
+        console.error("[/api/chat fatal]", error);
         return Response.json(
-          { text: 'An unexpected error occurred. Please try again.', errorHandled: true },
+          { error: "An unexpected error occurred. Please try again.", errorHandled: true },
           { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
         );
       }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // POST /api/ingest — Ingest a single R2 file into Vectorize
     // Body: { tenantId: 'gnosis'|'yada', key: 'filename.pdf' }
     // ─────────────────────────────────────────────────────────────────────────

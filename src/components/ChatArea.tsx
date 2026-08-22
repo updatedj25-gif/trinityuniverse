@@ -10,7 +10,7 @@ import {
   RotateCw, 
   Paperclip,
   X
-} from 'lucide-react';
+, Terminal, Zap, CheckCircle2, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface ChatAreaProps {
   tenant: Tenant;
@@ -240,20 +240,20 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                   key={m.id}
                   className={`flex gap-3 sm:gap-4 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  {m.role === 'assistant' && (
+                  {m.role === "assistant" && (
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-xs shadow-xs ${
-                      isYada ? 'bg-[#A36224]' : 'bg-blue-600'
+                      isYada ? "bg-[#A36224]" : "bg-blue-600"
                     }`}>
                       <Bot className="w-4 h-4" />
                     </div>
                   )}
 
-                  <div className={`flex flex-col max-w-[85%] sm:max-w-[75%] ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div className={`flex flex-col max-w-[85%] sm:max-w-[75%] ${m.role === "user" ? "items-end" : "items-start"}`}>
                     {m.attachments && m.attachments.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-2">
                         {m.attachments.map((att) => (
                           <div key={att.id} className="rounded-xl overflow-hidden border border-stone-200 max-w-[200px]">
-                            {att.type === 'image' ? (
+                            {att.type === "image" ? (
                               <img src={att.url} alt={att.name} className="w-full h-auto object-cover max-h-40" />
                             ) : (
                               <div className="p-2 bg-stone-100 text-xs font-mono text-slate-700 flex items-center gap-1.5">
@@ -266,15 +266,67 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                       </div>
                     )}
 
-                    <div className={`px-4 py-3 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-xs ${
-                      m.role === 'user'
-                        ? isYada
-                          ? 'bg-[#A36224] text-white rounded-br-xs'
-                          : 'bg-blue-600 text-white rounded-br-xs'
-                        : 'bg-white text-slate-800 border border-stone-200/80 rounded-bl-xs'
-                    }`}>
-                      <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
-                    </div>
+                    {/* Active Status Badge (UX Requirement) */}
+                    {m.status && (
+                      <div className="mb-2.5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-xs font-medium shadow-xs animate-pulse">
+                        <Zap className="w-3.5 h-3.5 text-amber-600 animate-bounce" />
+                        <span>{m.status}</span>
+                      </div>
+                    )}
+
+                    {/* Sandbox Execution Terminal Block */}
+                    {m.sandboxLogs && m.sandboxLogs.length > 0 && (
+                      <div className="w-full space-y-2 mb-3">
+                        {m.sandboxLogs.map((log, idx) => (
+                          <div key={idx} className="rounded-xl border border-slate-700 bg-slate-900 text-slate-100 overflow-hidden text-xs shadow-sm font-mono">
+                            <div className="flex items-center justify-between px-3 py-2 bg-slate-800 border-b border-slate-700">
+                              <div className="flex items-center gap-2">
+                                <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+                                <span className="font-semibold text-slate-200">
+                                  E2B Sandbox ({log.language || "python"})
+                                </span>
+                              </div>
+                              <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full ${
+                                log.success !== false ? "bg-emerald-950 text-emerald-300 border border-emerald-800" : "bg-rose-950 text-rose-300 border border-rose-800"
+                              }`}>
+                                {log.success !== false ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+                                {log.success !== false ? "Passed" : "Runtime Error"}
+                              </span>
+                            </div>
+                            
+                            {log.code && (
+                              <div className="p-3 bg-slate-950/60 border-b border-slate-800">
+                                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1">Executed Code</p>
+                                <pre className="overflow-x-auto text-slate-300 whitespace-pre-wrap">{log.code}</pre>
+                              </div>
+                            )}
+
+                            {(log.stdout || log.stderr || log.error) && (
+                              <div className="p-3 bg-slate-950">
+                                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1">Terminal Output</p>
+                                {log.stdout && <pre className="overflow-x-auto text-emerald-400 whitespace-pre-wrap">{log.stdout}</pre>}
+                                {(log.stderr || log.error) && (
+                                  <pre className="overflow-x-auto text-rose-400 whitespace-pre-wrap mt-1">{log.error || log.stderr}</pre>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Main Content Bubble */}
+                    {m.content && (
+                      <div className={`px-4 py-3 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-xs ${
+                        m.role === "user"
+                          ? isYada
+                            ? "bg-[#A36224] text-white rounded-br-xs"
+                            : "bg-blue-600 text-white rounded-br-xs"
+                          : "bg-white text-slate-800 border border-stone-200/80 rounded-bl-xs"
+                      }`}>
+                        <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
+                      </div>
+                    )}
                   </div>
 
                   {m.role === 'user' && (
