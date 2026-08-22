@@ -1,17 +1,17 @@
 
-// ── E2B Sandboxed Code Execution Engine ──────────────────────────────────────
+// ── E2B Sandboxed Code Execution Engine (v2+ Sandbox API) ────────────────────
 async function runCodeInSandbox(codeStr: string, apiKey: string) {
   try {
-    const { CodeInterpreter } = await import("@e2b/code-interpreter");
-    const sandbox = await CodeInterpreter.create({ apiKey });
+    const { Sandbox } = await import("@e2b/code-interpreter");
+    const sandbox = await Sandbox.create({ apiKey });
     try {
       const execution = await sandbox.runCode(codeStr);
       return {
         success: !execution.error,
-        stdout: execution.logs.stdout.join("\n"),
-        stderr: execution.logs.stderr.join("\n"),
+        stdout: (execution.logs?.stdout || []).join("\n"),
+        stderr: (execution.logs?.stderr || []).join("\n"),
         error: execution.error ? `${execution.error.name}: ${execution.error.value}` : undefined,
-        results: execution.results,
+        results: execution.results || [],
       };
     } finally {
       await sandbox.kill().catch(() => {});
@@ -21,7 +21,7 @@ async function runCodeInSandbox(codeStr: string, apiKey: string) {
       success: false,
       stdout: "",
       stderr: err.message || "Sandbox execution failed",
-      error: err.message || "Sandbox error",
+      error: err.message || "Sandbox execution error",
     };
   }
 }
