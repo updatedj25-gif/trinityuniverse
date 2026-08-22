@@ -21,6 +21,15 @@ class ChatViewModel(
     private val _activeTenant = MutableStateFlow(DefaultTenants.list[0])
     val activeTenant: StateFlow<Tenant> = _activeTenant.asStateFlow()
 
+    private val _currentView = MutableStateFlow("chat") // "chat" | "library" | "faceswap"
+    val currentView: StateFlow<String> = _currentView.asStateFlow()
+
+    private val _sessions = MutableStateFlow<List<ChatSession>>(emptyList())
+    val sessions: StateFlow<List<ChatSession>> = _sessions.asStateFlow()
+
+    private val _activeSessionId = MutableStateFlow<String?>(null)
+    val activeSessionId: StateFlow<String?> = _activeSessionId.asStateFlow()
+
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
 
@@ -36,105 +45,125 @@ class ChatViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    fun setView(view: String) {
+        _currentView.value = view
+    }
+
     fun selectTenant(tenant: Tenant) {
         _activeTenant.value = tenant
+        _activeSessionId.value = null
+        _messages.value = emptyList()
+        _currentView.value = "chat"
+    }
+
+    fun selectSession(sessionId: String) {
+        _activeSessionId.value = sessionId
+        val session = _sessions.value.find { it.id == sessionId }
+        _messages.value = session?.messages ?: emptyList()
+        _currentView.value = "chat"
+    }
+
+    fun newSession() {
+        val now = SimpleDateFormat("yyyy-MM-ddTHH:mm:ss.SSSZ", Locale.US).format(Date())
+        val newS = ChatSession(
+            id = "session_" + System.currentTimeMillis(),
+            tenantId = _activeTenant.value.id,
+            title = "New Conversation",
+            createdAt = now,
+            updatedAt = now,
+            messages = emptyList()
+        )
+        _sessions.value = listOf(newS) + _sessions.value
+        _activeSessionId.value = newS.id
+        _messages.value = emptyList()
+        _currentView.value = "chat"
+    }
+
+    fun deleteSession(sessionId: String) {
+        _sessions.value = _sessions.value.filter { it.id != sessionId }
+        if (_activeSessionId.value == sessionId) {
+            _activeSessionId.value = null
+            _messages.value = emptyList()
+        }
+    }
+
+    fun clearHistory() {
+        _sessions.value = _sessions.value.filter { it.tenantId != _activeTenant.value.id }
+        _activeSessionId.value = null
         _messages.value = emptyList()
     }
 
-    fun setInputText(text: String) {
-        _inputText.value = text
-    }
-
-    fun setSelectedPill(pill: String) {
-        _selectedPill.value = pill
-    }
-
-    fun removeAttachment(id: String) {
-        _attachments.value = _attachments.value.filter { it.id != id }
-    }
+    fun setInputText(text: String) { _inputText.value = text }
+    fun setSelectedPill(pill: String) { _selectedPill.value = pill }
+    fun removeAttachment(id: String) { _attachments.value = _attachments.value.filter { it.id != id } }
 
     fun sendMessage(content: String = _inputText.value) {
         val trimmed = content.trim()
         if (trimmed.isBlank() && _attachments.value.isEmpty()) return
         if (_isLoading.value) return
 
-        val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(Date())
-
-        val userMessage = ChatMessage(
-            id = "msg_${System.currentTimeMillis()}_user",
+        val now = SimpleDateFormat("yyyy-MM-ddTHH:mm:ss.SSSZ", Locale.US).format(Date())
+        val userMsg = ChatMessage(
+            id = "msg_" + System.currentTimeMillis() + "_user",
             role = "user",
             content = trimmed,
             timestamp = now,
             attachments = _attachments.value
         )
-
-        val assistantMessageId = "msg_${System.currentTimeMillis()}_assistant"
-        val initialAssistantMessage = ChatMessage(
-            id = assistantMessageId,
+        val assistantMsgId = "msg_" + System.currentTimeMillis() + "_assistant"
+        val initialAssistantMsg = ChatMessage(
+            id = assistantMsgId,
             role = "assistant",
             content = "",
             timestamp = now,
-            status = "Analyzing prompt..."
+            status = "Analyzing prompt...",
+            sandboxLogs = emptyList()
         )
 
-        _messages.value = _messages.value + userMessage + initialAssistantMessage
+        _messages.value = _messages.value + userMsg + initialAssistantMsg
         _inputText.value = ""
         _attachments.value = emptyList()
         _isLoading.value = true
 
         viewModelScope.launch {
             try {
-                var accumulatedText = ""
-                val currentLogs = mutableListOf<SandboxExecutionLog>()
+                var currentAssistantMsg = initialAssistantMsg
+                val accumulatedSandboxLogs = mutableListOf<SandboxExecutionLog>()
 
                 repository.streamChat(
                     tenantId = _activeTenant.value.id,
                     systemInstruction = _activeTenant.value.systemInstruction,
-                    messages = _messages.value.filter { it.id != assistantMessageId }
+                    messages = _messages.value.filter { it.id != assistantMsgId }
                 ).collect { payload ->
                     when (payload.type) {
                         "status" -> {
-                            updateAssistantMessage(assistantMessageId) {
-                                it.copy(status = payload.message ?: payload.status)
-                            }
+                            currentAssistantMsg = currentAssistantMsg.copy(status = payload.message ?: payload.status)
                         }
                         "sandbox_result" -> {
-                            payload.execution?.let { currentLogs.add(it) }
-                            updateAssistantMessage(assistantMessageId) {
-                                it.copy(sandboxLogs = currentLogs.toList())
-                            }
+                            payload.execution?.let { accumulatedSandboxLogs.add(it) }
+                            currentAssistantMsg = currentAssistantMsg.copy(sandboxLogs = accumulatedSandboxLogs.toList())
                         }
                         "text" -> {
-                            accumulatedText = payload.text ?: (accumulatedText + (payload.chunk ?: ""))
-                            updateAssistantMessage(assistantMessageId) {
-                                it.copy(content = accumulatedText, status = null)
-                            }
+                            val newContent = payload.text ?: (currentAssistantMsg.content + (payload.chunk ?: ""))
+                            currentAssistantMsg = currentAssistantMsg.copy(content = newContent, status = null)
                         }
                         "done" -> {
-                            accumulatedText = payload.text ?: accumulatedText
-                            updateAssistantMessage(assistantMessageId) {
-                                it.copy(content = accumulatedText.ifBlank { "Execution completed." }, status = null)
-                            }
+                            val finalContent = payload.text ?: currentAssistantMsg.content
+                            currentAssistantMsg = currentAssistantMsg.copy(content = finalContent.ifBlank { "Execution completed." }, status = null)
                         }
                         "error" -> {
-                            val errorText = payload.error ?: "Error during generation"
-                            updateAssistantMessage(assistantMessageId) {
-                                it.copy(content = errorText, status = null)
-                            }
+                            currentAssistantMsg = currentAssistantMsg.copy(content = payload.error ?: "Execution error.", status = null)
                         }
                     }
+                    _messages.value = _messages.value.map { if (it.id == assistantMsgId) currentAssistantMsg else it }
                 }
             } catch (e: Exception) {
-                updateAssistantMessage(assistantMessageId) {
-                    it.copy(content = "Connection error: ${e.localizedMessage}", status = null)
+                _messages.value = _messages.value.map {
+                    if (it.id == assistantMsgId) it.copy(content = "Connection error. Please try again.", status = null) else it
                 }
             } finally {
                 _isLoading.value = false
             }
         }
-    }
-
-    private fun updateAssistantMessage(id: String, transform: (ChatMessage) -> ChatMessage) {
-        _messages.value = _messages.value.map { if (it.id == id) transform(it) else it }
     }
 }

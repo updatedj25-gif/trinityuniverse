@@ -22,7 +22,7 @@ import okhttp3.sse.EventSources
 import java.util.concurrent.TimeUnit
 
 class ChatRepository(
-    private val baseUrl: String = "http://10.0.2.2:3000" // Android Emulator localhost bridge
+    private val baseUrl: String = "https://trinityuniverse-frontend.updatedj25.workers.dev" // Android Emulator localhost bridge
 ) {
     private val json = Json {
         ignoreUnknownKeys = true

@@ -31,7 +31,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    viewModel: ChatViewModel = viewModel()
+    viewModel: ChatViewModel = viewModel(),
+    onOpenDrawer: () -> Unit = {}
 ) {
     val activeTenant by viewModel.activeTenant.collectAsState()
     val tenants by viewModel.tenants.collectAsState()
@@ -56,6 +57,11 @@ fun ChatScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onOpenDrawer) {
+                        Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu", tint = TextPrimary)
+                    }
+                },
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
