@@ -709,10 +709,11 @@ export default {
     }
 
     // ── GET /download/apk (Direct APK download for Android) ──────────────────
-    if (url.pathname === "/download/apk" && request.method === "GET") {
-      return Response.redirect("https://github.com/updatedj25-gif/trinityuniverse/releases/latest/download/app-debug.apk", 302);
+    if (url.pathname === "/download/apk" || url.pathname === "/download/apk/") {
+      return Response.redirect("https://github.com/updatedj25-gif/trinityuniverse/releases/latest/download/gnosis-ai-v4.apk", 302);
     }
   
+    if (url.pathname === "/health" || url.pathname === "/") { return Response.json({ status: "healthy", service: "Gnosis Master Orchestrator" }); }
     if (url.pathname === '/api/me' && request.method === 'GET') {
       if (!env.GNOSIS_SESSIONS) {
         return Response.json({ error: 'Sessions not configured' }, { status: 503 });
