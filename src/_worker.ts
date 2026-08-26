@@ -696,10 +696,10 @@ export default {
     // ── GET /api/version (For Android In-App OTA Auto-Updates) ───────────────
     if (url.pathname === "/api/version" && request.method === "GET") {
       return Response.json({
-        versionCode: 2,
-        versionName: "1.1.0",
+        versionCode: 4,
+        versionName: "1.3.0",
         downloadUrl: url.origin + "/download/apk",
-        releaseNotes: "Gnosis AI branding, refreshed logo, and separated Yada spiritual RAG."
+        releaseNotes: "Refined icon padding and safe-zone alignment."
       }, {
         headers: {
           "Access-Control-Allow-Origin": "*",
