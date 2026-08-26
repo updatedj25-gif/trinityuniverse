@@ -696,10 +696,10 @@ export default {
     // ── GET /api/version (For Android In-App OTA Auto-Updates) ───────────────
     if (url.pathname === "/api/version" && request.method === "GET") {
       return Response.json({
-        versionCode: 4,
-        versionName: "1.3.0",
+        versionCode: 6,
+        versionName: "1.5.0",
         downloadUrl: url.origin + "/download/apk",
-        releaseNotes: "Refined icon padding and safe-zone alignment."
+        releaseNotes: "Bold brand logo sizing and optimal squircle alignment."
       }, {
         headers: {
           "Access-Control-Allow-Origin": "*",
@@ -710,7 +710,7 @@ export default {
 
     // ── GET /download/apk (Direct APK download for Android) ──────────────────
     if (url.pathname === "/download/apk" || url.pathname === "/download/apk/") {
-      return Response.redirect("https://github.com/updatedj25-gif/trinityuniverse/releases/latest/download/gnosis-ai-v4.apk", 302);
+      return Response.redirect("https://github.com/updatedj25-gif/trinityuniverse/releases/latest/download/gnosis-ai-v6.apk", 302);
     }
   
     if (url.pathname === "/health" || url.pathname === "/") { return Response.json({ status: "healthy", service: "Gnosis Master Orchestrator" }); }
