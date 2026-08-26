@@ -692,6 +692,27 @@ export default {
     }
 
     // ── GET /api/me ───────────────────────────────────────────────────────────
+    
+    // ── GET /api/version (For Android In-App OTA Auto-Updates) ───────────────
+    if (url.pathname === "/api/version" && request.method === "GET") {
+      return Response.json({
+        versionCode: 2,
+        versionName: "1.1.0",
+        downloadUrl: url.origin + "/download/apk",
+        releaseNotes: "Gnosis AI branding, refreshed logo, and separated Yada spiritual RAG."
+      }, {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
+    // ── GET /download/apk (Direct APK download for Android) ──────────────────
+    if (url.pathname === "/download/apk" && request.method === "GET") {
+      return Response.redirect("https://github.com/updatedj25-gif/trinityuniverse/releases/latest/download/app-debug.apk", 302);
+    }
+  
     if (url.pathname === '/api/me' && request.method === 'GET') {
       if (!env.GNOSIS_SESSIONS) {
         return Response.json({ error: 'Sessions not configured' }, { status: 503 });

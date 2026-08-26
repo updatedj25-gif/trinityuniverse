@@ -28,6 +28,13 @@ import com.trinityuniverse.ai.ui.theme.*
 import com.trinityuniverse.ai.ui.viewmodel.ChatViewModel
 import kotlinx.coroutines.launch
 
+import com.trinityuniverse.ai.data.repository.UpdateManager
+import com.trinityuniverse.ai.data.repository.AppVersionInfo
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalContext
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
@@ -35,6 +42,36 @@ fun ChatScreen(
     onOpenDrawer: () -> Unit = {}
 ) {
     val activeTenant by viewModel.activeTenant.collectAsState()
+
+    val context = LocalContext.current
+    val updateManager = remember { UpdateManager(context) }
+    var availableUpdate by remember { mutableStateOf<AppVersionInfo?>(null) }
+
+    LaunchedEffect(Unit) {
+        availableUpdate = updateManager.checkForUpdates()
+    }
+
+    if (availableUpdate != null) {
+        AlertDialog(
+            onDismissRequest = { availableUpdate = null },
+            title = { Text("Update Available", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+            text = { Text(availableUpdate?.releaseNotes ?: "A new version of Gnosis AI is ready.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    availableUpdate?.downloadUrl?.let { updateManager.startDownload(it) }
+                    availableUpdate = null
+                }) {
+                    Text("Update Now")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { availableUpdate = null }) {
+                    Text("Later")
+                }
+            }
+        )
+    }
+
     val tenants by viewModel.tenants.collectAsState()
     val messages by viewModel.messages.collectAsState()
     val inputText by viewModel.inputText.collectAsState()

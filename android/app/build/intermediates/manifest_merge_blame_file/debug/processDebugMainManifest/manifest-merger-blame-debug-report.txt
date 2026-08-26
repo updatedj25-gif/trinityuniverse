@@ -43,12 +43,12 @@
 26-->[androidx.core:core:1.13.1] /home/codespace/.gradle/caches/8.9/transforms/99108d988f4b40643090859d78aff6ed/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
 27        android:debuggable="true"
 28        android:extractNativeLibs="false"
-29        android:icon="@android:drawable/sym_def_app_icon"
-29-->/workspaces/trinityuniverse/android/app/src/main/AndroidManifest.xml:11:9-58
+29        android:icon="@mipmap/ic_launcher"
+29-->/workspaces/trinityuniverse/android/app/src/main/AndroidManifest.xml:11:9-43
 30        android:label="@string/app_name"
 30-->/workspaces/trinityuniverse/android/app/src/main/AndroidManifest.xml:12:9-41
-31        android:roundIcon="@android:drawable/sym_def_app_icon"
-31-->/workspaces/trinityuniverse/android/app/src/main/AndroidManifest.xml:13:9-63
+31        android:roundIcon="@mipmap/ic_launcher_round"
+31-->/workspaces/trinityuniverse/android/app/src/main/AndroidManifest.xml:13:9-54
 32        android:supportsRtl="true"
 32-->/workspaces/trinityuniverse/android/app/src/main/AndroidManifest.xml:14:9-35
 33        android:theme="@android:style/Theme.Material.NoActionBar"

@@ -113,9 +113,9 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] /home/codespace/.gradle/cac
 	android:label
 		ADDED from /workspaces/trinityuniverse/android/app/src/main/AndroidManifest.xml:12:9-41
 	android:roundIcon
-		ADDED from /workspaces/trinityuniverse/android/app/src/main/AndroidManifest.xml:13:9-63
+		ADDED from /workspaces/trinityuniverse/android/app/src/main/AndroidManifest.xml:13:9-54
 	android:icon
-		ADDED from /workspaces/trinityuniverse/android/app/src/main/AndroidManifest.xml:11:9-58
+		ADDED from /workspaces/trinityuniverse/android/app/src/main/AndroidManifest.xml:11:9-43
 	android:allowBackup
 		ADDED from /workspaces/trinityuniverse/android/app/src/main/AndroidManifest.xml:10:9-35
 	android:theme
