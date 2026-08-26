@@ -527,8 +527,10 @@ app.post("/api/chat", async (req, res) => {
     const cfApiToken = process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_API_KEY;
 
     let selectedModel = model || "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
-    const effectiveSystemInstruction = (systemInstruction || "You are a helpful AI assistant.") +
-      "\n\nYou have access to an isolated Linux microVM runtime via the run_sandbox_code tool. If you need to perform calculations, verify code, run scripts, test algorithms, or generate program outputs, call run_sandbox_code.";
+    const isYada = (tenantId === "yada");
+    const effectiveSystemInstruction = isYada
+      ? "You are Yada Guide, a serene spiritual master and philosopher. Respond with deep presence, timeless wisdom, and clarity."
+      : (systemInstruction || "You are Gnosis AI, a technical intellect and code assistant.") + "\n\nYou have access to an isolated Linux microVM via run_sandbox_code.";
 
     const llmMessages = [
       { role: "system", content: effectiveSystemInstruction },

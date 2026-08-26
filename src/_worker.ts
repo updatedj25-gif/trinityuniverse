@@ -949,7 +949,7 @@ export default {
               try {
                 const aiResult: any = await env.AI.run(selectedModel, {
                   messages: llmMessages,
-                  tools: [SANDBOX_TOOL],
+                  tools: isYada ? [] : [SANDBOX_TOOL],
                   max_tokens: 2048,
                 });
 
