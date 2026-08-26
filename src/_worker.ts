@@ -864,6 +864,7 @@ export default {
         };
 
         const { messages, systemInstruction, model, tenantId = "gnosis", sessionId = "default" } = body;
+        const isYada = (tenantId === "yada");
 
         if (!messages || !Array.isArray(messages)) {
           return Response.json({ error: "Messages array is required." }, { status: 400, headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } });
