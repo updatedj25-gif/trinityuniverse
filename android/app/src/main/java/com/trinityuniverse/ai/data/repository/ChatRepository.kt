@@ -57,6 +57,7 @@ class ChatRepository(
             .url("$baseUrl/api/chat")
             .header("Accept", "text/event-stream")
             .header("Content-Type", "application/json")
+            .header("User-Agent", "TrinityUniverse-Android/1.0 (Linux; Android)")
             .post(payloadObj.toString().toRequestBody("application/json".toMediaType()))
             .build()
 
@@ -79,7 +80,7 @@ class ChatRepository(
 
             override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
                 trySend(StreamEventPayload(type = "error", error = t?.localizedMessage ?: "Connection error"))
-                close(t)
+                close()
             }
         })
 

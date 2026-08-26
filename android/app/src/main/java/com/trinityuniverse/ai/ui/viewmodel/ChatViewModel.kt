@@ -64,7 +64,7 @@ class ChatViewModel(
     }
 
     fun newSession() {
-        val now = SimpleDateFormat("yyyy-MM-ddTHH:mm:ss.SSSZ", Locale.US).format(Date())
+        val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
         val newS = ChatSession(
             id = "session_" + System.currentTimeMillis(),
             tenantId = _activeTenant.value.id,
@@ -102,7 +102,7 @@ class ChatViewModel(
         if (trimmed.isBlank() && _attachments.value.isEmpty()) return
         if (_isLoading.value) return
 
-        val now = SimpleDateFormat("yyyy-MM-ddTHH:mm:ss.SSSZ", Locale.US).format(Date())
+        val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
         val userMsg = ChatMessage(
             id = "msg_" + System.currentTimeMillis() + "_user",
             role = "user",
