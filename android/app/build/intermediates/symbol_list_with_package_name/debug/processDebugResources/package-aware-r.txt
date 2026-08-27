@@ -23,6 +23,7 @@ color call_notification_decline_color
 color ic_launcher_background
 color notification_action_color_filter
 color notification_icon_bg_color
+color splash_background
 color vector_tint_color
 color vector_tint_theme_color
 dimen compat_button_inset_horizontal_material
