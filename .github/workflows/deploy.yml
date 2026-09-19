@@ -29,7 +29,7 @@ jobs:
         run: pnpm install
 
       - name: Typecheck
-        run: npx tsc --noEmit
+        run: pnpm exec tsc --noEmit
 
       - name: Build production assets
         run: pnpm run build
