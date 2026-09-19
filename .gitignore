@@ -24,3 +24,7 @@ fix_build.py
 *.py
 .gradle/
 build/
+
+android/build/
+repomix-output.xml
+catalog_dump.json.bak
