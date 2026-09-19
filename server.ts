@@ -1,3 +1,4 @@
+import { queryGnosisKnowledge } from "./src/gnosis-rag";
 
 async function runCodeInSandbox(codeStr: string, apiKey?: string, language: string = "python") {
   const token = apiKey || process.env.E2B_API_KEY;
