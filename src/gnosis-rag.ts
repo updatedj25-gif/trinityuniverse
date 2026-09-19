@@ -11,7 +11,7 @@ export interface KnowledgeDocument {
 
 const STOP_WORDS = new Set([
   'the', 'and', 'what', 'is', 'relationship', 'between', 'for', 'with', 
-  'in', 'of', 'to', 'a', 'an', 'explain', 'according', 'synthesize', 'cellular'
+  'in', 'of', 'to', 'a', 'an', 'explain', 'according', 'synthesize'
 ]);
 
 let catalogCache: KnowledgeDocument[] | null = null;
@@ -35,7 +35,7 @@ export function queryGnosisKnowledge(query: string, limit = 2): KnowledgeDocumen
   if (!docs.length || !query) return [];
 
   const tokens = query.toLowerCase()
-    .replace(/[^a-z0-9s]/g, ' ')
+    .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
     .filter(t => t.length > 2 && !STOP_WORDS.has(t));
 
@@ -44,10 +44,12 @@ export function queryGnosisKnowledge(query: string, limit = 2): KnowledgeDocumen
     const titleLower = (doc.title || '').toLowerCase();
     const nicheLower = (doc.niche || '').toLowerCase();
     const tagLower = (doc.tag || '').toLowerCase();
+    const authorLower = (doc.author || '').toLowerCase();
 
     for (const token of tokens) {
-      if (titleLower.includes(token)) score += 10;
+      if (titleLower.includes(token)) score += 12;
       if (nicheLower.includes(token)) score += 8;
+      if (authorLower.includes(token)) score += 6;
       if (tagLower.includes(token)) score += 4;
     }
     return { doc, score };
